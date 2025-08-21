@@ -1,0 +1,21 @@
+<!-- app/views/seller/listings/index.html.erb -->
+<%= render "shared/navbar" %>
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">My listings</h1>
+    <%= link_to "New Listing", new_seller_listing_path, class: "btn btn-dark" %>
+  </div>
+
+  <% if @listings.any? %>
+    <div class="list-group">
+      <% @listings.each do |l| %>
+        <%= link_to seller_listing_path(l), class: "list-group-item list-group-item-action d-flex justify-content-between" do %>
+          <span><strong><%= l.title %></strong> — <%= l.address %></span>
+          <span class="badge <%= l.published? ? 'text-bg-success' : 'text-bg-secondary' %>"><%= l.status.humanize %></span>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-muted">No listings yet.</div>
+  <% end %>
+</div>

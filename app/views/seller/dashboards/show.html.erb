@@ -1,0 +1,81 @@
+<!-- app/views/seller/dashboards/show.html.erb -->
+<%= render "shared/navbar" %>
+
+<section class="container py-5">
+  <h1 class="fw-bold mb-4">Seller dashboard</h1>
+
+  <!-- KPI cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Active listings</div>
+          <div class="h3 mb-0"><%= @stats[:active_listings] %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Unread messages</div>
+          <div class="h3 mb-0"><%= @stats[:unread_messages] %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Upcoming viewings</div>
+          <div class="h3 mb-0"><%= @stats[:upcoming_viewings] %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="small text-muted mb-1">Views this month</div>
+          <div class="h3 mb-0"><%= @stats[:this_month_views] %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white">
+          <strong>Quick actions</strong>
+        </div>
+        <div class="card-body d-flex gap-2 flex-wrap">
+          <%= link_to new_seller_listing_path, class: "btn btn-dark" do %>
+            New listing
+          <% end %>
+          <%= link_to seller_listings_path, class: "btn btn-outline-dark" do %>
+            Manage listings
+          <% end %>
+          <%= link_to "#", class: "btn btn-outline-dark" do %>
+            Inbox
+          <% end %>
+          <%= link_to "#", class: "btn btn-outline-dark" do %>
+            Viewings
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white">
+          <strong>Billing</strong>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">Plan: <strong><%= @billing_overview[:plan] %></strong></div>
+          <div class="mb-2">Next invoice: <%= @billing_overview[:next_invoice_on] || "—" %></div>
+          <div class="mb-3">Amount: <strong><%= @billing_overview[:amount] %></strong></div>
+          <%= link_to "Manage subscription", "#", class: "btn btn-outline-dark w-100" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

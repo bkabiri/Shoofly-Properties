@@ -1,0 +1,287 @@
+<%= form_with model: [:seller, listing],
+  html: {
+    id: "listingForm",
+    multipart: true, # ensure uploads work
+    data: {
+      controller: "listing-form",
+      action: "input->listing-form#validate change->listing-form#validate"
+    }
+  } do |f| %>
+
+  <% if listing.errors.any? %>
+    <div class="alert alert-danger">
+      <strong>Please fix the following:</strong>
+      <ul class="mb-0">
+        <% listing.errors.full_messages.each do |m| %>
+          <li><%= m %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# ---------- Energy suppliers list (for selects) ---------- %>
+  <% energy_suppliers = [
+    "Octopus Energy","British Gas","E.ON Next","OVO Energy","EDF Energy",
+    "ScottishPower","Co-operative Energy","Ecotricity","Good Energy",
+    "Outfox the Market","So Energy","100Green","Utilita Energy",
+    "Telecoms Utility Warehouse","Tomato Energy"
+  ] %>
+
+  <div class="row g-3">
+    <!-- Address + placeId -->
+    <div class="col-12">
+      <%= f.label :address, "Property Address", class: "form-label" %>
+      <%= f.text_field :address,
+        class: "form-control",
+        required: true,
+        placeholder: "Start typing your address… (autocomplete coming soon)",
+        aria: { describedby: "addressHelp" },
+        data: { "listing-form-target": "address" } %>
+      <div id="addressHelp" class="form-text">
+        Stores address text. Place ID stored when available.
+      </div>
+      <%= f.hidden_field :place_id, data: { "listing-form-target": "placeId" } %>
+      <div class="form-text mt-2">
+        <a href="#" class="link-secondary small"
+           data-bs-toggle="collapse"
+           data-bs-target="#manualAddress"
+           aria-expanded="false"
+           aria-controls="manualAddress">
+          Enter address manually
+        </a>
+      </div>
+    </div>
+
+    <!-- Manual Address Fallback -->
+    <div class="collapse col-12 mt-3" id="manualAddress">
+      <div class="row g-3">
+        <div class="col-12">
+          <%= f.label :address_line1, "Address Line 1", class: "form-label" %>
+          <%= f.text_field :address_line1, class: "form-control",
+            placeholder: "e.g., 123 High Street",
+            data: { "listing-form-target": "addressLine1" } %>
+        </div>
+        <div class="col-12">
+          <%= f.label :address_line2, "Address Line 2", class: "form-label" %>
+          <%= f.text_field :address_line2, class: "form-control",
+            placeholder: "Apartment, suite, etc. (optional)",
+            data: { "listing-form-target": "addressLine2" } %>
+        </div>
+        <div class="col-6 col-md-4">
+          <%= f.label :postcode, "Postcode", class: "form-label" %>
+          <%= f.text_field :postcode, class: "form-control",
+            placeholder: "e.g., SW1A 1AA",
+            data: { "listing-form-target": "postcode" } %>
+        </div>
+        <div class="col-6 col-md-8">
+          <%= f.label :city, "City", class: "form-label" %>
+          <%= f.text_field :city, class: "form-control",
+            placeholder: "e.g., London",
+            data: { "listing-form-target": "city" } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property Type -->
+    <div class="col-12 col-md-6">
+      <%= f.label :property_type, "Property Type", class: "form-label" %>
+      <%= f.select :property_type,
+        Listing.property_types.keys.map { |k| [k.humanize, k] },
+        { prompt: "Select type" },
+        class: "form-select",
+        required: true,
+        data: { "listing-form-target": "propertyType" } %>
+    </div>
+
+    <!-- Bedrooms / Bathrooms -->
+    <div class="col-6 col-md-3">
+      <%= f.label :bedrooms, class: "form-label" %>
+      <%= f.number_field :bedrooms, min: 0, class: "form-control", required: true,
+        data: { "listing-form-target": "bedrooms" } %>
+    </div>
+    <div class="col-6 col-md-3">
+      <%= f.label :bathrooms, class: "form-label" %>
+      <%= f.number_field :bathrooms, min: 0, class: "form-control", required: true,
+        data: { "listing-form-target": "bathrooms" } %>
+    </div>
+
+    <!-- Size -->
+    <div class="col-6 col-md-3">
+      <%= f.label :size_value, "Size", class: "form-label" %>
+      <%= f.number_field :size_value, step: "0.01", class: "form-control",
+        placeholder: "e.g., 1200" %>
+    </div>
+    <div class="col-6 col-md-3">
+      <%= f.label :size_unit, "Unit", class: "form-label" %>
+      <%= f.select :size_unit, [["sq ft","sq ft"],["sqm","sqm"]],
+        { include_blank: "Select unit" }, class: "form-select" %>
+    </div>
+
+    <!-- Guide Price -->
+    <div class="col-12 col-md-6">
+      <%= f.label :guide_price, "Guide Price (£)", class: "form-label" %>
+      <%= f.number_field :guide_price,
+        step: "0.01",
+        min: 0,
+        class: "form-control",
+        placeholder: "e.g., 450000" %>
+    </div>
+
+    <!-- Tenure / Council Tax / Parking / Garden -->
+    <div class="col-12 col-md-3">
+      <%= f.label :tenure, class: "form-label" %>
+      <%= f.select :tenure, Listing.tenures.keys.map { |k| [k.humanize, k] },
+        { prompt: "Select tenure" }, class: "form-select", required: true %>
+    </div>
+    <div class="col-12 col-md-3">
+      <%= f.label :council_tax_band, "Council Tax Band", class: "form-label" %>
+      <%= f.select :council_tax_band, Listing.council_tax_bands.keys.map { |k| [k.humanize, k] },
+        { include_blank: "Unknown" }, class: "form-select" %>
+    </div>
+    <div class="col-12 col-md-3">
+      <%= f.label :parking, class: "form-label" %>
+      <%= f.select :parking, Listing.parkings.keys.map { |k| [k.humanize, k] },
+        { include_blank: "Select" }, class: "form-select" %>
+    </div>
+    <div class="col-12 col-md-3">
+      <div class="form-check mt-4 pt-2">
+        <%= f.check_box :garden, class: "form-check-input", id: "listing_garden" %>
+        <%= f.label :garden, "Garden", class: "form-check-label" %>
+      </div>
+    </div>
+
+    <!-- Title / Description -->
+    <div class="col-12">
+      <%= f.label :title, class: "form-label" %>
+      <%= f.text_field :title, class: "form-control", required: true,
+        minlength: 5, maxlength: 120,
+        placeholder: "e.g., Bright 3-bed family home in Bishop Garden" %>
+    </div>
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <%= f.label :description_raw, "Description", class: "form-label mb-0" %>
+        <button type="button"
+          class="btn btn-sm btn-outline-secondary"
+          data-action="click->listing-form#generateDescription"
+          aria-label="Generate a suggested description">
+          ✨ Generate with AI
+        </button>
+      </div>
+      <%= f.text_area :description_raw, class: "form-control",
+        rows: 8, required: true, minlength: 20, maxlength: 10000,
+        placeholder: "Describe key features, condition, nearby transport, schools, etc.",
+        data: { "listing-form-target": "description" } %>
+      <div class="form-text">
+        Basic HTML allowed (links, lists, emphasis). Content is sanitized.
+      </div>
+    </div>
+
+    <!-- Utilities (updated: suppliers as selects) -->
+    <div class="col-12 col-md-4">
+      <%= f.label :broadband, "Broadband / Internet speed", class: "form-label" %>
+      <%= f.text_field :broadband, class: "form-control", placeholder: "e.g., FTTP 900 Mbps (BT)" %>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <%= f.label :electricity_supplier, "Electricity supplier", class: "form-label" %>
+      <%= f.select :electricity_supplier,
+            options_for_select(energy_suppliers, listing.electricity_supplier),
+            { include_blank: "Select supplier" },
+            class: "form-select" %>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <%= f.label :gas_supplier, "Gas supplier", class: "form-label" %>
+      <%= f.select :gas_supplier,
+            options_for_select(energy_suppliers, listing.gas_supplier),
+            { include_blank: "Select supplier" },
+            class: "form-select" %>
+    </div>
+
+    <!-- Banner -->
+    <div class="col-12">
+      <%= f.label :banner_image, "Banner Image (JPG/PNG/WEBP, ≤10MB)", class: "form-label" %>
+      <%= f.file_field :banner_image, accept: "image/jpeg,image/png,image/webp",
+        class: "form-control", data: { "listing-form-target": "banner" } %>
+      <% if listing.banner_image.attached? %>
+        <div class="mt-3 d-flex align-items-center gap-3">
+          <%= image_tag(
+                listing.banner_image.variable? ?
+                  listing.banner_image.variant(resize_to_fill: [560, 180]).processed :
+                  listing.banner_image,
+                class: "rounded border",
+                alt: "Current banner preview"
+              ) %>
+          <%= link_to "Remove banner",
+                purge_banner_seller_listing_path(listing),
+                data: { turbo_method: :delete, turbo_confirm: "Remove the current banner?" },
+                class: "btn btn-link text-danger p-0" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Gallery -->
+    <div class="col-12">
+      <%= f.label :gallery_images, "Gallery Images (up to 30)", class: "form-label" %>
+      <%= f.file_field :gallery_images, multiple: true, accept: "image/jpeg,image/png,image/webp",
+        class: "form-control", data: { "listing-form-target": "gallery" } %>
+      <div id="galleryPreviews" class="d-flex flex-wrap gap-2 mt-2" aria-live="polite"></div>
+      <div class="form-text">Drag & drop and reordering coming soon.</div>
+      <% if listing.gallery_images.attached? %>
+        <div class="mt-3">
+          <div class="small text-muted mb-2">Current photos</div>
+          <div class="d-flex flex-wrap gap-2">
+            <% listing.gallery_images.each do |photo| %>
+              <div class="text-center">
+                <%= image_tag(
+                      photo.variable? ?
+                        photo.variant(resize_to_fill: [160, 110]).processed :
+                        photo,
+                      class: "rounded border",
+                      alt: "Gallery photo"
+                    ) %>
+                <%= link_to "Remove",
+                      purge_photo_seller_listing_path(listing, blob_id: photo.blob_id),
+                      data: { turbo_method: :delete, turbo_confirm: "Remove this photo?" },
+                      class: "btn btn-link text-danger p-0 small" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- EPC -->
+    <div class="col-12">
+      <%= f.label :epc, "EPC Certificate (PDF/JPG/PNG, ≤20MB)", class: "form-label" %>
+      <%= f.file_field :epc, accept: "application/pdf,image/jpeg,image/png", class: "form-control" %>
+      <% if listing.epc.attached? %>
+        <div class="mt-2 d-flex align-items-center gap-2">
+          <span class="small">
+            Current EPC:
+            <%= link_to listing.epc.filename.to_s, url_for(listing.epc),
+                  target: "_blank", rel: "noopener" %>
+          </span>
+          <%= link_to "Remove",
+                purge_epc_seller_listing_path(listing),
+                data: { turbo_method: :delete, turbo_confirm: "Remove the current EPC?" },
+                class: "btn btn-link text-danger p-0 small" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Actions -->
+    <div class="col-12 d-flex flex-wrap gap-2 mt-3">
+      <%= f.hidden_field :status, value: listing.status %>
+      <%= f.submit "Save as Draft", name: "save_draft", class: "btn btn-outline-dark" %>
+      <%= button_tag "Publish",
+            type: "submit",
+            name: "publish",
+            class: "btn btn-success",
+            id: "publishBtn",
+            data: { "listing-form-target": "publishBtn" } %>
+      <%= link_to "Cancel", seller_listings_path, class: "btn btn-link text-muted" %>
+      <span class="ms-auto small text-muted" id="autosaveStatus" aria-live="polite"></span>
+    </div>
+  </div>
+<% end %>

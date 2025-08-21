@@ -1,0 +1,51 @@
+<%# app/views/seller/listings/_hero.html.erb %>
+<% price_text =
+     if @listing.guide_price.present?
+       number_to_currency(@listing.guide_price, unit: "£", precision: 0, delimiter: ",")
+     else
+       "Guide price on request"
+     end %>
+
+<div class="listing-hero">
+  <% if @listing.banner_image.attached? %>
+    <%= image_tag @listing.banner_image.variant(resize_to_limit: [2200, 1400]),
+                  class: "listing-hero__image",
+                  alt: @listing.title %>
+  <% else %>
+    <div class="listing-hero__image listing-hero__image--placeholder"></div>
+  <% end %>
+
+  <!-- Title (top, Snoofly red, no background) -->
+  <h1 class="listing-hero__title"><%= @listing.title %></h1>
+
+  <!-- Bottom bar (centered chips) -->
+  <div class="listing-hero__bottom">
+    <span class="listing-hero__price"><%= price_text %></span>
+
+    <div class="listing-hero__icons">
+      <span class="listing-hero__icon">
+        <!-- bed -->
+        <i class="bi bi-bed"></i>
+        <%= @listing.bedrooms || "—" %> beds
+      </span>
+
+      <span class="listing-hero__icon">
+        <!-- bath -->
+        <i class="bi bi-badge-wc"></i>
+        <%= @listing.bathrooms || "—" %> baths
+      </span>
+
+      <span class="listing-hero__icon">
+        <!-- receptions (optional: add a receptions column later; showing “—” for now) -->
+        <i class="bi bi-collection"></i>
+        <%= @listing.try(:receptions) || "—" %> receptions
+      </span>
+
+      <span class="listing-hero__icon">
+        <!-- EPC -->
+        <i class="bi bi-graph-up"></i>
+        EPC: <%= @listing.try(:epc_rating).presence || "—" %>
+      </span>
+    </div>
+  </div>
+</div>

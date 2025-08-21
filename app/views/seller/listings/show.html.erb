@@ -1,0 +1,169 @@
+<%= render "shared/navbar" %>
+
+<%# ---------- Helpers ---------- %>
+<% price_text =
+     if @listing.guide_price.present?
+       number_to_currency(@listing.guide_price, unit: "£", precision: 0, delimiter: ",")
+     else
+       "Guide price on request"
+     end %>
+
+<%# Build an ordered array for the gallery:
+    banner first (if any), then all gallery images %>
+<%
+  gallery_blobs = []
+  if @listing.banner_image.attached?
+    gallery_blobs << @listing.banner_image
+  end
+  if @listing.gallery_images.attached?
+    @listing.gallery_images.each { |b| gallery_blobs << b }
+  end
+%>
+
+<%# ============== STAGE: Left hero card + Right thumbnail rail ============== %>
+<div class="listing-stage">
+
+  <%# ---- Left: main hero card ---- %>
+  <div>
+    <div class="listing-hero-card">
+      <% if @listing.banner_image.attached? %>
+        <%= image_tag @listing.banner_image.variant(resize_to_limit: [2200, 1400]),
+                      class: "listing-hero-card__img",
+                      alt: @listing.title %>
+      <% else %>
+        <div class="listing-hero-card__img" style="background:#e9eef5;"></div>
+      <% end %>
+
+      <%# Premium badge (top-right) %>
+      <% if !@listing.respond_to?(:premium?) || @listing.premium? %>
+        <div class="premium-badge">
+          <i class="bi bi-star-fill"></i> Premium
+        </div>
+      <% end %>
+
+      <%# Floating white summary panel (bottom-left) %>
+      <div class="summary-float">
+        <div class="summary-float__address"><%= @listing.title %></div>
+        <div class="summary-float__price"><%= price_text %></div>
+
+        <div class="summary-chips mt-2">
+          <span class="chip"><i class="bi bi-house-door"></i><%= @listing.property_type&.humanize || "—" %></span>
+          <span class="chip"><i class="bi bi-bed"></i><%= @listing.bedrooms || "—" %> beds</span>
+          <span class="chip"><i class="bi bi-badge-wc"></i><%= @listing.bathrooms || "—" %> baths</span>
+          <span class="chip"><i class="bi bi-collection"></i><%= @listing.try(:receptions) || "—" %> receptions</span>
+          <span class="chip"><i class="bi bi-graph-up"></i>EPC: <%= @listing.try(:epc_rating).presence || "—" %></span>
+          <% if @listing.tenure.present? %>
+            <span class="chip"><i class="bi bi-shield-check"></i><%= @listing.tenure.humanize %></span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Right: vertical thumbnail rail (hidden on < lg) ---- %>
+  <aside class="thumb-rail">
+    <div class="thumb-rail__title">Photos</div>
+    <div class="thumb-rail__scroller">
+      <% gallery_blobs.each_with_index do |blob, idx| %>
+        <div class="thumb js-open-gallery" data-index="<%= idx %>">
+          <%= image_tag blob.variant(resize_to_fill: [520, 360]),
+                        alt: "Photo #{idx + 1}" %>
+          <span class="thumb__pill"><%= idx + 1 %>/<%= gallery_blobs.size %></span>
+        </div>
+      <% end %>
+    </div>
+  </aside>
+</div>
+
+<%# ============== Action bar (publish/unpublish + edit) ============== %>
+<div class="container py-3">
+  <div class="d-flex justify-content-end align-items-center">
+    <% if @listing.draft? %>
+      <%= button_to "Publish", publish_seller_listing_path(@listing),
+                    method: :patch, class: "btn btn-success" %>
+    <% else %>
+      <%= button_to "Unpublish", unpublish_seller_listing_path(@listing),
+                    method: :patch, class: "btn btn-secondary" %>
+    <% end %>
+    <%= link_to "Edit", edit_seller_listing_path(@listing), class: "btn btn-outline-dark ms-2" %>
+  </div>
+</div>
+
+<%# ============== Body content ============== %>
+<div class="listing-content">
+  <h3>Description</h3>
+  <div class="mb-4"><%= raw @listing.description_raw %></div>
+</div>
+
+<%# ============== Modal carousel (Bootstrap) ============== %>
+<div class="modal fade gallery-modal" id="galleryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-black">
+      <div class="modal-body p-0">
+        <div id="galleryCarousel" class="carousel slide" data-bs-interval="false">
+          <div class="carousel-inner">
+            <% gallery_blobs.each_with_index do |blob, idx| %>
+              <div class="carousel-item <%= 'active' if idx.zero? %>">
+                <%= image_tag blob.variant(resize_to_limit: [3000, 2000]),
+                              alt: "Photo #{idx + 1}" %>
+              </div>
+            <% end %>
+          </div>
+
+          <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <div class="text-white-50 small">
+          <span id="galleryCounter">1/<%= gallery_blobs.size %></span>
+        </div>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= render "shared/footer" %>
+
+<%# ============== Tiny JS: open modal at clicked index + counter ============== %>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const thumbs = document.querySelectorAll('.js-open-gallery');
+    const modalEl = document.getElementById('galleryModal');
+    const carouselEl = document.getElementById('galleryCarousel');
+    const counterEl  = document.getElementById('galleryCounter');
+
+    if (!carouselEl) return;
+
+    const carousel = new bootstrap.Carousel(carouselEl, { interval: false, ride: false });
+
+    thumbs.forEach(t => {
+      t.addEventListener('click', () => {
+        const idx = parseInt(t.getAttribute('data-index') || '0', 10);
+        // Activate requested slide
+        const items = carouselEl.querySelectorAll('.carousel-item');
+        items.forEach(i => i.classList.remove('active'));
+        if (items[idx]) items[idx].classList.add('active');
+
+        // Update counter and show modal
+        if (counterEl) counterEl.textContent = `${idx+1}/${items.length}`;
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      });
+    });
+
+    // Keep counter in sync when sliding
+    carouselEl.addEventListener('slid.bs.carousel', function () {
+      const items = carouselEl.querySelectorAll('.carousel-item');
+      const activeIndex = Array.prototype.indexOf.call(items, carouselEl.querySelector('.carousel-item.active'));
+      if (counterEl) counterEl.textContent = `${activeIndex+1}/${items.length}`;
+    });
+  });
+</script>
