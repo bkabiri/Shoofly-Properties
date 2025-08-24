@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_21_113708) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_24_234227) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -42,6 +42,16 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_21_113708) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "favorites", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "listing_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id"], name: "index_favorites_on_listing_id"
+    t.index ["user_id", "listing_id"], name: "index_favorites_on_user_id_and_listing_id", unique: true
+    t.index ["user_id"], name: "index_favorites_on_user_id"
+  end
+
   create_table "listings", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "address", null: false
@@ -68,7 +78,13 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_21_113708) do
     t.string "broadband"
     t.string "electricity_supplier"
     t.string "gas_supplier"
+    t.string "slug"
+    t.integer "sale_status", default: 0, null: false
+    t.datetime "featured_until"
+    t.index ["featured_until"], name: "index_listings_on_featured_until"
     t.index ["property_type"], name: "index_listings_on_property_type"
+    t.index ["sale_status"], name: "index_listings_on_sale_status"
+    t.index ["slug"], name: "index_listings_on_slug", unique: true
     t.index ["status"], name: "index_listings_on_status"
     t.index ["tenure"], name: "index_listings_on_tenure"
     t.index ["user_id"], name: "index_listings_on_user_id"
@@ -96,5 +112,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_21_113708) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "favorites", "listings"
+  add_foreign_key "favorites", "users"
   add_foreign_key "listings", "users"
 end

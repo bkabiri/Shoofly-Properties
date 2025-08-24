@@ -1,0 +1,344 @@
+/* Filter panel */
+.filter-panel {
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 1200px) {
+  .filter-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (max-width: 768px) {
+  .filter-grid { grid-template-columns: 1fr; }
+}
+
+.fg { display: flex; flex-direction: column; }
+.fg-label { font-weight: 700; font-size: .9rem; margin-bottom: 6px; color: #213047; }
+
+.fg-actions {
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+
+/* Snoofly button reuse */
+.btn-snoofly {
+  background-color:#ff4a5f;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-weight:700;
+  padding:.8rem 1rem;
+}
+.btn-snoofly:hover,
+.btn-snoofly:focus { background-color:#e53a4e; color:#fff; }
+
+/* app/assets/stylesheets/listings_index.scss */
+.filter-panel {
+  background:#f7f8fb; border:1px solid #eef1f5; border-radius:16px; padding:16px 18px; margin-bottom:12px;
+}
+.filter-grid {
+  display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:12px;
+}
+.fg { display:flex; flex-direction:column; }
+.fg-label { font-weight:700; font-size:.9rem; margin-bottom:6px; color:#213047; }
+.fg-actions { align-self:end; display:flex; flex-direction:column; justify-content:end; }
+@media (max-width: 1200px){ .filter-grid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 768px){ .filter-grid { grid-template-columns: 1fr; } }
+
+/* Quick search bar */
+.searchbar {
+  background: #f7f8fb;
+  border: 1px solid #e7e7ee;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.04);
+}
+
+.searchbar-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.1fr 1.1fr .9fr .9fr;
+  gap: 12px;
+}
+@media (max-width: 992px) {
+  .searchbar-row { grid-template-columns: 1fr 1fr; }
+}
+
+.sb-field { display: flex; flex-direction: column; }
+.sb-narrow { min-width: 140px; }
+
+.sb-label {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #4b4d57;
+  margin-bottom: .35rem;
+}
+
+.sb-input.form-control,
+.sb-input.form-select {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #d7d7e2;
+  background: #fff;
+}
+
+.sb-clear {
+  position: absolute;
+  right: 10px; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; font-size: 20px; line-height: 1; color: #888; cursor: pointer;
+}
+
+.sb-filter-btn {
+  height: 44px; border-radius: 10px;
+  background: #fff;
+  border: 1px solid #d7d7e2;
+}
+.sb-filter-btn i { margin-right: 6px; }
+
+.btn-snoofly {
+  background-color: #ff4a5f;  /* Snoofly red */
+  color: #fff;
+  border: none;
+  height: 44px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.btn-snoofly:hover { filter: brightness(.95); color: #fff; }
+
+.searchbar-drawer {
+  margin-top: 12px;
+  background: #fff;
+  border: 1px solid #e7e7ee;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* --- Property type dropdown --- */
+.sb-pt-menu {
+  min-width: 320px;
+  max-width: 420px;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.sb-pt-menu .form-check {
+  font-size: 0.9rem;
+}
+
+.sb-pt-menu .form-check-input {
+  cursor: pointer;
+}
+
+.sb-pt-menu .form-check-label {
+  cursor: pointer;
+}
+
+.sb-pt-menu hr {
+  margin: 0.5rem 0;
+}
+
+.sb-pt-menu .btn {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.sb-pt-menu .btn-snoofly {
+  background-color: #c1121f; /* Snoofly red */
+  border-color: #c1121f;
+  color: #fff;
+}
+
+.sb-pt-menu .btn-snoofly:hover {
+  background-color: #a00e19;
+  border-color: #a00e19;
+}
+
+/* Dropdown trigger (make it look like input) */
+.sb-field .dropdown > .form-select {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sb-field .dropdown > .form-select i {
+  font-size: 0.8rem;
+}
+
+/* Property type trigger label: single line + ellipsis */
+.sb-pt-label{
+  max-width: 220px;           /* adjust if you need more room */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@media (min-width:1200px){ .sb-pt-label{ max-width: 260px; } }
+
+/* Wider dropdown and prevent label wrapping inside menu */
+.sb-pt-menu{
+  min-width: 420px;           /* wider so two columns don't wrap */
+  max-width: 520px;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+  will-change: transform, opacity;
+}
+.sb-pt-menu .form-check-label{
+  white-space: nowrap;        /* keep each option on one line */
+}
+
+/* Snoofly button — strong specificity so Bootstrap can't override */
+.btn.btn-snoofly {
+  background-color: #ff4a5f !important;
+  border-color: #ff4a5f !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  height: 44px;
+}
+
+.btn.btn-snoofly:hover,
+.btn.btn-snoofly:focus {
+  background-color: #e53a4e !important;
+  border-color: #e53a4e !important;
+  color: #fff !important;
+}
+
+/* Responsive width helper for the Apply button */
+.w-md-auto { width: 100% !important; }
+@media (min-width: 768px) {
+  .w-md-auto { width: auto !important; }
+}
+
+/* Align "Apply filters" with the selects in the drawer (desktop) */
+.searchbar-drawer .row .d-flex.align-items-end {
+  align-items: flex-start !important;     /* stop bottom-aligning the button */
+}
+
+/* Give the button the same top offset a select has under its label */
+.searchbar-drawer .row .d-flex .btn-snoofly {
+  margin-top: 1.15rem;  /* matches .sb-label (.8rem font) + .35rem gap */
+  height: 44px;         /* same as inputs */
+}
+
+/* Mobile: keep it flush/full width, no extra offset */
+@media (max-width: 767.98px) {
+  .searchbar-drawer .row .d-flex .btn-snoofly {
+    margin-top: 0;
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   HARDENED STYLES (keep dropdown identical after submit)
+   ========================================================= */
+
+/* Always treat our menu as a dropdown-menu with fixed sizing */
+.dropdown-menu.sb-pt-menu {
+  min-width: 520px !important;   /* lock the good size */
+  max-width: 520px !important;
+  padding: 14px !important;      /* stable padding */
+  border-radius: 8px !important;
+  font-size: 0.95rem !important; /* avoid sudden small text */
+  line-height: 1.35 !important;
+}
+
+/* Grid inside the menu – consistent spacing */
+.dropdown-menu.sb-pt-menu .row {
+  --bs-gutter-x: 1.25rem;
+  --bs-gutter-y: .25rem;
+}
+
+/* Checkbox sizing/spacing stays the same */
+.dropdown-menu.sb-pt-menu .form-check-input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: .2rem;
+}
+.dropdown-menu.sb-pt-menu .form-check {
+  margin-bottom: .35rem;
+}
+
+/* “Show all” separator and spacing consistency */
+.dropdown-menu.sb-pt-menu hr {
+  margin: .6rem 0 !important;
+}
+
+/* Buttons area — Apply full width and same height */
+.dropdown-menu.sb-pt-menu .btn {
+  height: 44px;
+  border-radius: 10px;
+}
+.dropdown-menu.sb-pt-menu .btn-snoofly {
+  width: 100%;
+  font-weight: 700;
+  font-size: .95rem;
+  padding: .6rem .9rem;
+}
+
+/* Prevent Bootstrap popper from squashing width on short trigger containers */
+.sb-field.dropdown {
+  position: relative;
+}
+.sb-field.dropdown .dropdown-menu.sb-pt-menu {
+  inset: auto !important;         /* let Popper compute position but keep width */
+  transform: none !important;     /* avoid scale transforms that alter layout */
+}
+
+/* Keep the trigger looking like an input even after navigation/focus */
+.sb-field .form-select:focus {
+  box-shadow: 0 0 0 .2rem rgba(255,74,95,.15);
+  border-color: #ff4a5f;
+}
+.card .btn.btn-sm {
+  height: 34px;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: .35rem .6rem;
+}
+.card .btn-outline-danger {
+  --bs-btn-color: #ff4a5f;
+  --bs-btn-border-color: #ff4a5f;
+}
+.card .btn-outline-danger:hover {
+  background: #ff4a5f; color: #fff;
+}
+.fav-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .25rem .5rem;
+  line-height: 1;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.fav-toggle .bi {
+  font-size: 1.8rem; /* Bigger star */
+  transition: transform .12s ease;
+}
+
+.fav-toggle:hover .bi {
+  transform: scale(1.1);
+}
+
+.fav-toggle.is-saved .bi {
+  color: #ff4a5f; /* Snoofly red */
+}
+
+.fav-label {
+  font-size: .95rem;
+  color: #333;
+}
+
+.fav-toggle.is-saved .fav-label {
+  color: #ff4a5f; /* red text when saved */
+  font-weight: 600;
+}

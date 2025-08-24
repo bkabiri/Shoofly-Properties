@@ -28,8 +28,9 @@ gem "bootsnap", require: false
 
 # UI
 gem "bootstrap", "~> 5.1.3"
-
+gem "kaminari"
 # Auth
+gem "kaminari-bootstrap"
 gem "devise"
 
 group :development, :test do

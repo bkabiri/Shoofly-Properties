@@ -1,0 +1,259 @@
+/* =========================
+   Listing Show Page (scoped)
+   ========================= */
+
+/* Layout: LEFT (hero + thumbs + description), RIGHT (contact + nearby) */
+.listing-stage {
+  max-width: 1400px;
+  margin: 56px auto 0;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px; /* a bit wider rail, left can shrink */
+  gap: 20px;
+  align-items: start;            /* keep columns aligned from the top */
+}
+
+/* NEW: allow the left column to shrink inside the grid (prevents overflow) */
+.left-col { min-width: 0; }
+
+@media (max-width: 992px) {
+  .listing-stage {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Sticky right rail */
+.right-rail {
+  align-self: start;
+  position: sticky;
+  top: 84px;                     /* just under your navbar */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 1;                    /* sits below hero overlays like the premium pill */
+}
+
+@media (max-width: 992px) {
+  .right-rail {
+    position: static;            /* disable sticky on mobile */
+    top: auto;
+  }
+}
+
+/* Premium Badge */
+.premium-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #ff4a5f;
+  color: #fff;
+  font-weight: 700;
+  font-size: .95rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+  z-index: 5;
+}
+.premium-badge i { font-size: 1rem; color: #fff; }
+
+/* Hero card — respect the grid column (no viewport-wide width) */
+.listing-hero-card {
+  position: relative;
+  width: 100%;                   /* was 92vw */
+  max-width: none;               /* was 1080px — let the grid decide */
+  min-width: 0;
+  height: 560px;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  background: #f4f6f9;
+}
+@media (max-width: 992px) { .listing-hero-card { height: 480px; } }
+@media (max-width: 576px) { .listing-hero-card { height: 360px; } }
+
+.listing-hero-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform .8s ease;
+}
+.listing-hero-card:hover .listing-hero-card__img { transform: scale(1.03); }
+
+/* Snoofly red overlay chip (80% opacity) */
+.summary-float {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255, 74, 95, 0.80);
+  color: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  max-width: 420px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 5;
+}
+.summary-float__address { font-weight: 600; font-size: 1.5rem; color:#fff; }
+.summary-float__price   { font-weight: 800; font-size: 2rem;  color:#fff; }
+
+.summary-chips { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem; }
+.chip {
+  display:inline-flex; align-items:center; gap:.45rem;
+  padding:.42rem .7rem; background:#fff; border:1px solid #edf0f3; border-radius:10px;
+  color:#2d3648; font-size:.95rem; box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.chip i { color:#5b667a; font-size:1rem; }
+
+/* ===== Thumbnails BELOW the banner — respect grid column ===== */
+.thumb-strip {
+  width: 100%;                   /* was 92vw */
+  max-width: none;               /* let the grid control width */
+  min-width: 0;
+  margin: 12px auto 0;
+}
+.thumb-strip__head { font-weight: 700; font-size: 1rem; margin: 0 0 .5rem 2px; }
+.thumb-strip__scroller {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* show a few per line */
+  gap: 8px;
+}
+@media (max-width: 992px) {
+  .thumb-strip__scroller {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .thumb { display:inline-block; width:128px; margin-right:8px; }
+  .thumb img { height:80px; }
+}
+
+/* Thumb card */
+.thumb {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #eef2f6;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.thumb img {
+  width: 100%; height: 110px;
+  object-fit: cover; object-position: center;
+  transition: transform .4s ease;
+}
+.thumb:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,.12); }
+.thumb:hover img { transform: scale(1.04); }
+.thumb__pill {
+  position:absolute; bottom:8px; right:8px;
+  background:rgba(0,0,0,.55); color:#fff;
+  font-size:.8rem; font-weight:700;
+  padding:.18rem .45rem; border-radius:999px;
+}
+
+/* Description — respect grid column */
+.listing-content {
+  width: 100%;                   /* was 92vw */
+  max-width: none;
+  min-width: 0;
+  margin: 18px auto 24px;
+}
+.listing-content h3 { font-weight: 800; color: #213047; }
+
+/* Snoofly button */
+.btn-snoofly {
+  background-color:#ff4a5f;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  padding:.85rem 1rem;
+  width:100%;
+  display:inline-block;
+  text-align:center;
+  transition: background-color .15s ease-in-out, transform .05s ease-in-out;
+}
+.btn-snoofly:hover,
+.btn-snoofly:focus { background-color:#e53a4e; color:#fff; text-decoration:none; }
+
+/* Cards in rail */
+.contact-card,
+.info-card {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08);
+}
+
+/* Compact contact card */
+.contact-card { display: block; }
+
+.info-card .nearby-title {
+  font-weight:700; margin-bottom:.35rem;
+  display:flex; align-items:center; gap:.4rem;
+}
+.info-card .nearby-title i { color:#6b7280; }
+.nearby-list { list-style:none; padding-left:0; margin:0; }
+.nearby-list li {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.5rem .25rem; border-bottom:1px dashed #eef1f5;
+}
+.nearby-list li:last-child { border-bottom:none; }
+.nearby-name { color:#222; }
+.nearby-dist { color:#6b7280; font-weight:600; }
+
+/* Modal gallery images */
+.gallery-modal .carousel-item img {
+  width: 100%;
+  height: calc(100vh - 200px);
+  object-fit: contain;
+  background: #0b1220;
+}
+/* Map Section */
+.listing-map {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 18px auto 40px;
+}
+
+.listing-map h3 {
+  font-weight: 800;
+  color: #213047;
+  margin-bottom: .75rem;
+}
+
+/* Placeholder box for now */
+.map-placeholder {
+  width: 100%;
+  height: 360px;
+  background: #e5e7eb url("https://maps.gstatic.com/mapfiles/api-3/images/mapcnt6.png") center/cover no-repeat;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.show-fav-float{
+  position: absolute;
+  top: -10px;               /* slightly above the card */
+  right: -4px;              /* tuck into the corner */
+  z-index: 5;
+}
+
+/* Make sure the star reads nicely on show page */
+.show-fav-float .fav-toggle .bi{
+  font-size: 1.9rem;        /* bigger star on show page */
+}
+.show-fav-float .fav-label{
+  font-size: .95rem;
+}

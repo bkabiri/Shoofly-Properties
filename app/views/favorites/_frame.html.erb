@@ -1,0 +1,4 @@
+<%# Always render the star inside a turbo-frame so we can replace it in-place %>
+<%= turbo_frame_tag dom_id(listing, :fav) do %>
+  <%= render "favorites/toggle", listing: listing %>
+<% end %>

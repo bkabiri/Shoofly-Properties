@@ -1,4 +1,3 @@
-<!-- app/views/seller/listings/show.html.erb -->
 <%= render "shared/navbar" %>
 
 <%# ---------- Helpers ---------- %>
@@ -8,6 +7,14 @@
      else
        "Guide price on request"
      end %>
+
+<%# Who are we contacting? %>
+<%
+  seller        = @listing.user
+  is_agent      = seller.respond_to?(:company_name) && seller.company_name.present?
+  agent_logo    = seller.try(:logo) # ActiveStorage attachment if present
+  contact_email = seller.email
+%>
 
 <%# Build gallery list (banner first) %>
 <%
@@ -70,33 +77,79 @@
       </div>
     <% end %>
 
-    <%# ========= Action bar (right aligned) ========= %>
-    <div class="listing-content pt-2" style="margin-top: 8px;">
-      <div class="d-flex justify-content-end gap-2">
-        <% if @listing.draft? %>
-          <%= button_to "Publish",
-                        publish_seller_listing_path(@listing),
-                        method: :patch,
-                        class: "btn btn-success" %>
-        <% else %>
-          <%= button_to "Unpublish",
-                        unpublish_seller_listing_path(@listing),
-                        method: :patch,
-                        class: "btn btn-secondary" %>
-        <% end %>
-        <%= link_to "Edit", edit_seller_listing_path(@listing), class: "btn btn-outline-dark" %>
-      </div>
-    </div>
-
     <%# ========= Description (full banner width) ========= %>
     <div class="listing-content">
       <h3>Description</h3>
       <div class="mb-4"><%= raw @listing.description_raw %></div>
     </div>
+
+    <%# ========= Location (map) ========= %>
+    <div class="listing-map">
+      <h3>Location</h3>
+      <div class="map-placeholder">
+        <!-- Later you can embed a real Google Map iframe using @listing.address -->
+        <span>📍 Google Map will go here</span>
+      </div>
+    </div>
   </div>
 
-  <%# ========= RIGHT: (seller view has no contact/nearby rail) ========= %>
-  <aside class="right-rail" style="display:none;"></aside>
+  <%# ========= RIGHT: sticky contact + nearby ========= %>
+  <aside class="right-rail">
+    <%# Wrap the contact card so we can pin the favorite control above it (top-right) %>
+    <div class="position-relative mb-3">
+
+      <!-- Favorite star (floating above the card, top-right) -->
+      <div class="show-fav-float">
+        <%= turbo_frame_tag dom_id(@listing, :fav) do %>
+          <%= render "favorites/toggle", listing: @listing %>
+        <% end %>
+      </div>
+
+      <!-- Contact card -->
+      <div class="card shadow-sm border-0 contact-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="fw-semibold small text-muted">
+              <%= is_agent ? "Agent" : "Private Seller" %>
+            </div>
+            <% if agent_logo&.attached? %>
+              <%= image_tag agent_logo.variant(resize_to_fit: [140, 50]),
+                            alt: "Agent logo", class: "img-fluid" %>
+            <% end %>
+          </div>
+
+          <%= mail_to contact_email,
+                      "Message seller",
+                      subject: "Enquiry about #{@listing.title}",
+                      class: "btn btn-snoofly" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 info-card">
+      <div class="card-body">
+        <h6 class="mb-3 fw-bold">Nearby</h6>
+
+        <div class="nearby-block mb-3">
+          <div class="nearby-title"><i class="bi bi-train-front"></i> Nearest stations</div>
+          <ul class="nearby-list">
+            <li><span class="nearby-name">Windsor &amp; Eton Central</span><span class="nearby-dist">0.6 mi</span></li>
+            <li><span class="nearby-name">Windsor &amp; Eton Riverside</span><span class="nearby-dist">0.9 mi</span></li>
+            <li><span class="nearby-name">Datchet</span><span class="nearby-dist">1.7 mi</span></li>
+          </ul>
+        </div>
+
+        <div class="nearby-block">
+          <div class="nearby-title"><i class="bi bi-mortarboard-fill"></i> Nearest schools</div>
+          <ul class="nearby-list">
+            <li><span class="nearby-name">St George’s Primary</span><span class="nearby-dist">0.4 mi</span></li>
+            <li><span class="nearby-name">Long Walk Academy</span><span class="nearby-dist">0.8 mi</span></li>
+            <li><span class="nearby-name">Castle View High</span><span class="nearby-dist">1.3 mi</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <%= render "shared/footer" %>
@@ -164,3 +217,4 @@
     });
   });
 </script>
+

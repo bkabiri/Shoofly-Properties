@@ -1,0 +1,4 @@
+<%# @listing must be set in controller %>
+<%= turbo_stream.replace dom_id(@listing, :fav) do %>
+  <%= render "favorites/toggle", listing: @listing %>
+<% end %>

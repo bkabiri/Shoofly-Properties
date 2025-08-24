@@ -1,0 +1,371 @@
+<%= render "shared/navbar" %>
+
+<div class="container-xxl py-4">
+
+  <!-- FILTER PANEL -->
+  <%= form_with url: listings_path, method: :get, local: true, class: "searchbar", id: "listingSearchbar" do %>
+    <div class="searchbar-row">
+
+      <!-- Enter a location / keywords -->
+      <div class="sb-field">
+        <label class="sb-label">Enter a location</label>
+        <div class="position-relative">
+          <%= text_field_tag :q, params[:q], class: "form-control sb-input", placeholder: "e.g. SL44JU or Windsor" %>
+          <button class="sb-clear <%= params[:q].present? ? '' : 'd-none' %>" type="button" id="sbClearQ" aria-label="Clear">×</button>
+        </div>
+      </div>
+
+      <!-- Radius (placeholder / disabled for now) -->
+      <div class="sb-field">
+        <label class="sb-label">Radius</label>
+        <select class="form-select sb-input" name="radius" disabled title="Coming soon">
+          <option>This area only</option>
+          <option>¼ mile</option>
+          <option>½ mile</option>
+          <option>1 mile</option>
+          <option>3 miles</option>
+          <option>5 miles</option>
+        </select>
+      </div>
+
+      <!-- Bedrooms -->
+      <div class="sb-field">
+        <label class="sb-label">Bedrooms</label>
+        <select class="form-select sb-input" name="min_beds">
+          <% [["Any beds",""],["1+","1"],["2+","2"],["3+","3"],["4+","4"],["5+","5"]].each do |label,val| %>
+            <option value="<%= val %>" <%= 'selected' if params[:min_beds].to_s == val %>><%= label %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <!-- Price (single select -> hidden min/max) -->
+      <div class="sb-field">
+        <label class="sb-label">Price</label>
+        <select class="form-select sb-input" id="priceRange">
+          <% price_opts = [
+            ["Any price",""],
+            ["£100k – £300k","100000-300000"],
+            ["£300k – £500k","300000-500000"],
+            ["£500k – £750k","500000-750000"],
+            ["£750k – £1m","750000-1000000"],
+            ["£1m+","1000000-"]
+          ] %>
+          <% price_opts.each do |label,val| %>
+            <% selected = (params[:min_price].present? || params[:max_price].present?) &&
+                          val.present? &&
+                          val.split("-")[0].presence == params[:min_price].to_s &&
+                          val.split("-")[1].presence == params[:max_price].to_s %>
+            <option value="<%= val %>" <%= 'selected' if selected || (val.blank? && params[:min_price].blank? && params[:max_price].blank?) %>><%= label %></option>
+          <% end %>
+        </select>
+        <%= hidden_field_tag :min_price, params[:min_price] %>
+        <%= hidden_field_tag :max_price, params[:max_price] %>
+      </div>
+
+      <!-- Property type (multi-select) -->
+      <div class="sb-field dropdown">
+        <label class="sb-label d-block">Property type</label>
+
+        <% selected_pts = Array(params[:property_type]).reject(&:blank?) %>
+        <% first_label = selected_pts.first.present? ? selected_pts.first.humanize : "Show all" %>
+        <% more_count  = [selected_pts.size - 1, 0].max %>
+
+        <!-- Trigger -->
+        <button class="form-select sb-input d-flex justify-content-between align-items-center"
+                type="button" id="propTypeDropdown"
+                data-bs-toggle="dropdown" aria-expanded="false">
+          <span id="ptLabel" class="sb-pt-label">
+            <%= first_label %><%= more_count.positive? ? " +#{more_count}" : "" %>
+          </span>
+          <i class="bi bi-chevron-down ms-2"></i>
+        </button>
+
+        <!-- Dropdown menu -->
+        <div class="dropdown-menu p-3 sb-pt-menu" aria-labelledby="propTypeDropdown">
+          <div class="row gx-4">
+            <% Listing.property_types.keys.in_groups(2, false).each do |col| %>
+              <div class="col-6">
+                <% col.each do |pt| %>
+                  <div class="form-check mb-2">
+                    <%= check_box_tag "property_type[]", pt,
+                                      selected_pts.include?(pt),
+                                      id: "pt_#{pt}", class: "form-check-input sb-pt-cb js-pt-check" %>
+                    <%= label_tag "pt_#{pt}", pt.humanize, class: "form-check-label" %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <hr class="my-2">
+
+          <!-- Show all -->
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="pt_all" <%= "checked" if selected_pts.blank? %>>
+            <label class="form-check-label fw-semibold" for="pt_all">Show all</label>
+          </div>
+
+          <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-snoofly flex-grow-1" id="ptApplyBtn">Apply</button>
+            <button type="button" class="btn btn-light" data-bs-toggle="dropdown">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters button -->
+      <div class="sb-field sb-narrow">
+        <label class="sb-label">&nbsp;</label>
+        <button class="btn btn-outline-dark sb-filter-btn w-100" type="button"
+                data-bs-toggle="collapse" data-bs-target="#moreFilters"
+                aria-expanded="<%= params.except(:controller,:action,:page).keys.any? ? 'true' : 'false' %>">
+          <i class="bi bi-sliders"></i> Filters
+        </button>
+      </div>
+
+      <!-- Save / Search -->
+      <div class="sb-field sb-narrow">
+        <label class="sb-label">&nbsp;</label>
+        <button class="btn btn-snoofly sb-save-btn w-100" type="submit">
+          <i class="bi bi-heart"></i> Save
+        </button>
+      </div>
+    </div>
+
+    <!-- Drawer: extra filters -->
+    <div class="collapse <%= params[:added_since].present? || params[:include_under_offer].present? || params[:sort].present? ? 'show' : '' %>" id="moreFilters">
+      <div class="searchbar-drawer">
+        <div class="row g-3">
+          <div class="col-12 col-md-3">
+            <label class="sb-label">Added to site</label>
+            <select class="form-select sb-input" name="added_since">
+              <% { ""=>"Anytime","1"=>"Last 24 hours","3"=>"Last 3 days","7"=>"Last 7 days","14"=>"Last 14 days","30"=>"Last 30 days" }.each do |val, label| %>
+                <option value="<%= val %>" <%= 'selected' if params[:added_since] == val %>><%= label %></option>
+              <% end %>
+            </select>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" name="include_under_offer" id="inclUnderOffer" value="1" <%= 'checked' if params[:include_under_offer].present? %>>
+              <label class="form-check-label small" for="inclUnderOffer">Include Under Offer, Sold STC</label>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="sb-label">Sort</label>
+            <select class="form-select sb-input" name="sort">
+              <option value="" <%= 'selected' if params[:sort].blank? %>>Newest</option>
+              <option value="price_asc"  <%= 'selected' if params[:sort] == 'price_asc' %>>Price (low → high)</option>
+              <option value="price_desc" <%= 'selected' if params[:sort] == 'price_desc' %>>Price (high → low)</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-3 d-flex align-items-end justify-content-md-end">
+            <button class="btn btn-snoofly px-4 w-100 w-md-auto" type="submit">Apply filters</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Grid/List toggle (no border) -->
+  <% grid_active = params[:view].blank? || params[:view] == 'grid' %>
+  <% list_active = params[:view] == 'list' %>
+
+  <div class="mt-3 d-flex justify-content-end align-items-center gap-2">
+    <%= link_to listings_path(request.query_parameters.merge(view: "grid")),
+                class: "btn btn-light #{grid_active ? 'active' : ''}" do %>
+      <i class="bi bi-grid-3x3-gap-fill" style="font-size: 1.6rem;"></i>
+    <% end %>
+
+    <%= link_to listings_path(request.query_parameters.merge(view: "list")),
+                class: "btn btn-light #{list_active ? 'active' : ''}" do %>
+      <i class="bi bi-list" style="font-size: 1.6rem;"></i>
+    <% end %>
+  </div>
+
+  <% if @listings.blank? %>
+    <div class="alert alert-light border mt-3">
+      No properties found<%= params[:q].present? ? " for “#{params[:q]}”" : "" %>.
+      <%= link_to "Clear filters", listings_path, class: "ms-1" %>
+    </div>
+  <% else %>
+
+    <!-- RESULTS -->
+    <% if params[:view] == "list" %>
+      <!-- LIST VIEW -->
+      <div class="list-group mt-3">
+        <% @listings.each do |l| %>
+          <div class="list-group-item d-flex gap-3 py-3">
+            <!-- Thumb -->
+            <% if l.banner_image.attached? %>
+              <% if l.banner_image.variable? %>
+                <%= image_tag l.banner_image.variant(resize_to_fill: [180, 120]).processed,
+                              class: "flex-shrink-0 rounded",
+                              alt: l.title,
+                              loading: "lazy",
+                              data: { turbo_temporary: true } %>
+              <% else %>
+                <%= image_tag l.banner_image,
+                              class: "flex-shrink-0 rounded",
+                              alt: l.title,
+                              size: "180x120",
+                              data: { turbo_temporary: true } %>
+              <% end %>
+            <% else %>
+              <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                   style="width:180px;height:120px;">No image</div>
+            <% end %>
+
+            <!-- Content -->
+            <div class="d-flex flex-column flex-grow-1">
+              <div class="d-flex align-items-start justify-content-between">
+                <%= link_to listing_path(l), class: "text-decoration-none text-reset" do %>
+                  <h2 class="h6 mb-1"><%= l.title %></h2>
+                <% end %>
+
+                <%# --- Star-only Favorite (Turbo Frame) --- %>
+                <%= turbo_frame_tag dom_id(l, :fav) do %>
+                  <%= render "favorites/toggle", listing: l %>
+                <% end %>
+              </div>
+
+              <div class="text-muted small"><%= l.address %></div>
+
+              <div class="fw-bold mt-1">
+                <%= l.guide_price.present? ? number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") : "Guide price on request" %>
+              </div>
+
+              <div class="mt-1 small text-secondary d-flex gap-3 flex-wrap">
+                <span><i class="bi bi-house-door"></i> <%= l.property_type.humanize %></span>
+                <span><i class="bi bi-bed"></i> <%= l.bedrooms %> beds</span>
+                <span><i class="bi bi-badge-wc"></i> <%= l.bathrooms %> baths</span>
+              </div>
+
+              <!-- Optional: Message Seller -->
+              <div class="mt-2">
+                <% if l.user&.email.present? %>
+                  <%= link_to "mailto:#{l.user.email}?subject=#{ERB::Util.url_encode("Enquiry about: #{l.title}")}",
+                              class: "btn btn-outline-dark btn-sm d-inline-flex align-items-center gap-1",
+                              data: { turbo: false } do %>
+                    <i class="bi bi-envelope"></i> Message Seller
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+    <% else %>
+      <!-- GRID (BOX) VIEW -->
+      <div class="row g-3 mt-3">
+        <% @listings.each do |l| %>
+          <div class="col-12 col-sm-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 overflow-hidden position-relative">
+
+              <% if l.respond_to?(:sale_status) && %w[under_offer sold_stc].include?(l.sale_status.to_s) %>
+                <span class="badge position-absolute top-0 end-0 m-2
+                             <%= l.sale_status == 'under_offer' ? 'text-bg-warning' : 'text-bg-secondary' %>">
+                  <%= l.sale_status.humanize %>
+                </span>
+              <% end %>
+
+              <%= link_to listing_path(l), class: "text-decoration-none text-reset d-block" do %>
+                <% if l.banner_image.attached? %>
+                  <% if l.banner_image.variable? %>
+                    <%= image_tag l.banner_image.variant(resize_to_fill: [800, 520]).processed,
+                                  class: "card-img-top",
+                                  alt: l.title,
+                                  loading: "lazy",
+                                  data: { turbo_temporary: true } %>
+                  <% else %>
+                    <%= image_tag l.banner_image,
+                                  class: "card-img-top",
+                                  alt: l.title,
+                                  loading: "lazy",
+                                  data: { turbo_temporary: true } %>
+                  <% end %>
+                <% else %>
+                  <div class="bg-light ratio ratio-16x9">
+                    <div class="d-flex align-items-center justify-content-center text-muted">No image</div>
+                  </div>
+                <% end %>
+              <% end %>
+
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h2 class="h5 mb-1"><%= link_to l.title, listing_path(l), class: "text-reset text-decoration-none" %></h2>
+                    <div class="text-muted small mb-2"><%= l.address %></div>
+                  </div>
+
+                  <%# --- Star-only Favorite (Turbo Frame) --- %>
+      
+                    <%= render "favorites/frame", listing: l %>                
+
+                </div>
+
+                <div class="fw-bold">
+                  <%= l.guide_price.present? ? number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") : "Guide price on request" %>
+                </div>
+
+                <div class="mt-2 small text-secondary d-flex gap-3 flex-wrap">
+                  <span><i class="bi bi-house-door"></i> <%= l.property_type.humanize %></span>
+                  <span><i class="bi bi-bed"></i> <%= l.bedrooms %> beds</span>
+                  <span><i class="bi bi-badge-wc"></i> <%= l.bathrooms %> baths</span>
+                </div>
+
+                <!-- Optional: Message Seller -->
+                <div class="mt-3">
+                  <% if l.user&.email.present? %>
+                    <%= link_to "mailto:#{l.user.email}?subject=#{ERB::Util.url_encode("Enquiry about: #{l.title}")}",
+                                class: "btn btn-outline-dark btn-sm d-inline-flex align-items-center gap-1",
+                                data: { turbo: false } do %>
+                      <i class="bi bi-envelope"></i> Message Seller
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- Pagination (if Kaminari is present) -->
+    <% if defined?(Kaminari) && @listings.respond_to?(:current_page) %>
+      <div class="d-flex justify-content-center my-4">
+        <%= paginate @listings, params: request.query_parameters.except(:page) %>
+      </div>
+    <% end %>
+
+  <% end %>
+</div>
+
+<%= render "shared/footer" %>
+
+<!-- Retry failed images + Price auto-submit -->
+<script>
+document.addEventListener('turbo:load', () => {
+  document.querySelectorAll('img[data-turbo-temporary]').forEach(img => {
+    img.addEventListener('error', () => {
+      if (img.dataset._retried) return;
+      img.dataset._retried = '1';
+      const url = new URL(img.src, window.location.origin);
+      url.searchParams.set('_', Date.now().toString());
+      img.src = url.toString();
+    }, { once: true });
+  });
+
+  const priceSel = document.getElementById('priceRange');
+  if (priceSel) {
+    const minField = document.querySelector('input[name="min_price"]');
+    const maxField = document.querySelector('input[name="max_price"]');
+    priceSel.addEventListener('change', () => {
+      const [min,max] = priceSel.value.split('-');
+      if (minField) minField.value = min || '';
+      if (maxField) maxField.value = max || '';
+      priceSel.form?.requestSubmit();
+    });
+  }
+});
+</script>

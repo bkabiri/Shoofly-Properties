@@ -16,287 +16,43 @@ body {
   color: #000;
   font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
-
-/* =========================
-   Social login
-   ========================= */
-.social-icons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
-}
-.social-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 3.5rem; width: 3.5rem; border-radius: 50%; border: none;
-  background: #f8f9fa; transition: background .2s ease, transform .1s ease;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
-}
-.social-btn:hover { background: #e9ecef; transform: translateY(-1px); }
-.social-btn svg { display: block; }
-
-/* =========================
-   Footer
-   ========================= */
-.footer a { color: inherit; text-decoration: none; }
-.footer .form-control { border-radius: 0 !important; }
-.footer .btn-outline-light { border-radius: 0; }
-
-/* =========================
-   WhatsApp floating button
-   ========================= */
-.whatsapp-float {
-  position: fixed; bottom: 20px; right: 20px;
-  background: #25D366; width: 60px; height: 60px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  z-index: 1000;
-}
-.whatsapp-icon { font-size: 30px; color: #fff; }
-
-/* =========================
-   Login page
-   ========================= */
-body.login-page { background: #fff; }
-#snooflyLoginForm .form-control-lg { padding-top: .7rem; padding-bottom: .7rem; }
-#loginBtn { background: #e9ecef; color: #6c757d; cursor: not-allowed; }
-#loginBtn.enabled { background: #212529; color: #fff; cursor: pointer; }
-.login-forgot, .login-signup { color: #1aa087 !important; text-decoration: none; }
-
-/* =========================
-   Navbar
-   ========================= */
-.snoofly-navbar { background: #fff; }
-.snoofly-navbar .navbar-brand { font-size: 1.125rem; color: #111 !important; }
-.snoofly-navbar .nav-link { color: #2b2b2b; padding: .5rem .75rem; transition: all .2s ease; }
-.snoofly-navbar .nav-link:hover { color: #000; transform: scale(1.06); }
-
-/* CTA button */
-.btn-cta { background: #ff4a5f; color: #fff; border-radius: .6rem; }
-.btn-cta:hover { filter: brightness(0.95); }
-
-/* =========================
-   Hero Banner (home)
-   ========================= */
-.hero-banner { position: relative; max-height: 500px; overflow: hidden; }
-.hero-img { object-fit: cover; width: 100%; height: 100%; }
-.hero-title-overlay {
-  position: absolute; bottom: 0; width: 100%; text-align: center; padding: 1rem 0;
-  background: linear-gradient(to right, rgba(211,211,211,0) 0%, rgba(211,211,211,0.8) 20%, rgba(211,211,211,0.8) 80%, rgba(211,211,211,0) 100%);
-}
-.hero-title { font-size: 2rem; font-weight: 700; color: #000; margin: 0; }
-
-/* =========================
-   Services cards
-   ========================= */
-.service-card {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  background: #f8f9fa;
-  border-radius: 1rem;
-  overflow: hidden;
-  transition: transform .25s ease, box-shadow .25s ease;
-}
-.service-card img { transition: transform .5s ease; border-radius: 1rem; }
-.service-card__overlay {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  padding: 1rem 1.25rem;
-  background: linear-gradient(to top, rgba(0,0,0,.35) 0%, rgba(0,0,0,.15) 70%, rgba(0,0,0,0) 100%);
-  color: #fff; border-radius: 0 0 1rem 1rem;
-}
-.service-card__title { margin: 0; font-weight: 700; font-size: 1.5rem; }
-.service-card:hover { transform: translateY(-3px); box-shadow: 0 16px 30px rgba(0,0,0,.12); }
-.service-card:hover img { transform: scale(1.06); }
-
-/* =========================
-   Listing Show Page
-   ========================= */
-
-/* Stage layout: hero + right rail thumbs (desktop), single column (mobile) */
-.listing-stage {
-  max-width: 1400px;
-  margin: 56px auto 0;
-  padding: 0 16px;
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 18px;
-}
-@media (max-width: 992px) {
-  .listing-stage {
-    grid-template-columns: 1fr; /* single column on mobile */
-    gap: 12px;
+/* Default navbar styles */
+.snoofly-navbar {
+  .nav-link {
+    font-weight: 600;
+    transition: color 0.2s ease;
   }
 }
 
-/* =========================
-   Premium Badge
-   ========================= */
-.premium-badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  background: #ff4a5f; /* Snoofly red */
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.95rem;
-  padding: 6px 12px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.18);
-  z-index: 5;
+/* Landing page navbar (white logo, white links) */
+.navbar-landing {
+  background: transparent;
+  .navbar-brand img { filter: brightness(0) invert(1); } /* white logo */
+  .nav-link, .bi-person-circle { color: #fff; }
 }
 
-.premium-badge i {
-  font-size: 1rem;
-  color: #fff; /* star white inside red pill */
-}
-/* Hero card (centered, not full width) */
-.listing-hero-card {
-  position: relative;
-  width: 92vw;
-  max-width: 1080px;
-  min-width: 320px;
-  height: 560px;
-  margin: 0 auto;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(0,0,0,.12);
-  background: #f4f6f9;
-}
-@media (max-width: 992px) { .listing-hero-card { height: 480px; } }
-@media (max-width: 576px) { .listing-hero-card { height: 360px; } }
-
-.listing-hero-card__img {
-  width: 100%; height: 100%;
-  object-fit: cover; object-position: center;
-  transition: transform .8s ease;
-}
-.listing-hero-card:hover .listing-hero-card__img { transform: scale(1.03); }
-
-.listing-hero-card__title {
-  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-  margin: 0; padding: .45rem .9rem;
-  color: #fff; font-weight: 700; font-size: 1.6rem;
-  text-shadow: 0 2px 6px rgba(0,0,0,.35);
-  background: rgba(0,0,0,.18);
-  border-radius: 10px;
-}
-
-/* White summary card anchored on image (use this if you overlay the banner) */
-.summary-float {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(255, 74, 95, 0.8);  // Snoofly Red @ 80% opacity (20% transparent)
-  color: #fff;                         // white text
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  max-width: 420px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  z-index: 5;
-}
-.summary-float__address { font-weight: 600; font-size: 1.5rem; color:  #fff; }
-.summary-float__price   { font-weight: 800; font-size: 2rem; color:  #fff }
-
-/* Chip styling (used in overlays or summary sections) */
-.summary-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
-.chip {
-  display: inline-flex; align-items: center; gap: .45rem;
-  padding: .42rem .7rem;
-  background: #fff; border: 1px solid #edf0f3; border-radius: 10px;
-  color: #2d3648; font-size: .95rem; box-shadow: 0 1px 2px rgba(0,0,0,.04);
-}
-.chip i { color: #5b667a; font-size: 1rem; }
-
-/* Right rail thumbnails (desktop) */
-.thumb-rail {
-  height: 560px;
-  border-radius: 14px;
-  overflow: hidden;
+/* Inner pages navbar (red logo, dark links) */
+.navbar-inner {
   background: #fff;
-  box-shadow: 0 10px 24px rgba(0,0,0,.08);
-  padding: 10px;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 10px;
-}
+  border-bottom: 1px solid #eee;
 
-/* --- Mobile behaviour: show as horizontal strip under hero --- */
-@media (max-width: 992px) {
-  .thumb-rail {
-    height: auto;
-    padding: 8px;
-    display: block;            /* make it visible on mobile */
-    box-shadow: none;
-    background: transparent;
+  .navbar-brand img {
+    height: 32px;
+  }
+
+  .nav-link,
+  .bi-person-circle {
+    color: #2d3648; /* dark gray */
+  }
+
+  .nav-link:hover,
+  .bi-person-circle:hover {
+    color: #ff4a5f; /* snoofly red hover */
   }
 }
+/* (… keep all your existing general/global styles here …) */
 
-.thumb-rail__title { font-weight: 700; font-size: 1rem; }
-
-/* Vertical scroller on desktop */
-.thumb-rail__scroller { overflow: auto; padding-right: 6px; }
-
-/* Horizontal scroller on mobile */
-@media (max-width: 992px) {
-  .thumb-rail__scroller {
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    padding: 4px 2px;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-.thumb {
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 10px;
-  cursor: pointer;
-  border: 1px solid #eef2f6;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.thumb img {
-  width: 100%;
-  height: 120px;
-  object-fit: cover; object-position: center;
-  transition: transform .4s ease;
-}
-.thumb:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,.12); }
-.thumb:hover img { transform: scale(1.04); }
-
-/* Mobile thumb sizing (side‑scrolling chips) */
-@media (max-width: 992px) {
-  .thumb {
-    display: inline-block;
-    vertical-align: top;
-    width: 140px;
-    margin: 0 8px 0 0;        /* spacing between scroll items */
-  }
-  .thumb img { height: 90px; }
-}
-
-.thumb__pill {
-  position: absolute; bottom: 8px; right: 8px;
-  background: rgba(0,0,0,.55); color: #fff;
-  font-size: .8rem; font-weight: 700;
-  padding: .18rem .45rem; border-radius: 999px;
-}
-
-/* General content area (description, etc.) */
-.listing-content { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
-.listing-content h3 { font-weight: 800; color: #213047; }
-
-/* Modal gallery (if you add a Bootstrap carousel) */
-.gallery-modal .carousel-item img {
-  width: 100%;
-  height: calc(100vh - 200px);
-  object-fit: contain;
-  background: #0b1220;
-}
+/* 
+   🚨 All listing show page–specific CSS has been removed from here. 
+   That code block is now in `listings_show.scss`.
+*/

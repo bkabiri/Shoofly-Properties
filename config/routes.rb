@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
+  resources :listings, only: [:index, :show] do
+  post "favorite",   to: "favorites#create"
+  delete "unfavorite", to: "favorites#destroy"
+  end
+  authenticate :user do
+  resources :favorites, only: %i[index create destroy]
+  end
+
+  get "/saved", to: "favorites#index", as: :saved_properties
+  # catch old/bad links like /listings/index
+  get "/listings/index", to: redirect("/listings")
   get "home/index"
   devise_for :users
 
@@ -17,13 +28,16 @@ Rails.application.routes.draw do
 
         # For EDIT/SHOW pages (with ID)
         member do
-          post  :generate_description     # POST /seller/listings/:id/generate_description
-          patch :autosave                 # PATCH /seller/listings/:id/autosave
-          patch :publish                  # PATCH /seller/listings/:id/publish
+          post  :generate_description
+          patch :autosave
+          patch :publish
           patch :unpublish
+          patch :feature        # NEW  -> /seller/listings/:id/feature
+          patch :unfeature      # NEW  -> /seller/listings/:id/unfeature
+          patch :bump           # NEW  -> /seller/listings/:id/bump
           delete :purge_banner
           delete :purge_epc
-          delete :purge_photo              # PATCH /seller/listings/:id/unpublish
+          delete :purge_photo
         end
       end
     end

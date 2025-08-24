@@ -1,0 +1,19 @@
+<!-- app/views/listings/_message_button.html.erb -->
+<%# locals: listing %>
+<% seller_email = listing.try(:user)&.email %>
+<% if seller_email.present? %>
+  <%= mail_to seller_email,
+        "Message seller",
+        subject: "Enquiry about #{listing.title}",
+        body: "Hi,\nI'm interested in \"#{listing.title}\" (#{listing_url(listing)}).",
+        class: "btn btn-outline-dark btn-sm d-inline-flex align-items-center gap-1" do %>
+    <i class="bi bi-envelope"></i>
+    Message seller
+  <% end %>
+<% else %>
+  <%= link_to listing_path(listing, anchor: "contact"),
+        class: "btn btn-outline-dark btn-sm d-inline-flex align-items-center gap-1" do %>
+    <i class="bi bi-envelope"></i>
+    Message seller
+  <% end %>
+<% end %>

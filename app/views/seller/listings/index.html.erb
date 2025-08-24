@@ -7,13 +7,87 @@
   </div>
 
   <% if @listings.any? %>
-    <div class="list-group">
-      <% @listings.each do |l| %>
-        <%= link_to seller_listing_path(l), class: "list-group-item list-group-item-action d-flex justify-content-between" do %>
-          <span><strong><%= l.title %></strong> — <%= l.address %></span>
-          <span class="badge <%= l.published? ? 'text-bg-success' : 'text-bg-secondary' %>"><%= l.status.humanize %></span>
-        <% end %>
-      <% end %>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Thumbnail</th>
+            <th>Title</th>
+            <th>Address</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @listings.each do |l| %>
+            <tr>
+              <!-- Thumbnail clickable -->
+              <td style="width: 120px;">
+                <%= link_to seller_listing_path(l) do %>
+                  <% if l.banner_image.attached? %>
+                    <%= image_tag l.banner_image.variant(resize_to_fill: [120, 80]).processed,
+                                  class: "img-fluid rounded",
+                                  alt: l.title %>
+                  <% else %>
+                    <div class="bg-light d-flex align-items-center justify-content-center text-muted rounded"
+                         style="width:120px;height:80px;">No image</div>
+                  <% end %>
+                <% end %>
+              </td>
+
+              <!-- Title clickable -->
+              <td>
+                <%= link_to l.title, seller_listing_path(l),
+                            class: "fw-semibold text-decoration-none" %>
+              </td>
+
+              <td><%= l.address %></td>
+
+              <!-- Status badge -->
+              <td>
+                <span class="badge <%= l.published? ? 'bg-success' : 'bg-secondary' %>">
+                  <%= l.status.humanize %>
+                </span>
+              </td>
+
+              <!-- Price -->
+              <td>
+                <%= l.guide_price.present? ? number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") : "—" %>
+              </td>
+
+              <!-- Actions -->
+              <td>
+                <div class="btn-group btn-group-sm" role="group">
+                  <% if l.published? %>
+                    <%= link_to "Unpublish", unpublish_seller_listing_path(l),
+                                method: :patch, class: "btn btn-outline-secondary" %>
+                  <% else %>
+                    <%= link_to "Publish", publish_seller_listing_path(l),
+                                method: :patch, class: "btn btn-outline-success" %>
+                  <% end %>
+
+                  <% if l.featured_until.present? %>
+                    <%= link_to "Unfeature", unfeature_seller_listing_path(l),
+                                method: :patch, class: "btn btn-outline-warning" %>
+                  <% else %>
+                    <%= link_to "Feature", feature_seller_listing_path(l),
+                                method: :patch, class: "btn btn-outline-warning" %>
+                  <% end %>
+
+                  <%= link_to "Bump", bump_seller_listing_path(l),
+                              method: :patch, class: "btn btn-outline-primary" %>
+
+                  <%= link_to "Delete", seller_listing_path(l),
+                              method: :delete,
+                              data: { confirm: "Are you sure?" },
+                              class: "btn btn-outline-danger" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
   <% else %>
     <div class="text-muted">No listings yet.</div>
