@@ -51,7 +51,17 @@ class Listing < ApplicationRecord
   # ---- Slug + content safety ----
   before_validation :ensure_slug!
   before_validation :sanitize_description!
-
+    def parking_display
+      case parking.to_s.downcase
+      when "one"       then "1+"
+      when "two"       then "2+"
+      when "three"     then "3+"
+      when "three_plus", "3_plus" then "3+"
+      when "four"      then "4+"
+      else
+        parking.to_s.humanize.upcase.presence || "—"
+      end
+    end
   # Publishing gate
   validate :required_fields_for_publish, if: :publishing?
 

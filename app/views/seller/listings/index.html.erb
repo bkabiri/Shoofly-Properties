@@ -1,5 +1,6 @@
 <!-- app/views/seller/listings/index.html.erb -->
 <%= render "shared/navbar" %>
+
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">My listings</h1>
@@ -19,10 +20,11 @@
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           <% @listings.each do |l| %>
             <tr>
-              <!-- Thumbnail clickable -->
+              <!-- Thumbnail (clickable to Seller show page) -->
               <td style="width: 120px;">
                 <%= link_to seller_listing_path(l) do %>
                   <% if l.banner_image.attached? %>
@@ -36,15 +38,16 @@
                 <% end %>
               </td>
 
-              <!-- Title clickable -->
+              <!-- Title (clickable to Seller show page) -->
               <td>
                 <%= link_to l.title, seller_listing_path(l),
                             class: "fw-semibold text-decoration-none" %>
               </td>
 
+              <!-- Address -->
               <td><%= l.address %></td>
 
-              <!-- Status badge -->
+              <!-- Status badge (Green when published, Gray when draft/unpublished) -->
               <td>
                 <span class="badge <%= l.published? ? 'bg-success' : 'bg-secondary' %>">
                   <%= l.status.humanize %>
@@ -53,7 +56,9 @@
 
               <!-- Price -->
               <td>
-                <%= l.guide_price.present? ? number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") : "—" %>
+                <%= l.guide_price.present? ?
+                      number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") :
+                      "—" %>
               </td>
 
               <!-- Actions -->
@@ -67,7 +72,8 @@
                                 method: :patch, class: "btn btn-outline-success" %>
                   <% end %>
 
-                  <% if l.featured_until.present? %>
+                  <%# Feature / Unfeature (if you have those member routes) %>
+                  <% if l.respond_to?(:featured_until) && l.featured_until.present? %>
                     <%= link_to "Unfeature", unfeature_seller_listing_path(l),
                                 method: :patch, class: "btn btn-outline-warning" %>
                   <% else %>
@@ -75,12 +81,18 @@
                                 method: :patch, class: "btn btn-outline-warning" %>
                   <% end %>
 
+                  <%# Bump (if you have the member route) %>
                   <%= link_to "Bump", bump_seller_listing_path(l),
                               method: :patch, class: "btn btn-outline-primary" %>
 
+                  <%# NEW: Edit button %>
+                  <%= link_to "Edit", edit_seller_listing_path(l),
+                              class: "btn btn-outline-info" %>
+
+                  <%# Delete %>
                   <%= link_to "Delete", seller_listing_path(l),
                               method: :delete,
-                              data: { confirm: "Are you sure?" },
+                              data: { confirm: "Are you sure you want to delete this listing?" },
                               class: "btn btn-outline-danger" %>
                 </div>
               </td>

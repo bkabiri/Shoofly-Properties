@@ -72,14 +72,21 @@
         { prompt: "Select type" }, class: "form-select", required: true %>
     </div>
 
-    <!-- Bedrooms / Bathrooms -->
-    <div class="col-6 col-md-3">
+    <!-- Bedrooms / Bathrooms / Receptions -->
+    <div class="col-6 col-md-2">
       <%= f.label :bedrooms, class: "form-label" %>
       <%= f.number_field :bedrooms, min: 0, class: "form-control", required: true %>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-2">
       <%= f.label :bathrooms, class: "form-label" %>
       <%= f.number_field :bathrooms, min: 0, class: "form-control", required: true %>
+    </div>
+    <div class="col-6 col-md-2">
+      <%= f.label :receptions, "Receptions", class: "form-label" %>
+      <%= f.select :receptions,
+            options_for_select([["1",1],["2",2],["3",3],["4",4],["5+",5]], listing.receptions),
+            { include_blank: "Select" },
+            class: "form-select" %>
     </div>
 
     <!-- Size -->

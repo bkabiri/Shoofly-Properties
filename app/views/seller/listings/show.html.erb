@@ -45,7 +45,14 @@
           <span class="chip"><i class="bi bi-house-door"></i><%= @listing.property_type&.humanize || "—" %></span>
           <span class="chip"><i class="bi bi-bed"></i><%= @listing.bedrooms || "—" %> beds</span>
           <span class="chip"><i class="bi bi-badge-wc"></i><%= @listing.bathrooms || "—" %> baths</span>
-          <span class="chip"><i class="bi bi-collection"></i><%= @listing.try(:receptions) || "—" %> receptions</span>
+          <span class="chip">
+            <i class="bi bi-collection"></i>
+            <% if @listing.receptions.present? %>
+              <%= @listing.receptions == 5 ? "5+" : @listing.receptions %> receptions
+            <% else %>
+              —
+            <% end %>
+          </span>
           <span class="chip"><i class="bi bi-graph-up"></i>EPC: <%= @listing.try(:epc_rating).presence || "—" %></span>
           <% if @listing.tenure.present? %>
             <span class="chip"><i class="bi bi-shield-check"></i><%= @listing.tenure.humanize %></span>

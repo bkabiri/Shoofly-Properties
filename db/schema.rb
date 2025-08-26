@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_24_234227) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_25_221306) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -81,6 +81,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_24_234227) do
     t.string "slug"
     t.integer "sale_status", default: 0, null: false
     t.datetime "featured_until"
+    t.integer "receptions"
     t.index ["featured_until"], name: "index_listings_on_featured_until"
     t.index ["property_type"], name: "index_listings_on_property_type"
     t.index ["sale_status"], name: "index_listings_on_sale_status"

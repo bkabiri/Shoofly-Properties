@@ -8,6 +8,45 @@
        "Guide price on request"
      end %>
 
+<%# -------- Normalized values for the new details card -------- %>
+<%
+  # --- Parking -> display as N+ when possible (3+, 2+, etc.) ---
+  if @listing.respond_to?(:parking_display)
+    parking_display = @listing.parking_display.to_s
+  else
+    parking_raw = @listing.try(:parking).to_s
+    parking_display =
+      case parking_raw.downcase
+      when "one", "1"                  then "1+"
+      when "two", "2"                  then "2+"
+      when "three", "3"                then "3+"
+      when "three_plus", "3_plus",
+           "three +" , "3plus"         then "3+"
+      when "four", "4"                 then "4+"
+      else
+        parking_raw.present? ? parking_raw.humanize.upcase : "—"
+      end
+  end
+
+  # --- Garden -> YES/NO (uppercase), fallback to em dash ---
+  garden_val = @listing.try(:garden)
+  garden_text =
+    case garden_val
+    when true, "true", "yes", "Yes", 1, "1" then "YES"
+    when false, "false", "no", "No", 0, "0" then "NO"
+    else
+      garden_val.present? ? garden_val.to_s.humanize.upcase : "—"
+    end
+
+  # --- Council tax band -> uppercase / em dash ---
+  council_tax_text = (@listing.try(:council_tax_band).presence || "—").to_s.upcase
+
+  # --- Optional fields ---
+  internet_speed = @listing.try(:broadband).presence&.to_s&.upcase
+  gas_supplier   = @listing.try(:gas_supplier).presence&.to_s&.upcase
+  elec_supplier  = @listing.try(:electricity_supplier).presence&.to_s&.upcase
+%>
+
 <%# Who are we contacting? %>
 <%
   seller        = @listing.user
@@ -52,7 +91,14 @@
           <span class="chip"><i class="bi bi-house-door"></i><%= @listing.property_type&.humanize || "—" %></span>
           <span class="chip"><i class="bi bi-bed"></i><%= @listing.bedrooms || "—" %> beds</span>
           <span class="chip"><i class="bi bi-badge-wc"></i><%= @listing.bathrooms || "—" %> baths</span>
-          <span class="chip"><i class="bi bi-collection"></i><%= @listing.try(:receptions) || "—" %> receptions</span>
+           <span class="chip">
+  <i class="bi bi-collection"></i>
+  <% if @listing.receptions.present? %>
+    <%= @listing.receptions.to_i == 5 ? "5+" : @listing.receptions %> RECEPTIONS
+  <% else %>
+    —
+  <% end %>
+</span>
           <span class="chip"><i class="bi bi-graph-up"></i>EPC: <%= @listing.try(:epc_rating).presence || "—" %></span>
           <% if @listing.tenure.present? %>
             <span class="chip"><i class="bi bi-shield-check"></i><%= @listing.tenure.humanize %></span>
@@ -60,6 +106,77 @@
         </div>
       </div>
     </div>
+
+    <%# ========= KEY DETAILS CARD UNDER THE BANNER ========= %>
+    <div class="card shadow-sm border-0 my-3">
+  <div class="card-body py-3">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+
+      <!-- Parking -->
+      <div class="col">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-p-square" aria-hidden="true"></i>
+          <div class="fs-6"><%= parking_display.to_s.upcase %></div>
+        </div>
+      </div>
+
+      <!-- Garden -->
+      <div class="col">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-tree" aria-hidden="true"></i>
+          <div>
+            <div class="text-uppercase small text-muted fw-semibold">Garden</div>
+            <div class="fs-6"><%= garden_text.to_s.upcase %></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Council Tax Band -->
+      <div class="col">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-info-square" aria-hidden="true"></i>
+          <div>
+            <div class="text-uppercase small text-muted fw-semibold">Council Tax Band</div>
+            <div class="fs-6"><%= council_tax_text.to_s.upcase %></div>
+          </div>
+        </div>
+      </div>
+
+      <%# Internet speed (inline, only if present) %>
+      <% if internet_speed.present? %>
+        <div class="col">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-speedometer2" aria-hidden="true"></i>
+            <div class="fs-6"><%= internet_speed.to_s.upcase %></div>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Energy supplies (inline, only if at least one exists) %>
+      <% if gas_supplier.present? || elec_supplier.present? %>
+        <div class="col">
+          <div class="d-flex align-items-center gap-2">
+            <% if gas_supplier.present? %>
+              <i class="bi bi-fire" aria-hidden="true"></i>
+              <span class="fs-6">GAS: <%= gas_supplier.to_s.upcase %></span>
+            <% end %>
+
+            <% if gas_supplier.present? && elec_supplier.present? %>
+              <span class="text-muted mx-1">•</span>
+            <% end %>
+
+            <% if elec_supplier.present? %>
+              <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+              <span class="fs-6">ELECTRICITY: <%= elec_supplier.to_s.upcase %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+</div>
+    <%# ========= /KEY DETAILS CARD ========= %>
 
     <%# ========= Thumbnails strip UNDER the banner ========= %>
     <% if gallery_blobs.any? %>
@@ -217,4 +334,3 @@
     });
   });
 </script>
-
