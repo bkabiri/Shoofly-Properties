@@ -1,0 +1,108 @@
+.search-panel{
+    background:#fff;
+    border-radius: 1.75rem;
+    padding: 1.25rem 1.5rem 1.75rem;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .search-tabs .tab{
+    background: transparent;
+    border: 0;
+    padding: .25rem 0;
+    font-weight: 700;
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    color: #0b2239;
+    opacity: .85;
+    position: relative;
+    cursor: pointer;
+  }
+  .search-tabs .tab.active{
+    opacity: 1;
+  }
+  .search-tabs .tab.active::after{
+    content:"";
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 40px;
+    height: 4px;
+    background: #e14b4b; /* Snoofly red underline */
+    border-radius: 2px;
+  }
+
+  .search-bar { margin-top: 1.5rem; }
+  .search-input{
+    height: 72px;
+    border-radius: 18px;
+    border: 1px solid #d6d9de;
+    padding-left: 56px;
+    padding-right: 170px; /* room for button */
+    font-size: clamp(1rem, 2.4vw, 1.5rem);
+  }
+  .left-icon{
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    color: #9aa4ad;
+  }
+  .search-btn{
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 140px;
+    border: 0;
+    border-radius: 16px;
+    background: #d84b4a; /* red button like screenshot */
+    color: #fff;
+    font-size: 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .search-btn .bi-search{ font-size: 1.25rem; }
+  /* Dark placeholder like screenshot */
+  .search-input::placeholder{ color:#9aa4ad; opacity:1; }
+  .search-bar {
+  position: relative;
+}
+
+.left-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #ff4a5f;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+.search-input {
+  padding-left: 2.5rem; /* space for left icon */
+  padding-right: 3rem;  /* space for button */
+  border-radius: 2rem;
+  height: 50px; /* consistent height */
+}
+
+.search-btn {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  background: #ff4a5f;
+  border: none;
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.search-btn i {
+  font-size: 1.2rem;
+}

@@ -51,6 +51,7 @@
 <%
   seller        = @listing.user
   is_agent      = seller.respond_to?(:company_name) && seller.company_name.present?
+  estate_agent_name = seller.try(:estate_agent_name)
   agent_logo    = seller.try(:logo) # ActiveStorage attachment if present
   contact_email = seller.email
 %>
@@ -91,91 +92,98 @@
           <span class="chip"><i class="bi bi-house-door"></i><%= @listing.property_type&.humanize || "—" %></span>
           <span class="chip"><i class="bi bi-bed"></i><%= @listing.bedrooms || "—" %> beds</span>
           <span class="chip"><i class="bi bi-badge-wc"></i><%= @listing.bathrooms || "—" %> baths</span>
-           <span class="chip">
-  <i class="bi bi-collection"></i>
-  <% if @listing.receptions.present? %>
-    <%= @listing.receptions.to_i == 5 ? "5+" : @listing.receptions %> RECEPTIONS
-  <% else %>
-    —
-  <% end %>
-</span>
+          <span class="chip">
+            <i class="bi bi-collection"></i>
+            <% if @listing.receptions.present? %>
+              <%= @listing.receptions.to_i == 5 ? "5+" : @listing.receptions %> RECEPTIONS
+            <% else %>
+              —
+            <% end %>
+          </span>
           <span class="chip"><i class="bi bi-graph-up"></i>EPC: <%= @listing.try(:epc_rating).presence || "—" %></span>
           <% if @listing.tenure.present? %>
             <span class="chip"><i class="bi bi-shield-check"></i><%= @listing.tenure.humanize %></span>
           <% end %>
         </div>
       </div>
+
+      <!-- Favorite star (bottom-right over banner) -->
+      <div class="fav-float-banner">
+        <%= turbo_frame_tag dom_id(@listing, :fav) do %>
+          <%= render "favorites/toggle", listing: @listing %>
+        <% end %>
+      </div>
     </div>
 
     <%# ========= KEY DETAILS CARD UNDER THE BANNER ========= %>
     <div class="card shadow-sm border-0 my-3">
-  <div class="card-body py-3">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+      <div class="card-body py-3">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
 
-      <!-- Parking -->
-      <div class="col">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-p-square" aria-hidden="true"></i>
-          <div class="fs-6"><%= parking_display.to_s.upcase %></div>
+          <!-- Parking -->
+          <div class="col">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-p-square" aria-hidden="true"></i>
+              <div class="fs-6"><%= parking_display.to_s.upcase %></div>
+            </div>
+          </div>
+
+          <!-- Garden -->
+          <div class="col">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-tree" aria-hidden="true"></i>
+              <div>
+                <div class="text-uppercase small text-muted fw-semibold">Garden</div>
+                <div class="fs-6"><%= garden_text.to_s.upcase %></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Council Tax Band -->
+          <div class="col">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-info-square" aria-hidden="true"></i>
+              <div>
+                <div class="text-uppercase small text-muted fw-semibold">Council Tax Band</div>
+                <div class="fs-6"><%= council_tax_text.to_s.upcase %></div>
+              </div>
+            </div>
+          </div>
+
+          <%# Internet speed (inline, only if present) %>
+          <% if internet_speed.present? %>
+            <div class="col">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                <div class="fs-6"><%= internet_speed.to_s.upcase %></div>
+              </div>
+            </div>
+          <% end %>
+
+          <%# Energy supplies (inline, only if at least one exists) %>
+          <% if gas_supplier.present? || elec_supplier.present? %>
+            <div class="col">
+              <div class="d-flex align-items-center gap-2">
+                <% if gas_supplier.present? %>
+                  <i class="bi bi-fire" aria-hidden="true"></i>
+                  <span class="fs-6">GAS: <%= gas_supplier.to_s.upcase %></span>
+                <% end %>
+
+                <% if gas_supplier.present? && elec_supplier.present? %>
+                  <span class="text-muted mx-1">•</span>
+                <% end %>
+
+                <% if elec_supplier.present? %>
+                  <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+                  <span class="fs-6">ELECTRICITY: <%= elec_supplier.to_s.upcase %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
         </div>
       </div>
-
-      <!-- Garden -->
-      <div class="col">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-tree" aria-hidden="true"></i>
-          <div>
-            <div class="text-uppercase small text-muted fw-semibold">Garden</div>
-            <div class="fs-6"><%= garden_text.to_s.upcase %></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Council Tax Band -->
-      <div class="col">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-info-square" aria-hidden="true"></i>
-          <div>
-            <div class="text-uppercase small text-muted fw-semibold">Council Tax Band</div>
-            <div class="fs-6"><%= council_tax_text.to_s.upcase %></div>
-          </div>
-        </div>
-      </div>
-
-      <%# Internet speed (inline, only if present) %>
-      <% if internet_speed.present? %>
-        <div class="col">
-          <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-speedometer2" aria-hidden="true"></i>
-            <div class="fs-6"><%= internet_speed.to_s.upcase %></div>
-          </div>
-        </div>
-      <% end %>
-
-      <%# Energy supplies (inline, only if at least one exists) %>
-      <% if gas_supplier.present? || elec_supplier.present? %>
-        <div class="col">
-          <div class="d-flex align-items-center gap-2">
-            <% if gas_supplier.present? %>
-              <i class="bi bi-fire" aria-hidden="true"></i>
-              <span class="fs-6">GAS: <%= gas_supplier.to_s.upcase %></span>
-            <% end %>
-
-            <% if gas_supplier.present? && elec_supplier.present? %>
-              <span class="text-muted mx-1">•</span>
-            <% end %>
-
-            <% if elec_supplier.present? %>
-              <i class="bi bi-lightning-charge" aria-hidden="true"></i>
-              <span class="fs-6">ELECTRICITY: <%= elec_supplier.to_s.upcase %></span>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-
     </div>
-  </div>
-</div>
     <%# ========= /KEY DETAILS CARD ========= %>
 
     <%# ========= Thumbnails strip UNDER the banner ========= %>
@@ -212,35 +220,73 @@
 
   <%# ========= RIGHT: sticky contact + nearby ========= %>
   <aside class="right-rail">
-    <%# Wrap the contact card so we can pin the favorite control above it (top-right) %>
     <div class="position-relative mb-3">
-
-      <!-- Favorite star (floating above the card, top-right) -->
-      <div class="show-fav-float">
-        <%= turbo_frame_tag dom_id(@listing, :fav) do %>
-          <%= render "favorites/toggle", listing: @listing %>
-        <% end %>
-      </div>
-
       <!-- Contact card -->
-      <div class="card shadow-sm border-0 contact-card">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="fw-semibold small text-muted">
-              <%= is_agent ? "Agent" : "Private Seller" %>
-            </div>
-            <% if agent_logo&.attached? %>
-              <%= image_tag agent_logo.variant(resize_to_fit: [140, 50]),
-                            alt: "Agent logo", class: "img-fluid" %>
+      <div class="card border-0 shadow-sm rm-contact">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+      <div class="flex-grow-1">
+        <div class="text-uppercase small text-muted fw-semibold mb-1">Marketed by</div>
+
+        <div class="d-flex flex-column">
+          <div class="fw-semibold">
+            <% if seller.estate_agent? %>
+              <%= seller.estate_agent_name.presence || "Estate Agent" %>
+              <% if seller.office_city.present? %>, <%= seller.office_city %><% end %>
+            <% else %>
+              Private Seller
             <% end %>
           </div>
 
-          <%= mail_to contact_email,
-                      "Message seller",
-                      subject: "Enquiry about #{@listing.title}",
-                      class: "btn btn-snoofly" %>
+          <% if seller.estate_agent? && (
+                seller.office_address_line1.present? ||
+                seller.office_city.present? ||
+                seller.office_postcode.present?
+              ) %>
+            <div class="text-muted small">
+              <%= [seller.office_address_line1, seller.office_city, seller.office_postcode].compact_blank.join(", ") %>
+            </div>
+          <% end %>
+
+          <% if seller.estate_agent? %>
+            <%= link_to "More properties from this agent",
+                        listings_path(q: seller.estate_agent_name.presence || seller.office_city),
+                        class: "small rm-contact-more" %>
+          <% end %>
         </div>
       </div>
+
+      <% if seller.estate_agent? && seller.logo.attached? %>
+        <div class="flex-shrink-0">
+          <%= image_tag seller.logo.variant(resize_to_fill: [180, 110]),
+                        alt: "#{seller.estate_agent_name} logo",
+                        class: "rm-agent-logo rounded" %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if seller.estate_agent? %>
+      <div class="mb-3 small text-muted">
+        <% if seller.landline_phone.present? %>
+          <div><strong>Landline:</strong> <%= seller.landline_phone %></div>
+        <% end %>
+        <% if seller.mobile_phone.present? %>
+          <div><strong>Mobile:</strong> <%= seller.mobile_phone %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+   <div class="d-grid gap-2 mt-3">
+  <%= mail_to contact_email,
+              "Message Seller",
+              subject: "Enquiry about #{@listing.title}",
+              class: "btn btn-snoofly w-100" %>
+
+  
+</div>
+  
+  </div>
+</div>
     </div>
 
     <div class="card shadow-sm border-0 info-card">
@@ -305,6 +351,8 @@
     </div>
   </div>
 </div>
+
+
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {

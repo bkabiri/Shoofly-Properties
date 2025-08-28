@@ -1,0 +1,54 @@
+/* Solid vs transparent variants */
+.navbar--solid {
+  background: #fff;
+}
+.navbar--transparent {
+  background: transparent;
+  z-index: 1030;
+}
+
+/* CTA button (Snoofly red) */
+.btn-cta {
+  background: #ff4a5f;
+  color: #fff !important;
+  border-radius: .75rem;
+  border: none;
+}
+.btn-cta:hover { filter: brightness(0.95); }
+
+/* Always-visible burger button */
+.burger-btn{
+  width: 48px; height: 44px;
+  border: 0; background: transparent;
+  display: inline-flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; border-radius: .75rem;
+}
+.burger-btn .line{
+  width: 24px; height: 2px; background: #222;
+  border-radius: 2px;
+}
+.burger-btn--light .line{ background: #fff; } /* for hero/transparent nav */
+
+/* Offcanvas menu links */
+.offcanvas .menu-link{
+  display: block;
+  padding: .4rem 0;
+  text-decoration: none;
+  color: #111;
+}
+.offcanvas .menu-link:hover{ color:#ff4a5f; }
+.offcanvas { z-index: 1060; }           /* default is 1045; this is just safer */
+.offcanvas-backdrop { z-index: 1055; }
+
+.btn-snoofly {
+  background: #ff4a5f;
+  color: #fff;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.btn-snoofly:hover {
+  background: #e53b4e; /* darker shade on hover */
+  color: #fff;
+}

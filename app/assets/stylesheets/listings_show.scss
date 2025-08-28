@@ -257,3 +257,91 @@
 .show-fav-float .fav-label{
   font-size: .95rem;
 }
+/* app/assets/stylesheets/listings.scss or similar */
+.fav-float-banner {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 2px 6px r
+  gba(0,0,0,0.15);
+}
+.listing-hero-card { position: relative; }
+  .fav-float-banner{
+    position:absolute;
+    right:1rem;
+    bottom:1rem;
+    z-index:5;
+    background:rgba(255,255,255,0.9);
+    border-radius:8px;
+    padding:.4rem .6rem;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  .rm-contact .rm-contact-more {
+    color: #0b72ff;
+    text-decoration: none;
+  }
+  .rm-contact .rm-contact-more:hover { text-decoration: underline; }
+
+  .rm-agent-logo {
+    width: 180px; height: 110px; object-fit: cover; object-position: center;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+
+  /* Dark/navy panel behind the buttons */
+  .rm-cta-panel {
+    background: #051433; /* deep navy */
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+
+  /* Teal buttons like the screenshot */
+  .rm-btn-teal {
+    background: #0fe1c5; /* teal fill */
+    border: 2px solid #0fe1c5;
+    color: #03102a;
+    padding: .8rem 1rem;
+    border-radius: .8rem;
+  }
+  .rm-btn-teal:hover { filter: brightness(0.95); color: #03102a; }
+
+  /* Outline variant for the second CTA */
+  .rm-btn-outline {
+    background: transparent;
+    color: #0fe1c5;
+    border-color: #0fe1c5;
+  }
+  .rm-btn-outline:hover {
+    background: rgba(15,225,197,.08);
+    color: #0fe1c5;
+  }
+  .rm-contact .rm-contact-more {
+    color: #0b72ff;
+    text-decoration: none;
+  }
+  .rm-contact .rm-contact-more:hover { text-decoration: underline; }
+
+  .rm-agent-logo {
+    width: 180px; height: 110px; object-fit: cover; object-position: center;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  }
+
+  .rm-cta-panel { background: #051433; } /* deep navy like the ref */
+
+  /* Outline variant to pair with your existing .btn-snoofly */
+  .btn-snoofly-outline {
+    --snoofly: #ff4a5f;
+    background: transparent;
+    border: 2px solid var(--snoofly);
+    color: var(--snoofly);
+    padding: .8rem 1rem;
+    border-radius: .8rem;
+  }
+  .btn-snoofly-outline:hover {
+    background: rgba(255,74,95,.08);
+    color: var(--snoofly);
+  }

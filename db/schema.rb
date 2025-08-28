@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_25_221306) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_26_204342) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -40,6 +40,29 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_25_221306) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "agency_invitations", force: :cascade do |t|
+    t.bigint "agency_id"
+    t.string "email"
+    t.string "role"
+    t.string "token"
+    t.datetime "accepted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agency_id"], name: "index_agency_invitations_on_agency_id"
+    t.index ["email"], name: "index_agency_invitations_on_email"
+    t.index ["token"], name: "index_agency_invitations_on_token"
+  end
+
+  create_table "agency_memberships", force: :cascade do |t|
+    t.bigint "agency_id"
+    t.bigint "user_id"
+    t.string "role"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agency_id"], name: "index_agency_memberships_on_agency_id"
+    t.index ["user_id"], name: "index_agency_memberships_on_user_id"
   end
 
   create_table "favorites", force: :cascade do |t|
@@ -106,6 +129,14 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_25_221306) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "role", default: 0, null: false
+    t.string "office_address_line1"
+    t.string "office_address_line2"
+    t.string "office_postcode"
+    t.string "office_city"
+    t.string "office_county"
+    t.string "landline_phone"
+    t.string "mobile_phone"
+    t.string "estate_agent_name"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"

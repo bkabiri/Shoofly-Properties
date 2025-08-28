@@ -1,81 +1,410 @@
-<!-- app/views/seller/dashboards/show.html.erb -->
 <%= render "shared/navbar" %>
 
+<%
+  # Which tab?
+  active_tab = (params[:tab].presence_in(%w[buying selling]) || "buying")
+
+  # Collections with safe fallbacks
+  favorites         = (defined?(current_user) && current_user.respond_to?(:saved_listings)) ? current_user.saved_listings.limit(10) : []
+  upcoming_viewings = defined?(@upcoming_viewings) ? @upcoming_viewings : []
+  sellers_contacted = defined?(@sellers_contacted) ? @sellers_contacted : []
+  recent_messages   = defined?(@recent_messages) ? @recent_messages : []
+  sellers_from_favs = favorites.respond_to?(:map) ? favorites.map(&:user).uniq : []
+
+  # Unlock logic: if controller set @has_approved_listing use it; otherwise infer:
+  has_approved =
+    if defined?(@has_approved_listing)
+      @has_approved_listing
+    elsif current_user && current_user.respond_to?(:listings)
+      # If you use statuses, prefer one of these; otherwise "any listing" unlocks.
+      (current_user.listings.where(status: %w[published approved active]).exists? rescue false) ||
+        current_user.listings.exists?
+    else
+      false
+    end
+%>
+
 <section class="container py-5">
-  <h1 class="fw-bold mb-4">Seller dashboard</h1>
 
-  <!-- KPI cards -->
-  <div class="row g-4 mb-4">
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Active listings</div>
-          <div class="h3 mb-0"><%= @stats[:active_listings] %></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Unread messages</div>
-          <div class="h3 mb-0"><%= @stats[:unread_messages] %></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Upcoming viewings</div>
-          <div class="h3 mb-0"><%= @stats[:upcoming_viewings] %></div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <div class="small text-muted mb-1">Views this month</div>
-          <div class="h3 mb-0"><%= @stats[:this_month_views] %></div>
-        </div>
-      </div>
+  <!-- Top bar: Buying | Selling tabs -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="fw-bold mb-0">Dashboard</h1>
+
+    <div class="d-flex align-items-center gap-3">
+      <%= link_to "Buying",
+                  dashboard_path(tab: "buying"),
+                  class: "btn #{active_tab == 'buying' ? 'btn-primary' : 'btn-link'} px-4 py-2 fw-semibold" %>
+
+      <% if has_approved %>
+        <%= link_to "Selling",
+                    dashboard_path(tab: "selling"),
+                    class: "btn #{active_tab == 'selling' ? 'btn-primary' : 'btn-link'} px-4 py-2 fw-semibold" %>
+      <% else %>
+        <span class="position-relative d-inline-block"
+              data-bs-toggle="tooltip"
+              title="Post a listing and get approved to unlock the Seller dashboard.">
+          <a class="btn btn-link px-4 py-2 fw-semibold disabled"
+             href="javascript:void(0)" aria-disabled="true">Selling</a>
+        </span>
+      <% end %>
     </div>
   </div>
 
-  <!-- Shortcuts -->
-  <div class="row g-4">
-    <div class="col-lg-8">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-white">
-          <strong>Quick actions</strong>
-        </div>
-        <div class="card-body d-flex gap-2 flex-wrap">
-          <%= link_to new_seller_listing_path, class: "btn btn-dark" do %>
-            New listing
-          <% end %>
-          <%= link_to seller_listings_path, class: "btn btn-outline-dark" do %>
-            Manage listings
-          <% end %>
-          <%= link_to "#", class: "btn btn-outline-dark" do %>
-            Inbox
-          <% end %>
-          <%= link_to "#", class: "btn btn-outline-dark" do %>
-            Viewings
-          <% end %>
-        </div>
-      </div>
-    </div>
+  <%# ====================== BUYING TAB ====================== %>
+  <% if active_tab == "buying" %>
 
-    <div class="col-lg-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-white">
-          <strong>Billing</strong>
-        </div>
-        <div class="card-body">
-          <div class="mb-2">Plan: <strong><%= @billing_overview[:plan] %></strong></div>
-          <div class="mb-2">Next invoice: <%= @billing_overview[:next_invoice_on] || "—" %></div>
-          <div class="mb-3">Amount: <strong><%= @billing_overview[:amount] %></strong></div>
-          <%= link_to "Manage subscription", "#", class: "btn btn-outline-dark w-100" %>
+    <div class="row g-4">
+      <!-- Left: Buyer Profile (inline editable) -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <strong>Your buyer details</strong>
+            <button class="btn btn-sm btn-outline-secondary" id="editBuyerBtn" type="button">
+              <i class="bi bi-pencil"></i> Edit
+            </button>
+          </div>
+
+          <div class="card-body">
+            <!-- Read-only view -->
+            <div id="buyerReadView">
+              <div class="mb-2">
+                <div class="text-muted small">Full name</div>
+                <div class="fw-semibold"><%= current_user.try(:full_name).presence || "—" %></div>
+              </div>
+              <div class="mb-2">
+                <div class="text-muted small">Email</div>
+                <div class="fw-semibold"><%= current_user.email %></div>
+              </div>
+              <div>
+                <div class="text-muted small">Mobile</div>
+                <div class="fw-semibold"><%= current_user.try(:mobile_phone).presence || "—" %></div>
+              </div>
+            </div>
+
+            <!-- Edit form (hidden until pencil clicked) -->
+            <div id="buyerEditForm" class="d-none">
+              <%= form_with model: current_user,
+                            url: user_registration_path,
+                            method: :put,
+                            local: true do |f| %>
+                <div class="mb-3">
+                  <%= f.label :full_name, "Full name", class: "form-label" %>
+                  <%= f.text_field :full_name, class: "form-control", value: current_user.try(:full_name) %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :email, "Email", class: "form-label" %>
+                  <%= f.email_field :email, class: "form-control", value: current_user.email %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :mobile_phone, "Mobile", class: "form-label" %>
+                  <%= f.telephone_field :mobile_phone, class: "form-control", value: current_user.try(:mobile_phone) %>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <%= f.submit "Save", class: "btn btn-snoofly" %>
+                  <button type="button" class="btn btn-light" id="cancelBuyerEdit">Cancel</button>
+                </div>
+              <% end %>
+              <div class="form-text mt-2">We’ll use these details when sellers reply to you.</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- Right: two mini cards + CTA + favourites + contacts/messages -->
+      <div class="col-lg-8">
+        <div class="row g-4">
+
+          <!-- Mini KPI: Upcoming Viewings -->
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <div class="small text-muted mb-1">Upcoming viewings</div>
+                <div class="h3 mb-0"><%= upcoming_viewings.respond_to?(:size) ? upcoming_viewings.size : 0 %></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini KPI: Sellers Contacted -->
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <div class="small text-muted mb-1">Sellers contacted</div>
+                <div class="h3 mb-0"><%= sellers_contacted.respond_to?(:size) ? sellers_contacted.size : 0 %></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SELL CTA (always visible on Buying tab) -->
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-body d-flex flex-wrap align-items-center justify-content-between">
+                <div class="mb-2 mb-md-0">
+                  <div class="fw-bold">Start selling your property</div>
+                  <div class="text-muted">Create a new listing in minutes.</div>
+                </div>
+                <div class="d-flex gap-2">
+                  <%= link_to "New Listing", new_seller_listing_path, class: "btn btn-snoofly" %>
+                  <%# Show a quick link to Seller tab if already unlocked %>
+                  <% if has_approved %>
+                    <%= link_to "Go to Seller tools", dashboard_path(tab: "selling"), class: "btn btn-outline-dark" %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Favourites list -->
+          <div class="col-12">
+            <div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <strong>Favourite properties</strong>
+    <span class="text-muted small">Click the ★ to toggle</span>
   </div>
+
+  <div class="card-body p-0">
+    <% if favorites.present? %>
+      <div class="list-group list-group-flush">
+        <% favorites.each do |l| %>
+          <% price_text =
+               l.guide_price.present? ?
+                 number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") :
+                 "Guide price on request" %>
+
+          <div class="list-group-item py-3">
+            <div class="row g-3 align-items-center">
+
+              <!-- Thumbnail -->
+              <div class="col-12 col-md-3 col-lg-2">
+                <% if l.banner_image&.attached? %>
+                  <%= image_tag(
+                        (l.banner_image.variable? ?
+                           l.banner_image.variant(resize_to_fill: [360, 220]).processed :
+                           l.banner_image),
+                        class: "w-100 rounded", alt: l.title
+                      ) %>
+                <% else %>
+                  <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                       style="width:100%;aspect-ratio:16/10;">No image</div>
+                <% end %>
+              </div>
+
+              <!-- Main details -->
+              <div class="col-md-8 col-lg-9 d-flex">
+                <div class="flex-grow-1">
+                  <h5 class="mb-1">
+                    <%= link_to l.title, listing_path(l), class: "text-decoration-none" %>
+                  </h5>
+                  <div class="text-muted mb-2"><%= l.address %></div>
+
+                  <div class="h5 mb-3"><%= price_text %></div>
+
+                  <div class="d-flex flex-wrap gap-3 small text-muted">
+                    <% if l.property_type.present? %>
+                      <span><i class="bi bi-house-door me-1"></i><%= l.property_type.humanize %></span>
+                    <% end %>
+                    <% if l.bedrooms.present? %>
+                      <span><i class="bi bi-bed me-1"></i><%= l.bedrooms %> beds</span>
+                    <% end %>
+                    <% if l.bathrooms.present? %>
+                      <span><i class="bi bi-badge-wc me-1"></i><%= l.bathrooms %> baths</span>
+                    <% end %>
+                  </div>
+
+                  <div class="mt-3">
+                    <%= mail_to l.user.email,
+                                "Message Seller",
+                                subject: "Enquiry about #{l.title}",
+                                class: "btn btn-outline-dark btn-sm" %>
+                  </div>
+                </div>
+
+                <!-- Favourite star -->
+                <div class="ms-3 d-none d-md-block">
+                  <%= turbo_frame_tag dom_id(l, :fav) do %>
+                    <%= render "favorites/toggle", listing: l %>
+                  <% end %>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-4 text-muted">No favourites yet. Tap the ★ on a listing to save it here.</div>
+    <% end %>
+  </div>
+</div>
+          </div>
+
+          <!-- Sellers + recent messages split card -->
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white">
+                <strong>Contacts & messages</strong>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-5">
+                    <div class="small text-muted mb-2">Sellers</div>
+                    <ul class="list-group">
+                      <% if sellers_from_favs.present? %>
+                        <% sellers_from_favs.each do |s| %>
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><%= s.try(:estate_agent_name).presence || s.try(:company_name).presence || s.email %></span>
+                            <% if s.respond_to?(:mobile_phone) && s.mobile_phone.present? %>
+                              <span class="badge bg-light text-dark"><i class="bi bi-phone"></i> <%= s.mobile_phone %></span>
+                            <% end %>
+                          </li>
+                        <% end %>
+                      <% else %>
+                        <li class="list-group-item text-muted">No sellers yet.</li>
+                      <% end %>
+                    </ul>
+                  </div>
+
+                  <div class="col-md-7">
+                    <div class="small text-muted mb-2">Recent messages</div>
+                    <div class="border rounded p-2" style="min-height: 140px;">
+                      <% if recent_messages.present? %>
+                        <% recent_messages.each do |m| %>
+                          <div class="mb-2">
+                            <div class="fw-semibold"><%= m.try(:from_name).presence || "Seller" %></div>
+                            <div class="small"><%= m.try(:body).presence || "…" %></div>
+                            <div class="text-muted small"><%= m.try(:sent_at)&.strftime("%d %b %Y %H:%M") %></div>
+                          </div>
+                          <hr class="my-2">
+                        <% end %>
+                      <% else %>
+                        <div class="text-muted">No recent messages.</div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div> <!-- /row -->
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /row in right column -->
+      </div> <!-- /col-lg-8 -->
+    </div> <!-- /row -->
+
+  <%# ====================== SELLING TAB ====================== %>
+  <% else %>
+    <% if has_approved %>
+      <!-- Seller dashboard content -->
+
+      <!-- KPI cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="small text-muted mb-1">Active listings</div>
+              <div class="h3 mb-0"><%= @stats[:active_listings] %></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="small text-muted mb-1">Unread messages</div>
+              <div class="h3 mb-0"><%= @stats[:unread_messages] %></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="small text-muted mb-1">Upcoming viewings</div>
+              <div class="h3 mb-0"><%= @stats[:upcoming_viewings] %></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div class="small text-muted mb-1">Views this month</div>
+              <div class="h3 mb-0"><%= @stats[:this_month_views] %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shortcuts + Billing -->
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+              <strong>Quick actions</strong>
+            </div>
+            <div class="card-body d-flex gap-2 flex-wrap">
+              <%= link_to "New listing", new_seller_listing_path, class: "btn btn-dark" %>
+              <%= link_to "Manage listings", seller_listings_path, class: "btn btn-outline-dark" %>
+              <%= link_to "Inbox", "#", class: "btn btn-outline-dark" %>
+              <%= link_to "Viewings", "#", class: "btn btn-outline-dark" %>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+              <strong>Billing</strong>
+            </div>
+            <div class="card-body">
+              <div class="mb-2">Plan: <strong><%= @billing_overview[:plan] %></strong></div>
+              <div class="mb-2">Next invoice: <%= @billing_overview[:next_invoice_on] || "—" %></div>
+              <div class="mb-3">Amount: <strong><%= @billing_overview[:amount] %></strong></div>
+              <%= link_to "Manage subscription", "#", class: "btn btn-outline-dark w-100" %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <% else %>
+      <!-- Locked state (no approved listing) -->
+      <div class="alert alert-light border d-flex align-items-center gap-3">
+        <i class="bi bi-lock-fill fs-4 text-muted"></i>
+        <div>
+          <div class="fw-semibold">Seller dashboard is locked</div>
+          <div class="text-muted">Post a new listing and get it approved to unlock selling tools.</div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body d-flex flex-wrap gap-2">
+          <%= link_to "Create your first listing", new_seller_listing_path, class: "btn btn-snoofly" %>
+          <%= link_to "View my listings", seller_listings_path, class: "btn btn-outline-dark" %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
 </section>
+
+<script>
+  document.addEventListener("turbo:load", () => {
+    // Buyer profile edit toggles
+    const editBtn   = document.getElementById("editBuyerBtn");
+    const readView  = document.getElementById("buyerReadView");
+    const editForm  = document.getElementById("buyerEditForm");
+    const cancelBtn = document.getElementById("cancelBuyerEdit");
+
+    if (editBtn && readView && editForm) {
+      editBtn.addEventListener("click", () => {
+        readView.classList.add("d-none");
+        editForm.classList.remove("d-none");
+      });
+    }
+    if (cancelBtn && readView && editForm) {
+      cancelBtn.addEventListener("click", () => {
+        editForm.classList.add("d-none");
+        readView.classList.remove("d-none");
+      });
+    }
+
+    // Enable Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+  });
+</script>

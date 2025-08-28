@@ -1,0 +1,22 @@
+.snoofly-legal-footer {
+  background: #fff;
+  font-size: 0.875rem;
+
+  .nav-link {
+    color: #6c757d !important;
+    &:hover {
+      text-decoration: underline;
+      color: #000 !important;
+    }
+  }
+
+  .sf-privacy-cta {
+    font-weight: 600;
+    color: #0d6efd;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

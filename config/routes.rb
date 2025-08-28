@@ -1,40 +1,60 @@
+# config/routes.rb
 Rails.application.routes.draw do
+  # Public listings
   resources :listings, only: [:index, :show] do
-  post "favorite",   to: "favorites#create"
-  delete "unfavorite", to: "favorites#destroy"
+    post   :favorite,   to: "favorites#create"
+    delete :unfavorite, to: "favorites#destroy"
   end
+
+  # Saved properties (authenticated list)
   authenticate :user do
-  resources :favorites, only: %i[index create destroy]
+    resources :favorites, only: %i[index create destroy]
   end
-
   get "/saved", to: "favorites#index", as: :saved_properties
-  # catch old/bad links like /listings/index
-  get "/listings/index", to: redirect("/listings")
-  get "home/index"
-  devise_for :users
 
+  # Tidy legacy/incorrect paths
+  get "/listings/index", to: redirect("/listings")
+
+  # Devise + home
+  get "home/index"
+
+  devise_for :users
   root to: "home#index"
 
-  # Authenticated seller area
+  # -------------------------
+  # Authenticated Seller area
+  # -------------------------
   authenticate :user do
     namespace :seller do
-      resource :dashboard, only: :show   # /seller/dashboard
+      # Dashboard (controller is Seller::DashboardsController)
+      resource :dashboard, only: :show, controller: "dashboards"
 
+      # Account type switching + office details (controller: Seller::AccountsController)
+      resource :account, only: :show, controller: "accounts" do
+        patch :switch_to_estate_agent
+        patch :switch_to_private_seller
+        patch :update_office_details
+      end
+
+      # Team management (controller: Seller::TeamMembersController)
+      resources :team_members, only: [:index, :create, :update, :destroy], controller: "team_members"
+
+      # Invite management (controller: Seller::InvitesController)
+      resources :invites, only: [:index, :create, :destroy], controller: "invites" do
+        post :resend, on: :member
+      end
+
+      # Listings (with feature/unfeature/bump and assets purging)
       resources :listings do
-        # For the NEW page (no ID yet)
-        collection do
-          post :generate_description      # POST /seller/listings/generate_description
-        end
-
-        # For EDIT/SHOW pages (with ID)
+        collection { post :generate_description }
         member do
           post  :generate_description
           patch :autosave
           patch :publish
           patch :unpublish
-          patch :feature        # NEW  -> /seller/listings/:id/feature
-          patch :unfeature      # NEW  -> /seller/listings/:id/unfeature
-          patch :bump           # NEW  -> /seller/listings/:id/bump
+          patch :feature
+          patch :unfeature
+          patch :bump
           delete :purge_banner
           delete :purge_epc
           delete :purge_photo
@@ -43,6 +63,12 @@ Rails.application.routes.draw do
     end
   end
 
-  # Nice alias (short URL) – public helper to seller dashboard
+  # Public invite acceptance (no auth required)
+  get "seller/invites/:token/accept",
+      to: "seller/invites#accept",
+      as: :accept_seller_invite
+
+  # Nice alias for the dashboard
   get "/dashboard", to: "seller/dashboards#show", as: :dashboard
+  get "/pricing", to: "home#pricing", as: :pricing
 end
