@@ -1,4 +1,3 @@
-
 <% seller_area = controller_path.start_with?("seller/") %>
 <% on_landing  = current_page?(root_path) %>
 
@@ -8,7 +7,7 @@
 
     <%# --------- Brand (left) --------- %>
     <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
-      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
         <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
         <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
       </svg>
@@ -16,67 +15,207 @@
     <% end %>
 
     <%# --------- Right side: Start Selling + Burger --------- %>
-    <div class="d-flex align-items-center gap-2">
-  <%# Start Selling button (always visible) %>
-  <% if user_signed_in? %>
-    <%= link_to "Start Selling",
-                dashboard_path,
-                class: "btn px-3 fw-semibold",
-                style: "background:#ff4a5f; color:#fff; border-radius:0.5rem;" %>
-  <% else %>
-    <%= link_to "Start Selling",
-                new_user_registration_path,
-                class: "btn px-3 fw-semibold",
-                style: "background:#ff4a5f; color:#fff; border-radius:0.5rem;" %>
-  <% end %>
+    <div class="d-flex align-items-center gap-3">
+      <%# Start Selling button (always visible) %>
+      <% if user_signed_in? %>
+        <%= link_to "Start Selling",
+                    dashboard_path,
+                    class: "btn btn-snoofly-nav px-3 fw-semibold" %>
+      <% else %>
+        <%= link_to "Start Selling",
+                    new_user_registration_path,
+                    class: "btn btn-snoofly-nav px-3 fw-semibold" %>
+      <% end %>
 
-  <%# Burger (always visible, opens offcanvas) %>
-  <button
-    class="burger-btn <%= on_landing ? 'burger-btn--light' : '' %>"
-    type="button"
-    data-bs-toggle="offcanvas"
-    data-bs-target="#mainMenu"
-    aria-controls="mainMenu"
-    aria-label="Open menu">
-    <span class="line"></span>
-    <span class="line"></span>
-    <span class="line"></span>
-  </button>
-</div>
+      <%# Creative Burger Menu Button %>
+      <button class="creative-burger <%= on_landing ? 'creative-burger--light' : 'creative-burger--dark' %>" 
+              type="button" 
+              id="menuToggle" 
+              aria-label="Toggle menu">
+        <span class="creative-burger__line creative-burger__line--top"></span>
+        <span class="creative-burger__line creative-burger__line--middle"></span>
+        <span class="creative-burger__line creative-burger__line--bottom"></span>
+      </button>
+    </div>
   </div>
 </nav>
 
-<%# --------------------------------- Off-canvas menu --------------------------------- %>
-<div class="offcanvas offcanvas-end" tabindex="-1" id="mainMenu" aria-labelledby="mainMenuLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title fw-bold" id="mainMenuLabel">Menu</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
+<%# --------------------------------- Slide-out Menu --------------------------------- %>
+<div class="slideout-menu" id="slideoutMenu">
+  <div class="slideout-menu__overlay" id="menuOverlay"></div>
+  
+  <div class="slideout-menu__content">
+    <%# Header with close button %>
+    <div class="slideout-menu__header">
+      <div class="slideout-menu__brand">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 16 16" fill="#ff4a5f">
+          <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+          <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+        </svg>
+        <span class="fw-bold fs-4" style="color:#ff4a5f;">Snoofly</span>
+      </div>
+      <button class="slideout-menu__close" id="menuClose" aria-label="Close menu">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
 
-  <div class="offcanvas-body">
-    <%# Top action (login/register or profile) %>
-    <div class="d-grid gap-2 mb-3">
+    <%# User info section %>
+    <div class="slideout-menu__user">
       <% if user_signed_in? %>
-        <div class="text-muted small">Signed in as <%= current_user.email %></div>
-        <%= link_to "My Dashboard", dashboard_path, class: "btn btn-outline-dark" %>
+        <div class="slideout-menu__avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="slideout-menu__user-info">
+          <div class="slideout-menu__user-name">Hello, <%= current_user.full_name || current_user.email.split('@').first %></div>
+          <div class="slideout-menu__user-email"><%= current_user.email %></div>
+        </div>
       <% else %>
-        <%= link_to "Sign in / Register", new_user_session_path, class: "btn btn-outline-dark" %>
+        <div class="slideout-menu__avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="slideout-menu__user-info">
+          <div class="slideout-menu__user-name">Welcome to Snoofly</div>
+          <div class="slideout-menu__user-email">Sign in to access your account</div>
+        </div>
       <% end %>
     </div>
 
-    <ul class="list-unstyled fs-5 lh-lg mb-0">
-      <li><%= link_to "Listings", listings_path, class: "menu-link" %></li>
-      <li><%= link_to "Saved properties", saved_properties_path, class: "menu-link" %></li>
-      <li><%= link_to "Pricing", pricing_path, class: "menu-link" %></li>
+    <%# Navigation links %>
+    <nav class="slideout-menu__nav">
+      <div class="slideout-menu__section">
+        <h3 class="slideout-menu__section-title">Navigation</h3>
+        <ul class="slideout-menu__list">
+          <li class="slideout-menu__item">
+            <%= link_to listings_path, class: "slideout-menu__link" do %>
+              <i class="bi bi-house-door slideout-menu__icon"></i>
+              <span>Browse Properties</span>
+            <% end %>
+          </li>
+          <li class="slideout-menu__item">
+            <%= link_to saved_properties_path, class: "slideout-menu__link" do %>
+              <i class="bi bi-heart slideout-menu__icon"></i>
+              <span>Saved Properties</span>
+            <% end %>
+          </li>
+          <li class="slideout-menu__item">
+            <%= link_to pricing_path, class: "slideout-menu__link" do %>
+              <i class="bi bi-tag slideout-menu__icon"></i>
+              <span>Pricing</span>
+            <% end %>
+          </li>
+        </ul>
+      </div>
 
       <% if user_signed_in? %>
-        <li class="mt-2">
-          <%= link_to "Sign out",
-                      destroy_user_session_path,
-                      data: { turbo_method: :delete },
-                      class: "menu-link text-danger" %>
-        </li>
+        <div class="slideout-menu__section">
+          <h3 class="slideout-menu__section-title">My Account</h3>
+          <ul class="slideout-menu__list">
+            <li class="slideout-menu__item">
+              <%= link_to dashboard_path, class: "slideout-menu__link" do %>
+                <i class="bi bi-speedometer2 slideout-menu__icon"></i>
+                <span>Dashboard</span>
+              <% end %>
+            </li>
+            <li class="slideout-menu__item">
+              <%= link_to edit_user_registration_path, class: "slideout-menu__link" do %>
+                <i class="bi bi-gear slideout-menu__icon"></i>
+                <span>Account Settings</span>
+              <% end %>
+            </li>
+            <li class="slideout-menu__item">
+              <%= link_to destroy_user_session_path, 
+                          data: { turbo_method: :delete }, 
+                          class: "slideout-menu__link slideout-menu__link--danger" do %>
+                <i class="bi bi-box-arrow-right slideout-menu__icon"></i>
+                <span>Sign Out</span>
+              <% end %>
+            </li>
+          </ul>
+        </div>
+      <% else %>
+        <div class="slideout-menu__section">
+          <h3 class="slideout-menu__section-title">Account</h3>
+          <ul class="slideout-menu__list">
+            <li class="slideout-menu__item">
+              <%= link_to new_user_session_path, class: "slideout-menu__link" do %>
+                <i class="bi bi-box-arrow-in-right slideout-menu__icon"></i>
+                <span>Sign In</span>
+              <% end %>
+            </li>
+            <li class="slideout-menu__item">
+              <%= link_to new_user_registration_path, class: "slideout-menu__link" do %>
+                <i class="bi bi-person-plus slideout-menu__icon"></i>
+                <span>Create Account</span>
+              <% end %>
+            </li>
+          </ul>
+        </div>
       <% end %>
-    </ul>
+    </nav>
+
+    <%# Footer section %>
+    <div class="slideout-menu__footer">
+      <div class="slideout-menu__social">
+        <a href="#" class="slideout-menu__social-link" aria-label="Facebook">
+          <i class="bi bi-facebook"></i>
+        </a>
+        <a href="#" class="slideout-menu__social-link" aria-label="Twitter">
+          <i class="bi bi-twitter"></i>
+        </a>
+        <a href="#" class="slideout-menu__social-link" aria-label="Instagram">
+          <i class="bi bi-instagram"></i>
+        </a>
+      </div>
+      <p class="slideout-menu__copyright">© 2025 Snoofly. All rights reserved.</p>
+    </div>
   </div>
 </div>
+
+<script>
+  // Fixed JavaScript for menu functionality
+  function setupMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose = document.getElementById('menuClose');
+    const slideoutMenu = document.getElementById('slideoutMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    if (!menuToggle || !menuClose || !slideoutMenu || !menuOverlay) {
+      console.error('Menu elements not found');
+      return;
+    }
+
+    function openMenu() {
+      slideoutMenu.classList.add('slideout-menu--open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+      slideoutMenu.classList.remove('slideout-menu--open');
+      document.body.style.overflow = '';
+    }
+
+    // Add event listeners
+    menuToggle.addEventListener('click', openMenu);
+    menuClose.addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', closeMenu);
+
+    // Close menu when clicking on navigation links
+    const navLinks = document.querySelectorAll('.slideout-menu__link');
+    navLinks.forEach(link => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    // Close menu with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && slideoutMenu.classList.contains('slideout-menu--open')) {
+        closeMenu();
+      }
+    });
+  }
+
+  // Initialize menu when DOM is loaded
+  document.addEventListener('DOMContentLoaded', setupMenu);
+  
+  // Re-initialize menu after Turbo navigation
+  document.addEventListener('turbo:load', setupMenu);
+</script>

@@ -1,74 +1,123 @@
-<footer class="snoofly-legal-footer border-top mt-5">
-  <div class="container text-center py-4">
+<footer class="snoofly-footer">
+  <div class="footer-container">
+    <!-- Main Footer Content -->
+    <div class="footer-main">
+      <div class="footer-content">
+        <!-- Logo and Description -->
+        <div class="footer-brand">
+          <%= link_to root_path, class: "footer-logo" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16" fill="#ff4a5f">
+              <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+              <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+            </svg>
+            <span class="footer-brand-name">Snoofly</span>
+          <% end %>
+          <p class="footer-description">
+            Revolutionizing the UK property market with transparent, direct-to-buyer solutions.
+          </p>
+        </div>
 
-    <!-- Top nav links -->
-    <nav class="mb-3">
-      <ul class="nav flex-wrap justify-content-center gap-3 small">
-        <li class="nav-item"><%= link_to "About", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Research", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Careers", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "UK Privacy Notice", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Help", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Advertise", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "UK Housing Guide", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Advocacy", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Terms of Use", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Cookie Preferences", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Learn", "#", class: "nav-link p-0 text-muted" %></li>
-        <li class="nav-item"><%= link_to "Mobile Apps", "#", class: "nav-link p-0 text-muted" %></li>
-      </ul>
-    </nav>
+        <!-- Quick Links Grid -->
+        <div class="footer-links-grid">
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">Company</h4>
+            <ul class="footer-links-list">
+              <li><%= link_to "About", "#", class: "footer-link" %></li>
+              <li><%= link_to "Careers", "#", class: "footer-link" %></li>
+              <li><%= link_to "Research", "#", class: "footer-link" %></li>
+              <li><%= link_to "Advocacy", "#", class: "footer-link" %></li>
+            </ul>
+          </div>
 
-    <!-- Privacy CTA -->
-    <div class="mb-3">
-      <%= link_to "Do Not Sell or Share My Personal Information →", "#", class: "text-primary small fw-semibold" %>
-    </div>
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">Resources</h4>
+            <ul class="footer-links-list">
+              <li><%= link_to "Help Center", "#", class: "footer-link" %></li>
+              <li><%= link_to "UK Housing Guide", "#", class: "footer-link" %></li>
+              <li><%= link_to "Learn", "#", class: "footer-link" %></li>
+              <li><%= link_to "Mobile Apps", "#", class: "footer-link" %></li>
+            </ul>
+          </div>
 
-    <hr class="my-3">
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">Legal</h4>
+            <ul class="footer-links-list">
+              <li><%= link_to "Terms of Use", "#", class: "footer-link" %></li>
+              <li><%= link_to "Privacy Notice", "#", class: "footer-link" %></li>
+              <li><%= link_to "Cookie Preferences", "#", class: "footer-link" %></li>
+              <li><%= link_to "Advertise", "#", class: "footer-link" %></li>
+            </ul>
+          </div>
 
-    <!-- Accessibility + disclaimer -->
-    <div class="text-muted small mb-3">
-      Snoofly is committed to ensuring digital accessibility for individuals in the UK.  
-      We continuously work to improve the accessibility of our web experience for everyone, 
-      and we welcome feedback and accommodation requests.  
-      Please <%= link_to "let us know", "#", class: "text-decoration-underline" %>.
-    </div>
+          <div class="footer-links-column">
+            <h4 class="footer-links-title">Connect</h4>
+            <div class="footer-social">
+              <a href="#" class="footer-social-link" aria-label="Facebook">
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a href="#" class="footer-social-link" aria-label="Twitter">
+                <i class="bi bi-twitter"></i>
+              </a>
+              <a href="#" class="footer-social-link" aria-label="Instagram">
+                <i class="bi bi-instagram"></i>
+              </a>
+              <a href="#" class="footer-social-link" aria-label="LinkedIn">
+                <i class="bi bi-linkedin"></i>
+              </a>
+            </div>
+            <div class="footer-contact">
+              <%= mail_to "support@snoofly.co.uk", "support@snoofly.co.uk", class: "footer-contact-link" %>
+            </div>
+          </div>
+        </div>
 
-  
-    <div class="text-muted small mb-3">
-      Contact Snoofly: <%= mail_to "support@snoofly.co.uk", "support@snoofly.co.uk" %>
-    </div>
-
-    <!-- App store buttons -->
-    <div class="d-flex justify-content-center gap-2 mb-3">
-      <a href="#"><img src="/appstore-badge.png" alt="Download on the App Store" height="40"></a>
-      <a href="#"><img src="/googleplay-badge.png" alt="Get it on Google Play" height="40"></a>
-    </div>
-
-    <!-- Logo + social -->
-    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-3">
-      <div>
-        <%= link_to root_path,
-                    class: "navbar-brand d-flex align-items-center gap-2 fs-6" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-               viewBox="0 0 16 16" fill="#ff4a5f">
-            <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
-            <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
-          </svg>
-          <span class="fw-bold" style="color:#ff4a5f;">Snoofly</span>
-        <% end %>
+        <!-- App Download Buttons -->
+        <div class="footer-apps">
+          <h4 class="footer-apps-title">Get the App</h4>
+          <div class="footer-apps-buttons">
+            <a href="#" class="app-download-btn">
+              <i class="bi bi-apple"></i>
+              <div>
+                <span>Download on the</span>
+                <strong>App Store</strong>
+              </div>
+            </a>
+            <a href="#" class="app-download-btn">
+              <i class="bi bi-google-play"></i>
+              <div>
+                <span>Get it on</span>
+                <strong>Google Play</strong>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="d-flex gap-3">
-        <a href="#" class="text-muted"><i class="bi bi-facebook fs-5"></i></a>
-        <a href="#" class="text-muted"><i class="bi bi-twitter fs-5"></i></a>
-        <a href="#" class="text-muted"><i class="bi bi-instagram fs-5"></i></a>
-        <a href="#" class="text-muted"><i class="bi bi-linkedin fs-5"></i></a>
-      </div>
     </div>
 
-    <!-- Bottom copyright -->
-    <div class="small text-muted mt-3">
-      © 2006–<%= Time.current.year %> Snoofly Ltd. All rights reserved.
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <div class="footer-bottom-content">
+        <!-- Privacy CTA -->
+        <div class="footer-privacy">
+          <%= link_to "Do Not Sell or Share My Personal Information →", "#", class: "footer-privacy-link" %>
+        </div>
+
+        <!-- Accessibility Statement -->
+        <div class="footer-accessibility">
+          <p class="footer-accessibility-text">
+            Snoofly is committed to ensuring digital accessibility for individuals in the UK.  
+            We continuously work to improve the accessibility of our web experience for everyone, 
+            and we welcome feedback and accommodation requests.  
+            Please <%= link_to "let us know", "#", class: "footer-accessibility-link" %>.
+          </p>
+        </div>
+
+        <!-- Copyright -->
+        <div class="footer-copyright">
+          <p>© 2006–<%= Time.current.year %> Snoofly Ltd. All rights reserved.</p>
+        </div>
+      </div>
     </div>
   </div>
 </footer>
+

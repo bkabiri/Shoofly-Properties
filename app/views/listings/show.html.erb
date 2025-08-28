@@ -49,11 +49,8 @@
 
 <%# Who are we contacting? %>
 <%
-  seller        = @listing.user
-  is_agent      = seller.respond_to?(:company_name) && seller.company_name.present?
-  estate_agent_name = seller.try(:estate_agent_name)
-  agent_logo    = seller.try(:logo) # ActiveStorage attachment if present
-  contact_email = seller.email
+  seller             = @listing.user
+  contact_email      = seller.email
 %>
 
 <%# Build gallery list (banner first) %>
@@ -65,254 +62,277 @@
   end
 %>
 
-<div class="listing-stage listing-stage--thumbs-below">
-  <%# ========= LEFT: hero ========= %>
-  <div class="left-col">
-    <div class="listing-hero-card">
-      <% if @listing.banner_image.attached? %>
-        <%= image_tag @listing.banner_image.variant(resize_to_limit: [2200, 1400]),
-                      class: "listing-hero-card__img",
-                      alt: @listing.title %>
-      <% else %>
-        <div class="listing-hero-card__img" style="background:#e9eef5;"></div>
-      <% end %>
-
-      <!-- Premium badge (top-right) -->
-      <div class="premium-badge">
-        <i class="bi bi-star-fill"></i>
-        Premium
-      </div>
-
-      <!-- Floating summary (Snoofly red @ 80% opacity) -->
-      <div class="summary-float">
-        <div class="summary-float__address"><%= @listing.title %></div>
-        <div class="summary-float__price"><%= price_text %></div>
-
-        <div class="summary-chips mt-2">
-          <span class="chip"><i class="bi bi-house-door"></i><%= @listing.property_type&.humanize || "—" %></span>
-          <span class="chip"><i class="bi bi-bed"></i><%= @listing.bedrooms || "—" %> beds</span>
-          <span class="chip"><i class="bi bi-badge-wc"></i><%= @listing.bathrooms || "—" %> baths</span>
-          <span class="chip">
-            <i class="bi bi-collection"></i>
-            <% if @listing.receptions.present? %>
-              <%= @listing.receptions.to_i == 5 ? "5+" : @listing.receptions %> RECEPTIONS
-            <% else %>
-              —
+<div class="listing-container">
+  <div class="listing-grid">
+    <%# ========= MAIN CONTENT ========= %>
+    <div class="main-content">
+      <%# Hero Section %>
+      <div class="creative-listing-header">
+        <%# Hero Banner with Overlay Elements %>
+        <div class="creative-hero">
+          <% if @listing.banner_image.attached? %>
+            <%= image_tag @listing.banner_image.variant(resize_to_limit: [2200, 1400]),
+                          class: "creative-hero-image",
+                          alt: @listing.title %>
+          <% else %>
+            <div class="creative-hero-image no-image">
+              <i class="bi bi-house-door text-white"></i>
+            </div>
+          <% end %>
+          
+          <%# Premium Badge - Creative Placement %>
+          <div class="creative-premium-badge">
+            <i class="bi bi-award"></i>
+            <span>Featured</span>
+          </div>
+          
+          <%# Favorite Button - Modern Design %>
+          <div class="creative-favorite">
+            <%= turbo_frame_tag dom_id(@listing, :fav) do %>
+              <%= render "favorites/toggle", listing: @listing %>
             <% end %>
-          </span>
-          <span class="chip"><i class="bi bi-graph-up"></i>EPC: <%= @listing.try(:epc_rating).presence || "—" %></span>
-          <% if @listing.tenure.present? %>
-            <span class="chip"><i class="bi bi-shield-check"></i><%= @listing.tenure.humanize %></span>
-          <% end %>
+          </div>
+        </div>
+        
+        <%# Compact Info Card - Moved below banner with all details integrated %>
+        <div class="creative-info-card">
+          <div class="creative-info-content">
+            <%# Title Row %>
+            <div class="creative-title-row">
+              <h1 class="creative-title"><%= @listing.title %></h1>
+              <div class="creative-price"><%= price_text %></div>
+            </div>
+            
+            <%# Address %>
+            <div class="creative-address">
+              <i class="bi bi-geo-alt"></i>
+              <%= @listing.address %>
+            </div>
+            
+            <%# Property Features - All integrated in one section %>
+            <div class="creative-features">
+              <%# Basic property features %>
+              <div class="feature-pill">
+                <i class="bi bi-house-door"></i>
+                <span><%= @listing.property_type&.humanize || "—" %></span>
+              </div>
+              
+              <div class="feature-pill">
+                <i class="bi bi-door-closed"></i>
+                <span><%= @listing.bedrooms || "—" %> bed<%= @listing.bedrooms.to_i > 1 ? 's' : '' %></span>
+              </div>
+              
+              <div class="feature-pill">
+                <i class="bi bi-droplet"></i>
+                <span><%= @listing.bathrooms || "—" %> bath<%= @listing.bathrooms.to_i > 1 ? 's' : '' %></span>
+              </div>
+              
+              <% if @listing.receptions.present? %>
+                <div class="feature-pill">
+                  <i class="bi bi-columns"></i>
+                  <span><%= @listing.receptions %> reception<%= @listing.receptions > 1 ? 's' : '' %></span>
+                </div>
+              <% end %>
+              
+              <%# Additional features from the details card %>
+              <% if @listing.try(:parking).present? %>
+                <div class="feature-pill">
+                  <i class="bi bi-p-square"></i>
+                  <span><%= parking_display %></span>
+                </div>
+              <% end %>
+              
+              <% if @listing.try(:garden) == true || garden_text == "YES" %>
+                <div class="feature-pill">
+                  <i class="bi bi-tree"></i>
+                  <span>Garden</span>
+                </div>
+              <% end %>
+              
+              <% if council_tax_text != "—" %>
+                <div class="feature-pill">
+                  <i class="bi bi-receipt"></i>
+                  <span>Council Tax: <%= council_tax_text %></span>
+                </div>
+              <% end %>
+              
+              <% if internet_speed.present? %>
+                <div class="feature-pill">
+                  <i class="bi bi-wifi"></i>
+                  <span>Internet: <%= internet_speed %></span>
+                </div>
+              <% end %>
+              
+              <% if gas_supplier.present? %>
+                <div class="feature-pill">
+                  <i class="bi bi-fire"></i>
+                  <span>Gas: <%= gas_supplier %></span>
+                </div>
+              <% end %>
+              
+              <% if elec_supplier.present? %>
+                <div class="feature-pill">
+                  <i class="bi bi-lightning"></i>
+                  <span>Electric: <%= elec_supplier %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Favorite star (bottom-right over banner) -->
-      <div class="fav-float-banner">
-        <%= turbo_frame_tag dom_id(@listing, :fav) do %>
-          <%= render "favorites/toggle", listing: @listing %>
-        <% end %>
-      </div>
-    </div>
-
-    <%# ========= KEY DETAILS CARD UNDER THE BANNER ========= %>
-    <div class="card shadow-sm border-0 my-3">
-      <div class="card-body py-3">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
-
-          <!-- Parking -->
-          <div class="col">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-p-square" aria-hidden="true"></i>
-              <div class="fs-6"><%= parking_display.to_s.upcase %></div>
-            </div>
-          </div>
-
-          <!-- Garden -->
-          <div class="col">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-tree" aria-hidden="true"></i>
-              <div>
-                <div class="text-uppercase small text-muted fw-semibold">Garden</div>
-                <div class="fs-6"><%= garden_text.to_s.upcase %></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Council Tax Band -->
-          <div class="col">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-info-square" aria-hidden="true"></i>
-              <div>
-                <div class="text-uppercase small text-muted fw-semibold">Council Tax Band</div>
-                <div class="fs-6"><%= council_tax_text.to_s.upcase %></div>
-              </div>
-            </div>
-          </div>
-
-          <%# Internet speed (inline, only if present) %>
-          <% if internet_speed.present? %>
-            <div class="col">
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-speedometer2" aria-hidden="true"></i>
-                <div class="fs-6"><%= internet_speed.to_s.upcase %></div>
-              </div>
-            </div>
-          <% end %>
-
-          <%# Energy supplies (inline, only if at least one exists) %>
-          <% if gas_supplier.present? || elec_supplier.present? %>
-            <div class="col">
-              <div class="d-flex align-items-center gap-2">
-                <% if gas_supplier.present? %>
-                  <i class="bi bi-fire" aria-hidden="true"></i>
-                  <span class="fs-6">GAS: <%= gas_supplier.to_s.upcase %></span>
-                <% end %>
-
-                <% if gas_supplier.present? && elec_supplier.present? %>
-                  <span class="text-muted mx-1">•</span>
-                <% end %>
-
-                <% if elec_supplier.present? %>
-                  <i class="bi bi-lightning-charge" aria-hidden="true"></i>
-                  <span class="fs-6">ELECTRICITY: <%= elec_supplier.to_s.upcase %></span>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-
-        </div>
-      </div>
-    </div>
-    <%# ========= /KEY DETAILS CARD ========= %>
-
-    <%# ========= Thumbnails strip UNDER the banner ========= %>
-    <% if gallery_blobs.any? %>
-      <div class="thumb-strip">
-        <div class="thumb-strip__head">Photos</div>
-        <div class="thumb-strip__scroller">
+      <%# Gallery Thumbnails %>
+      <% if gallery_blobs.any? %>
+        <div class="gallery-thumbnails">
           <% gallery_blobs.each_with_index do |blob, idx| %>
-            <div class="thumb js-open-gallery" data-index="<%= idx %>">
-              <%= image_tag blob.variant(resize_to_fill: [520, 360]),
-                            alt: "Photo #{idx + 1}" %>
-              <span class="thumb__pill"><%= idx + 1 %>/<%= gallery_blobs.size %></span>
+            <div class="gallery-thumb js-open-gallery" data-index="<%= idx %>">
+              <%= image_tag blob.variant(resize_to_fill: [200, 150]), alt: "Photo #{idx + 1}" %>
+              <span class="gallery-count"><%= idx + 1 %>/<%= gallery_blobs.size %></span>
             </div>
           <% end %>
-        </div>
-      </div>
-    <% end %>
-
-    <%# ========= Description (full banner width) ========= %>
-    <div class="listing-content">
-      <h3>Description</h3>
-      <div class="mb-4"><%= raw @listing.description_raw %></div>
-    </div>
-
-    <%# ========= Location (map) ========= %>
-    <div class="listing-map">
-      <h3>Location</h3>
-      <div class="map-placeholder">
-        <!-- Later you can embed a real Google Map iframe using @listing.address -->
-        <span>📍 Google Map will go here</span>
-      </div>
-    </div>
-  </div>
-
-  <%# ========= RIGHT: sticky contact + nearby ========= %>
-  <aside class="right-rail">
-    <div class="position-relative mb-3">
-      <!-- Contact card -->
-      <div class="card border-0 shadow-sm rm-contact">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-      <div class="flex-grow-1">
-        <div class="text-uppercase small text-muted fw-semibold mb-1">Marketed by</div>
-
-        <div class="d-flex flex-column">
-          <div class="fw-semibold">
-            <% if seller.estate_agent? %>
-              <%= seller.estate_agent_name.presence || "Estate Agent" %>
-              <% if seller.office_city.present? %>, <%= seller.office_city %><% end %>
-            <% else %>
-              Private Seller
-            <% end %>
-          </div>
-
-          <% if seller.estate_agent? && (
-                seller.office_address_line1.present? ||
-                seller.office_city.present? ||
-                seller.office_postcode.present?
-              ) %>
-            <div class="text-muted small">
-              <%= [seller.office_address_line1, seller.office_city, seller.office_postcode].compact_blank.join(", ") %>
-            </div>
-          <% end %>
-
-          <% if seller.estate_agent? %>
-            <%= link_to "More properties from this agent",
-                        listings_path(q: seller.estate_agent_name.presence || seller.office_city),
-                        class: "small rm-contact-more" %>
-          <% end %>
-        </div>
-      </div>
-
-      <% if seller.estate_agent? && seller.logo.attached? %>
-        <div class="flex-shrink-0">
-          <%= image_tag seller.logo.variant(resize_to_fill: [180, 110]),
-                        alt: "#{seller.estate_agent_name} logo",
-                        class: "rm-agent-logo rounded" %>
         </div>
       <% end %>
+
+      <%# Description Section %>
+      <div class="content-section">
+        <h2 class="section-title">Property Description</h2>
+        <div class="description-content">
+          <%= raw @listing.description_raw %>
+        </div>
+      </div>
+
+      <%# ================= Location (Map + Street View) ================= %>
+      <% maps_api_key_present = ENV["GOOGLE_MAPS_API_KEY"].present? %>
+      <% display_address =
+           @listing.try(:address).presence ||
+           [@listing.try(:title), @listing.try(:office_address_line1), @listing.try(:office_city), @listing.try(:office_postcode)]
+             .compact.join(", ") %>
+
+      <div class="content-section">
+        <h2 class="section-title">Location</h2>
+
+        <% if maps_api_key_present %>
+          <div class="row g-3 align-items-stretch">
+            <div class="col-md-6">
+              <div id="gmap" class="gmap-box rounded-3 border"></div>
+            </div>
+            <div class="col-md-6">
+              <div id="gstreet" class="gstreet-box rounded-3 border"></div>
+            </div>
+          </div>
+        <% else %>
+          <div class="alert alert-warning">
+            Google Maps is not configured. Set <code>ENV["GOOGLE_MAPS_API_KEY"]</code> to enable Map &amp; Street View.
+          </div>
+        <% end %>
+
+        <div class="property-address mt-3">
+          <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+          <%= display_address.presence || "Address not provided" %>
+        </div>
+      </div>
     </div>
 
-    <% if seller.estate_agent? %>
-      <div class="mb-3 small text-muted">
-        <% if seller.landline_phone.present? %>
-          <div><strong>Landline:</strong> <%= seller.landline_phone %></div>
-        <% end %>
-        <% if seller.mobile_phone.present? %>
-          <div><strong>Mobile:</strong> <%= seller.mobile_phone %></div>
-        <% end %>
+    <%# ========= SIDEBAR ========= %>
+    <div class="sidebar">
+      <%# Contact Card %>
+      <div class="sidebar-card">
+        <h3 class="section-title">Contact Agent</h3>
+
+        <div class="agent-info">
+          <% if seller.respond_to?(:logo) && seller.logo&.attached? %>
+            <%= image_tag(seller.logo.variable? ? seller.logo.variant(resize_to_fill: [80, 80]).processed : seller.logo,
+                          alt: "#{seller.try(:estate_agent_name).presence || 'Agent'} logo",
+                          class: "agent-logo") %>
+          <% end %>
+
+          <div class="agent-details">
+            <div class="agent-name">
+              <% if seller.respond_to?(:estate_agent?) && seller.estate_agent? %>
+                <%= seller.estate_agent_name.presence || "Estate Agent" %>
+              <% else %>
+                Private Seller
+              <% end %>
+            </div>
+            <div class="agent-type">
+              <%= (seller.respond_to?(:estate_agent?) && seller.estate_agent?) ? "Estate Agent" : "Private Seller" %>
+            </div>
+            <% if seller.respond_to?(:office_address_line1) && seller.office_address_line1.present? %>
+              <div class="agent-address">
+                <i class="bi bi-geo-alt"></i> <%= [seller.office_address_line1, seller.office_city].compact.join(", ") %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="agent-contact">
+          <% if seller.respond_to?(:estate_agent?) && seller.estate_agent? %>
+            <div class="contact-info">
+              <% if seller.respond_to?(:landline_phone) && seller.landline_phone.present? %>
+                <div class="contact-item">
+                  <i class="bi bi-telephone"></i> <%= seller.landline_phone %>
+                </div>
+              <% end %>
+              <% if seller.respond_to?(:mobile_phone) && seller.mobile_phone.present? %>
+                <div class="contact-item">
+                  <i class="bi bi-phone"></i> <%= seller.mobile_phone %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%= mail_to contact_email, "Message Seller",
+                      subject: "Enquiry about #{@listing.title}",
+                      class: "btn btn-snoofly w-100" %>
+
+          <% if seller.respond_to?(:estate_agent?) && seller.estate_agent? %>
+            <div class="text-center mt-2">
+              <%= link_to "More properties from this agent",
+                          listings_path(q: seller.estate_agent_name.presence || seller.office_city),
+                          class: "small text-muted" %>
+            </div>
+          <% end %>
+        </div>
       </div>
-    <% end %>
 
-   <div class="d-grid gap-2 mt-3">
-  <%= mail_to contact_email,
-              "Message Seller",
-              subject: "Enquiry about #{@listing.title}",
-              class: "btn btn-snoofly w-100" %>
+      <%# Nearby Amenities %>
+      <div class="sidebar-card">
+        <h3 class="section-title">Nearby Amenities</h3>
 
-  
-</div>
-  
+        <div class="mb-3">
+          <h4 class="h6 mb-2"><i class="bi bi-train-front text-primary me-2"></i>Transportation</h4>
+          <div class="nearby-item">
+            <span class="nearby-name">Windsor &amp; Eton Central</span>
+            <span class="nearby-distance">0.6 mi</span>
+          </div>
+          <div class="nearby-item">
+            <span class="nearby-name">Windsor &amp; Eton Riverside</span>
+            <span class="nearby-distance">0.9 mi</span>
+          </div>
+          <div class="nearby-item">
+            <span class="nearby-name">Datchet Station</span>
+            <span class="nearby-distance">1.7 mi</span>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="h6 mb-2"><i class="bi bi-mortarboard text-primary me-2"></i>Education</h4>
+          <div class="nearby-item">
+            <span class="nearby-name">St George's Primary</span>
+            <span class="nearby-distance">0.4 mi</span>
+          </div>
+          <div class="nearby-item">
+            <span class="nearby-name">Long Walk Academy</span>
+            <span class="nearby-distance">0.8 mi</span>
+          </div>
+          <div class="nearby-item">
+            <span class="nearby-name">Castle View High</span>
+            <span class="nearby-distance">1.3 mi</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
-    </div>
-
-    <div class="card shadow-sm border-0 info-card">
-      <div class="card-body">
-        <h6 class="mb-3 fw-bold">Nearby</h6>
-
-        <div class="nearby-block mb-3">
-          <div class="nearby-title"><i class="bi bi-train-front"></i> Nearest stations</div>
-          <ul class="nearby-list">
-            <li><span class="nearby-name">Windsor &amp; Eton Central</span><span class="nearby-dist">0.6 mi</span></li>
-            <li><span class="nearby-name">Windsor &amp; Eton Riverside</span><span class="nearby-dist">0.9 mi</span></li>
-            <li><span class="nearby-name">Datchet</span><span class="nearby-dist">1.7 mi</span></li>
-          </ul>
-        </div>
-
-        <div class="nearby-block">
-          <div class="nearby-title"><i class="bi bi-mortarboard-fill"></i> Nearest schools</div>
-          <ul class="nearby-list">
-            <li><span class="nearby-name">St George’s Primary</span><span class="nearby-dist">0.4 mi</span></li>
-            <li><span class="nearby-name">Long Walk Academy</span><span class="nearby-dist">0.8 mi</span></li>
-            <li><span class="nearby-name">Castle View High</span><span class="nearby-dist">1.3 mi</span></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </aside>
 </div>
 
 <%= render "shared/footer" %>
@@ -352,9 +372,8 @@
   </div>
 </div>
 
-
-
 <script>
+  // -------- Gallery modal logic --------
   document.addEventListener('DOMContentLoaded', function () {
     const thumbs     = document.querySelectorAll('.js-open-gallery');
     const modalEl    = document.getElementById('galleryModal');
@@ -381,4 +400,65 @@
       if (counterEl) counterEl.textContent = `${activeIndex+1}/${items.length}`;
     });
   });
+
+  // -------- Google Maps + Street View init (no extra script tag needed) --------
+  (function() {
+    const address = <%= raw(display_address.to_json) %>;
+    const mapsEnabled = <%= maps_api_key_present ? 'true' : 'false' %>;
+
+    if (!mapsEnabled) return;
+
+    function initMap() {
+      const mapEl    = document.getElementById("gmap");
+      const streetEl = document.getElementById("gstreet");
+      if (!mapEl || !streetEl || !window.google || !google.maps) return;
+
+      const map = new google.maps.Map(mapEl, {
+        zoom: 16,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: address }, function(results, status) {
+        if (status === "OK" && results[0]) {
+          const loc = results[0].geometry.location;
+          map.setCenter(loc);
+          new google.maps.Marker({ position: loc, map: map, title: address });
+
+          const pano = new google.maps.StreetViewPanorama(streetEl, {
+            position: loc,
+            pov: { heading: 0, pitch: 0 },
+            zoom: 1,
+            addressControl: true,
+            fullscreenControl: true
+          });
+
+          map.setStreetView(pano);
+        } else {
+          mapEl.innerHTML    = '<div class="p-3 text-muted">Could not locate address on the map.</div>';
+          streetEl.innerHTML = '<div class="p-3 text-muted">Street View not available for this address.</div>';
+        }
+      });
+    }
+
+    // Wait for Google Maps to be available (since it's loaded globally in layout)
+    function whenGoogleReady(cb) {
+      if (window.google && google.maps) { cb(); return; }
+      let tries = 0;
+      const iv = setInterval(() => {
+        tries += 1;
+        if (window.google && google.maps) {
+          clearInterval(iv); cb();
+        } else if (tries > 50) {
+          clearInterval(iv);
+          // Give up silently after ~5s
+        }
+      }, 100);
+    }
+
+    document.addEventListener("turbo:load", () => whenGoogleReady(initMap));
+    document.addEventListener("DOMContentLoaded", () => whenGoogleReady(initMap));
+  })();
 </script>
