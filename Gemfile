@@ -16,7 +16,7 @@ gem "image_processing", "~> 1.12"
 gem "importmap-rails"
 gem "turbo-rails"
 gem "stimulus-rails"
-
+gem "geocoder"
 # JSON builders
 gem "jbuilder"
 

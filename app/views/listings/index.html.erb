@@ -6,25 +6,42 @@
   <%= form_with url: listings_path, method: :get, local: true, class: "searchbar", id: "listingSearchbar" do %>
     <div class="searchbar-row">
 
-      <!-- Enter a location / keywords -->
-      <div class="sb-field">
+      <!-- Enter a location / keywords (Places Autocomplete) -->
+      <div class="sb-field" data-controller="home-search">
         <label class="sb-label">Enter a location</label>
         <div class="position-relative">
-          <%= text_field_tag :q, params[:q], class: "form-control sb-input", placeholder: "e.g. SL44JU or Windsor" %>
-          <button class="sb-clear <%= params[:q].present? ? '' : 'd-none' %>" type="button" id="sbClearQ" aria-label="Clear">×</button>
+          <%= text_field_tag :q, params[:q],
+                class: "form-control sb-input",
+                id: "listingSearchInput",
+                placeholder: "e.g. SL4 4JU or Windsor",
+                data: { "home-search-target": "input" } %>
+
+          <!-- Hidden fields filled by Google Places -->
+          <%= hidden_field_tag :place_id, params[:place_id], id: "placeIdField", data: { "home-search-target": "placeId" } %>
+          <%= hidden_field_tag :lat, params[:lat], id: "latField", data: { "home-search-target": "lat" } %>
+          <%= hidden_field_tag :lng, params[:lng], id: "lngField", data: { "home-search-target": "lng" } %>
+          <%= hidden_field_tag :formatted_address, params[:formatted_address], id: "formattedAddressField", data: { "home-search-target": "address" } %>
+
+          <button class="sb-clear <%= params[:q].present? ? '' : 'd-none' %>"
+                  type="button" id="sbClearQ" aria-label="Clear">×</button>
         </div>
       </div>
 
-      <!-- Radius (placeholder / disabled for now) -->
+      <!-- Radius (enabled + bound to params; set to disabled if you’re not ready) -->
       <div class="sb-field">
         <label class="sb-label">Radius</label>
-        <select class="form-select sb-input" name="radius" disabled title="Coming soon">
-          <option>This area only</option>
-          <option>¼ mile</option>
-          <option>½ mile</option>
-          <option>1 mile</option>
-          <option>3 miles</option>
-          <option>5 miles</option>
+        <select class="form-select sb-input" name="radius" <%= params[:lat].blank? && params[:lng].blank? ? "" : "" %>>
+          <% radius_opts = [
+            ["This area only",""],
+            ["¼ mile","0.25"],
+            ["½ mile","0.5"],
+            ["1 mile","1"],
+            ["3 miles","3"],
+            ["5 miles","5"]
+          ] %>
+          <% radius_opts.each do |label,val| %>
+            <option value="<%= val %>" <%= 'selected' if params[:radius].to_s == val.to_s %>><%= label %></option>
+          <% end %>
         </select>
       </div>
 
@@ -356,7 +373,7 @@
 
 <%= render "shared/footer" %>
 
-<!-- Retry failed images + Price auto-submit + Card click navigation -->
+<!-- Retry failed images + Price auto-submit + Card click navigation + Clear button resets hidden fields -->
 <script>
 document.addEventListener('turbo:load', () => {
   // Retry any failed images once (cache issue after Turbo BFCache)
@@ -383,30 +400,39 @@ document.addEventListener('turbo:load', () => {
     });
   }
 
+  // Clear button clears text + hidden fields and submits
+  const clearBtn = document.getElementById('sbClearQ');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      const input = document.getElementById('listingSearchInput');
+      ['place_id','lat','lng','formatted_address'].forEach(name => {
+        const el = document.querySelector(`input[name="${name}"]`);
+        if (el) el.value = '';
+      });
+      if (input) input.value = '';
+      clearBtn.classList.add('d-none');
+      // submit updated (cleared) search
+      clearBtn.form ? clearBtn.form.requestSubmit() : input?.form?.requestSubmit();
+    });
+  }
+
   // Make whole cards clickable except exempt areas (favourite + message seller)
-  const cards = document.querySelectorAll('.js-card');
-  cards.forEach(card => {
+  document.querySelectorAll('.js-card').forEach(card => {
     const href = card.dataset.href;
     if (!href) return;
 
-    // Click anywhere not inside an exempt element -> navigate
     card.addEventListener('click', (e) => {
-      // If click came from an <a> or inside an exempt area, do nothing
       if (e.target.closest('a, .js-card-exempt')) return;
       window.Turbo ? Turbo.visit(href) : (window.location.href = href);
     });
 
-    // Keyboard accessibility (Enter / Space)
     card.addEventListener('keydown', (e) => {
-      const isEnter = e.key === 'Enter';
-      const isSpace = e.key === ' ';
-      if (!isEnter && !isSpace) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
       if (document.activeElement.closest('.js-card-exempt')) return;
       e.preventDefault();
       window.Turbo ? Turbo.visit(href) : (window.location.href = href);
     });
 
-    // Make it look clickable
     card.style.cursor = 'pointer';
   });
 });

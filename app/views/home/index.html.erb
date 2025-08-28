@@ -21,62 +21,65 @@
     <p class="lead mt-2 mb-4">Skip the middleman. Buyers meet sellers instantly and close faster.</p>
 
     <!-- SEARCH PANEL -->
-    <div class="mx-auto search-panel shadow-lg">
+    <div class="mx-auto search-panel shadow-lg" data-controller="home-search">
       <!-- Tabs -->
       <div class="search-tabs d-flex gap-5">
-  <!-- Buy tab -->
-  <div class="search-tabs d-flex gap-5">
-  <!-- Buy tab -->
-  <button class="tab active"
-          data-placeholder="Where do you want to buy? e.g Windsor, SL44JU">
-    Buy
-  </button>
+        <!-- Buy tab -->
+        <button class="tab active"
+                data-placeholder="Where do you want to buy? e.g Windsor, SL4 4JU">
+          Buy
+        </button>
 
-  <!-- Sell tab (styled like Buy) -->
-  <% if user_signed_in? %>
-    <%= link_to "Sell",
-                dashboard_path,
-                class: "tab text-decoration-none",
-                data: { placeholder: "Start selling your property here" } %>
-  <% else %>
-    <%= link_to "Sell",
-                new_user_session_path,
-                class: "tab text-decoration-none",
-                data: { placeholder: "Start selling your property here" } %>
-  <% end %>
+        <!-- Sell tab -->
+        <% if user_signed_in? %>
+          <%= link_to "Sell",
+                      dashboard_path,
+                      class: "tab text-decoration-none",
+                      data: { placeholder: "Start selling your property here" } %>
+        <% else %>
+          <%= link_to "Sell",
+                      new_user_session_path,
+                      class: "tab text-decoration-none",
+                      data: { placeholder: "Start selling your property here" } %>
+        <% end %>
 
-  <!-- Instant Valuation tab -->
-  <button class="tab"
-          data-placeholder="Enter your address for an instant valuation">
-    Instant Valuation
-  </button>
-</div>
-</div>
+        <!-- Instant Valuation tab -->
+        <button class="tab"
+                data-placeholder="Enter your address for an instant valuation">
+          Instant Valuation
+        </button>
+      </div>
 
       <!-- Search -->
       <%= form_with url: listings_path, method: :get, local: true, html: { class: "search-form" } do %>
-  <div class="search-bar position-relative">
-    <!-- Left icon -->
-    <i class="bi bi-house-heart-fill left-icon"></i>
+        <div class="search-bar position-relative">
+          <!-- Left icon -->
+          <i class="bi bi-house-heart-fill left-icon"></i>
 
-    <!-- Input -->
-    <input
-      type="text"
-      name="q"
-      id="homeSearchInput"
-      class="form-control search-input ps-5 pe-5"
-      placeholder="Where do you want to buy? e.g Windsor, SL44JU"
-      aria-label="Search by area or postcode">
+          <!-- Input (Stimulus target) -->
+          <input
+            type="text"
+            name="q"
+            id="homeSearchInput"
+            class="form-control search-input ps-5 pe-5"
+            placeholder="Where do you want to buy? e.g Windsor, SL4 4JU"
+            aria-label="Search by area or postcode"
+            data-home-search-target="input">
 
-    <!-- Search button -->
-    <button class="search-btn" type="submit" aria-label="Search">
-      <i class="bi bi-search"></i>
-    </button>
-  </div>
-<% end %>
+          <!-- Hidden fields filled by Google Places (Stimulus targets) -->
+          <input type="hidden" name="place_id" id="placeIdField" data-home-search-target="placeId">
+          <input type="hidden" name="lat" id="latField" data-home-search-target="lat">
+          <input type="hidden" name="lng" id="lngField" data-home-search-target="lng">
+          <input type="hidden" name="formatted_address" id="formattedAddressField" data-home-search-target="address">
+
+          <!-- Search button -->
+          <button class="search-btn" type="submit" aria-label="Search">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      <% end %>
     </div>
 
-  
   </div>
 </section>
 <!-- ======================= /HERO ======================= -->
@@ -139,9 +142,6 @@
 
 <%= render "shared/footer" %>
 
-
-
-
 <!-- ===== Tiny JS to switch the active tab + placeholder ===== -->
 <script>
   document.addEventListener("turbo:load", function(){
@@ -157,3 +157,5 @@
     });
   });
 </script>
+
+<!-- Load Google Maps JS once (kept here if not in layout). If you already load it in layout, remove this. -->

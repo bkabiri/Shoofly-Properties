@@ -3,56 +3,84 @@ class ListingsController < ApplicationController
   before_action :normalize_index_params, only: :index
 
   def index
-    scope = Listing.published_only
-                   .with_attached_banner_image
-                   .order(created_at: :desc)
+  scope = Listing.published_only
+                 .with_attached_banner_image
+                 .order(created_at: :desc)
 
-    # --- keyword search ---
-    if @filters[:q].present?
-      like = "%#{@filters[:q]}%"
-      scope = scope.where("title ILIKE :like OR address ILIKE :like", like: like)
+  # ------- location / radius (Google Places or fallback geocode) -------
+  origin = nil
+  radius_km = (@filters[:radius].presence || 10).to_f # default 10km
+
+  if params[:lat].present? && params[:lng].present?
+    # From Google Places hidden fields
+    origin = [params[:lat].to_f, params[:lng].to_f]
+  elsif @filters[:q].present?
+    # Try to geocode free-text "q" (area/postcode). If it fails, we’ll use it as a keyword below.
+    if (geo = Geocoder.search(@filters[:q]).first)&.coordinates
+      origin = geo.coordinates # [lat, lng]
+    end
+  end
+
+  if origin.present?
+    # Requires geocoder + Listing.geocoded (latitude/longitude columns)
+    # order: :distance will expose distance_in_km / distance as a select.
+    scope = scope.near(origin, radius_km, order: :distance)
+  end
+
+  # ------- keyword search (only if no successful location geocode) -------
+  if @filters[:q].present? && origin.blank?
+    like = "%#{@filters[:q]}%"
+    scope = scope.where("title ILIKE :like OR address ILIKE :like", like: like)
+  end
+
+  # ------- property types (multi-select) -------
+  if @filters[:property_types].present?
+    scope = scope.where(property_type: @filters[:property_types])
+  end
+
+  # ------- price range -------
+  scope = scope.where("guide_price >= ?", @filters[:min_price]) if @filters[:min_price]
+  scope = scope.where("guide_price <= ?", @filters[:max_price]) if @filters[:max_price]
+
+  # ------- bedrooms -------
+  scope = scope.where("bedrooms >= ?", @filters[:min_beds]) if @filters[:min_beds]
+  scope = scope.where("bedrooms <= ?", @filters[:max_beds]) if @filters[:max_beds]
+
+  # ------- added since (days) -------
+  if @filters[:added_since]&.positive?
+    scope = scope.where("created_at >= ?", @filters[:added_since].days.ago)
+  end
+
+  # ------- include under-offer / sold-stc -------
+  if Listing.respond_to?(:sale_statuses) && Listing.column_names.include?("sale_status")
+    if @filters[:include_under_offer]
+      allowed = Listing.sale_statuses.values_at(:available, :under_offer, :sold_stc)
+      scope = scope.where(sale_status: allowed)
+    else
+      scope = scope.where(sale_status: Listing.sale_statuses[:available])
+    end
+  end
+
+  # ------- sorting -------
+  @sort = permitted_sort(@filters[:sort])
+  scope =
+    case @sort
+    when "price_asc"  then order_price(scope, direction: :asc)
+    when "price_desc" then order_price(scope, direction: :desc)
+    when "beds_desc"  then scope.order(bedrooms: :desc, created_at: :desc)
+    when "distance"   then origin.present? ? scope # already ordered by :distance via .near
+                                          : scope.order(created_at: :desc)
+    else                    scope.order(created_at: :desc) # newest
     end
 
-    # --- property types (multi-select) ---
-    if @filters[:property_types].present?
-      scope = scope.where(property_type: @filters[:property_types])
-    end
+  # ------- pagination (Kaminari) -------
+  @listings = defined?(Kaminari) ? scope.page(params[:page]).per(12) : scope
 
-    # --- price range ---
-    scope = scope.where("guide_price >= ?", @filters[:min_price]) if @filters[:min_price]
-    scope = scope.where("guide_price <= ?", @filters[:max_price]) if @filters[:max_price]
-
-    # --- bedrooms ---
-    scope = scope.where("bedrooms >= ?", @filters[:min_beds]) if @filters[:min_beds]
-    scope = scope.where("bedrooms <= ?", @filters[:max_beds]) if @filters[:max_beds]
-
-    # --- added since (days) ---
-    if @filters[:added_since]&.positive?
-      scope = scope.where("created_at >= ?", @filters[:added_since].days.ago)
-    end
-
-    # --- include under-offer / sold-stc (NO-OP unless sale_status enum exists) ---
-    if Listing.respond_to?(:sale_statuses) && Listing.column_names.include?("sale_status")
-      if @filters[:include_under_offer]
-        allowed = Listing.sale_statuses.values_at(:available, :under_offer, :sold_stc)
-        scope = scope.where(sale_status: allowed)
-      else
-        scope = scope.where(sale_status: Listing.sale_statuses[:available])
-      end
-    end
-
-    # --- sorting ---
-    @sort = permitted_sort(@filters[:sort])
-    scope =
-      case @sort
-      when "price_asc"  then order_price(scope, direction: :asc)
-      when "price_desc" then order_price(scope, direction: :desc)
-      when "beds_desc"  then scope.order(bedrooms: :desc, created_at: :desc)
-      else                    scope.order(created_at: :desc) # newest
-      end
-
-    # --- pagination (Kaminari) ---
-    @listings = defined?(Kaminari) ? scope.page(params[:page]).per(12) : scope
+  # Expose for the view (map pins, chips, etc.)
+  @origin           = origin
+  @radius_km        = radius_km
+  @place_id         = params[:place_id].presence
+  @formatted_address = params[:formatted_address].presence
   end
 
   def show

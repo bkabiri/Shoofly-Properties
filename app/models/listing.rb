@@ -9,6 +9,34 @@ class Listing < ApplicationRecord
   has_many :fans, through: :favorites, source: :user
   has_one_attached  :epc
 
+  # ---- Geocoder ----
+  # Build a single-line address for geocoding. Uses `address` if you store it,
+  # otherwise composes from the parts you have.
+  def full_address
+    base =
+      if address.present?
+        address
+      else
+        # Rails 7+: `compact_blank`; if you’re on older, use `.compact.reject(&:blank?)`
+        [address_line1, address_line2].compact_blank.join(', ')
+      end
+
+    [base, city, postcode].compact_blank.join(', ')
+  end
+
+  geocoded_by :full_address
+
+  # Re-geocode whenever any address-y field changes
+  after_validation :geocode, if: :should_geocode?
+
+  def should_geocode?
+    will_save_change_to_address? ||
+      will_save_change_to_address_line1? ||
+      will_save_change_to_address_line2? ||
+      will_save_change_to_city? ||
+      will_save_change_to_postcode?
+  end
+
   # ---- Enums ----
   enum property_type: {
     detached: 0, terraced: 1, semi_detached: 2, end_of_terrace: 3,
@@ -19,8 +47,7 @@ class Listing < ApplicationRecord
   enum parking: { none: 0, one: 1, two: 2, three_plus: 3 }, _prefix: :parking
   enum status: { draft: 0, published: 1 }
 
-  # New: sale lifecycle (powers “Include Under Offer, Sold STC”)
-  # available → under_offer → sold_stc → sold (for example)
+  # New: sale lifecycle
   enum sale_status: { available: 0, under_offer: 1, sold_stc: 2, sold: 3 }, _prefix: :sale
 
   # ---- Scopes ----
@@ -31,10 +58,7 @@ class Listing < ApplicationRecord
   scope :beds_min,       ->(v) { where("bedrooms >= ?", v) if v.present? }
   scope :beds_max,       ->(v) { where("bedrooms <= ?", v) if v.present? }
   scope :added_since,    ->(days) { where("created_at >= ?", days.to_i.days.ago) if days.present? && days.to_i.positive? }
-
-  # When you *don’t* tick “include under offer”, show only fully available stock
   scope :market_available_only, -> { where(sale_status: sale_statuses[:available]) }
-  # When you *do* tick it, include under_offer + sold_stc in the feed
   scope :market_including_uo_stc, -> { where(sale_status: sale_statuses.values_at(:available, :under_offer, :sold_stc)) }
 
   # ---- Validations ----
@@ -51,17 +75,18 @@ class Listing < ApplicationRecord
   # ---- Slug + content safety ----
   before_validation :ensure_slug!
   before_validation :sanitize_description!
-    def parking_display
-      case parking.to_s.downcase
-      when "one"       then "1+"
-      when "two"       then "2+"
-      when "three"     then "3+"
-      when "three_plus", "3_plus" then "3+"
-      when "four"      then "4+"
-      else
-        parking.to_s.humanize.upcase.presence || "—"
-      end
+
+  def parking_display
+    case parking.to_s.downcase
+    when "one" then "1+"
+    when "two" then "2+"
+    when "three", "three_plus", "3_plus" then "3+"
+    when "four" then "4+"
+    else
+      parking.to_s.humanize.upcase.presence || "—"
     end
+  end
+
   # Publishing gate
   validate :required_fields_for_publish, if: :publishing?
 
@@ -70,7 +95,6 @@ class Listing < ApplicationRecord
     slug.presence || id.to_s
   end
 
-  # Nice select helpers for the filters (optional)
   def self.property_type_options
     property_types.keys.map { |k| [k.humanize, k] }
   end
@@ -104,7 +128,6 @@ class Listing < ApplicationRecord
     candidate = base.presence || id&.to_s
     candidate = "listing-#{SecureRandom.hex(3)}" if candidate.blank?
 
-    # ensure uniqueness
     n = 1
     while Listing.where.not(id: id).exists?(slug: candidate)
       candidate = "#{base}-#{n}"

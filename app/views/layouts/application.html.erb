@@ -31,7 +31,9 @@
                              defer: true,
                              integrity: "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz",
                              crossorigin: "anonymous" %>
-
+<%= javascript_include_tag \
+  "https://maps.googleapis.com/maps/api/js?key=#{ENV['GOOGLE_MAPS_API_KEY']}&libraries=places&loading=async",
+  async: true, defer: true %>
   <%= javascript_importmap_tags %>
 </head>
 
