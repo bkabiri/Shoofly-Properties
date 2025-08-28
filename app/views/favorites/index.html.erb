@@ -1,40 +1,86 @@
-<!-- app/views/favorites/index.html.erb -->
 <%= render "shared/navbar" %>
-<div class="container-xxl py-4">
-  <h1 class="h4 mb-3">Saved properties</h1>
+
+<div class="container-xxl py-4 saved-properties-container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="section-title mb-0">Saved Properties</h1>
+    <span class="badge bg-primary rounded-pill"><%= @listings.count %> saved</span>
+  </div>
 
   <% if @listings.any? %>
-    <div class="row g-3">
-      <% @listings.each do |l| %>
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-0">
-            <%= link_to listing_path(l), class: "text-decoration-none text-reset d-block" do %>
-              <% if l.banner_image.attached? %>
-                <%= image_tag(
-                      l.banner_image.variable? ? l.banner_image.variant(resize_to_fill: [800, 520]).processed : l.banner_image,
-                      class: "card-img-top", alt: l.title, loading: "lazy"
-                    ) %>
-              <% else %>
-                <div class="bg-light ratio ratio-16x9 d-flex align-items-center justify-content-center text-muted">No image</div>
+    <div class="list-group">
+      <% @listings.each do |listing| %>
+        <div class="list-group-item list-group-item-action p-3 mb-3 border rounded shadow-sm">
+          <div class="row g-3 align-items-center">
+            
+            <!-- Image -->
+            <div class="col-md-4 col-lg-3">
+              <%= link_to listing_path(listing), class: "d-block" do %>
+                <% if listing.banner_image.attached? %>
+                  <%= image_tag(
+                        listing.banner_image.variable? ? listing.banner_image.variant(resize_to_fill: [400, 250]).processed : listing.banner_image,
+                        class: "img-fluid rounded",
+                        alt: listing.title,
+                        loading: "lazy"
+                      ) %>
+                <% else %>
+                  <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                       style="height:180px;">
+                    <i class="bi bi-image fs-1 text-muted"></i>
+                  </div>
+                <% end %>
               <% end %>
-              <div class="card-body">
-                <h2 class="h6 mb-1"><%= l.title %></h2>
-                <div class="text-muted small mb-2"><%= l.address %></div>
-                <div class="fw-bold"><%= l.guide_price ? number_to_currency(l.guide_price, unit: "£", precision: 0) : "Guide price on request" %></div>
-                <div class="mt-3 d-flex gap-2">
-                  <span id="<%= dom_id(l, :fav_btn) %>">
-                    <%= render "favorites/toggle", listing: l %>
-                  </span>
-                  <%= render "listings/message_button", listing: l %>
-                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="col-md-8 col-lg-9">
+              <h3 class="h5 mb-1"><%= listing.title %></h3>
+              <div class="text-muted mb-2">
+                <i class="bi bi-geo-alt"></i> <%= listing.address %>
               </div>
-            <% end %>
+
+              <div class="fw-bold mb-2" style="color:#ff4a5f;">
+                <%= listing.guide_price ? number_to_currency(listing.guide_price, unit: "£", precision: 0) : "Guide price on request" %>
+              </div>
+
+              <div class="mb-3 small text-muted d-flex gap-3">
+                <% if listing.property_type.present? %>
+                  <span><i class="bi bi-house-door"></i> <%= listing.property_type.humanize %></span>
+                <% end %>
+                <% if listing.bedrooms.present? %>
+                  <span><i class="bi bi-door-closed"></i> <%= listing.bedrooms %> bed</span>
+                <% end %>
+                <% if listing.bathrooms.present? %>
+                  <span><i class="bi bi-droplet"></i> <%= listing.bathrooms %> bath</span>
+                <% end %>
+              </div>
+
+              <!-- Actions -->
+              <div class="d-flex gap-2 align-items-center">
+                <%= mail_to listing.user.email, "Message Seller",
+                    subject: "Enquiry about #{listing.title}",
+                    class: "btn btn-snoofly" %>
+
+                <%= link_to "View Details", listing_path(listing),
+                            class: "btn btn-snoofly" %>
+
+                <span id="<%= dom_id(listing, :fav_btn) %>" class="ms-auto">
+                  <%= render "favorites/toggle", listing: listing %>
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
       <% end %>
     </div>
   <% else %>
-    <div class="alert alert-light border">You haven’t saved any properties yet.</div>
+    <div class="empty-state text-center py-5">
+      <i class="bi bi-heart fs-1 text-muted"></i>
+      <h3 class="mt-3">No saved properties yet</h3>
+      <p class="mb-4">Start browsing properties and save your favorites to compare later</p>
+      <%= link_to "Browse Properties", listings_path, class: "btn btn-snoofly" %>
+    </div>
   <% end %>
 </div>
+
 <%= render "shared/footer" %>
