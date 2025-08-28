@@ -3,84 +3,93 @@ class ListingsController < ApplicationController
   before_action :normalize_index_params, only: :index
 
   def index
-  scope = Listing.published_only
-                 .with_attached_banner_image
-                 .order(created_at: :desc)
+    scope = Listing.published_only
+                   .with_attached_banner_image
+                   .order(created_at: :desc)
 
-  # ------- location / radius (Google Places or fallback geocode) -------
-  origin = nil
-  radius_km = (@filters[:radius].presence || 10).to_f # default 10km
+    # ------- location / radius (Google Places or fallback geocode) -------
+    origin       = nil
+    radius_miles = @filters[:radius] # String: "0", "0.5", ..., "national" or nil
+    use_national = radius_miles.to_s == "national"
+    numeric_radius = radius_miles.to_s.match?(/\A\d+(\.\d+)?\z/) ? radius_miles.to_f : nil
+    radius_km   = numeric_radius ? (numeric_radius * 1.60934) : nil
 
-  if params[:lat].present? && params[:lng].present?
-    # From Google Places hidden fields
-    origin = [params[:lat].to_f, params[:lng].to_f]
-  elsif @filters[:q].present?
-    # Try to geocode free-text "q" (area/postcode). If it fails, we’ll use it as a keyword below.
-    if (geo = Geocoder.search(@filters[:q]).first)&.coordinates
-      origin = geo.coordinates # [lat, lng]
-    end
-  end
+    # 1) Prefer explicit lat/lng from hidden fields populated by Places
+    if params[:lat].present? && params[:lng].present?
+      origin = [params[:lat].to_f, params[:lng].to_f]
 
-  if origin.present?
-    # Requires geocoder + Listing.geocoded (latitude/longitude columns)
-    # order: :distance will expose distance_in_km / distance as a select.
-    scope = scope.near(origin, radius_km, order: :distance)
-  end
-
-  # ------- keyword search (only if no successful location geocode) -------
-  if @filters[:q].present? && origin.blank?
-    like = "%#{@filters[:q]}%"
-    scope = scope.where("title ILIKE :like OR address ILIKE :like", like: like)
-  end
-
-  # ------- property types (multi-select) -------
-  if @filters[:property_types].present?
-    scope = scope.where(property_type: @filters[:property_types])
-  end
-
-  # ------- price range -------
-  scope = scope.where("guide_price >= ?", @filters[:min_price]) if @filters[:min_price]
-  scope = scope.where("guide_price <= ?", @filters[:max_price]) if @filters[:max_price]
-
-  # ------- bedrooms -------
-  scope = scope.where("bedrooms >= ?", @filters[:min_beds]) if @filters[:min_beds]
-  scope = scope.where("bedrooms <= ?", @filters[:max_beds]) if @filters[:max_beds]
-
-  # ------- added since (days) -------
-  if @filters[:added_since]&.positive?
-    scope = scope.where("created_at >= ?", @filters[:added_since].days.ago)
-  end
-
-  # ------- include under-offer / sold-stc -------
-  if Listing.respond_to?(:sale_statuses) && Listing.column_names.include?("sale_status")
-    if @filters[:include_under_offer]
-      allowed = Listing.sale_statuses.values_at(:available, :under_offer, :sold_stc)
-      scope = scope.where(sale_status: allowed)
-    else
-      scope = scope.where(sale_status: Listing.sale_statuses[:available])
-    end
-  end
-
-  # ------- sorting -------
-  @sort = permitted_sort(@filters[:sort])
-  scope =
-    case @sort
-    when "price_asc"  then order_price(scope, direction: :asc)
-    when "price_desc" then order_price(scope, direction: :desc)
-    when "beds_desc"  then scope.order(bedrooms: :desc, created_at: :desc)
-    when "distance"   then origin.present? ? scope # already ordered by :distance via .near
-                                          : scope.order(created_at: :desc)
-    else                    scope.order(created_at: :desc) # newest
+    # 2) Else, best-effort geocode free-text q (postcode/town) if Geocoder is available
+    elsif @filters[:q].present? && defined?(Geocoder)
+      if (geo = Geocoder.search(@filters[:q]).first)&.coordinates
+        origin = geo.coordinates # [lat, lng]
+      end
     end
 
-  # ------- pagination (Kaminari) -------
-  @listings = defined?(Kaminari) ? scope.page(params[:page]).per(12) : scope
+    # Apply radius only if:
+    #  - we have an origin
+    #  - radius is numeric and > 0
+    #  - and .near is available (geocoder)
+    if origin.present? && Listing.respond_to?(:near) && numeric_radius && numeric_radius > 0 && !use_national
+      scope = scope.near(origin, radius_km, order: :distance) # exposes distance_in_km/distance
+    end
+    # Note:
+    #  - "0" (This area only) => no radius filter (skip .near)
+    #  - "national" => no radius filter (nationwide)
 
-  # Expose for the view (map pins, chips, etc.)
-  @origin           = origin
-  @radius_km        = radius_km
-  @place_id         = params[:place_id].presence
-  @formatted_address = params[:formatted_address].presence
+    # ------- keyword search (only if no successful location geocode) -------
+    if @filters[:q].present? && origin.blank?
+      like = "%#{@filters[:q]}%"
+      scope = scope.where("title ILIKE :like OR address ILIKE :like", like: like)
+    end
+
+    # ------- property types (multi-select) -------
+    if @filters[:property_types].present?
+      scope = scope.where(property_type: @filters[:property_types])
+    end
+
+    # ------- price range -------
+    scope = scope.where("guide_price >= ?", @filters[:min_price]) if @filters[:min_price]
+    scope = scope.where("guide_price <= ?", @filters[:max_price]) if @filters[:max_price]
+
+    # ------- bedrooms -------
+    scope = scope.where("bedrooms >= ?", @filters[:min_beds]) if @filters[:min_beds]
+    scope = scope.where("bedrooms <= ?", @filters[:max_beds]) if @filters[:max_beds]
+
+    # ------- added since (days) -------
+    if @filters[:added_since]&.positive?
+      scope = scope.where("created_at >= ?", @filters[:added_since].days.ago)
+    end
+
+    # ------- include under-offer / sold-stc -------
+    if Listing.respond_to?(:sale_statuses) && Listing.column_names.include?("sale_status")
+      if @filters[:include_under_offer]
+        allowed = Listing.sale_statuses.values_at(:available, :under_offer, :sold_stc)
+        scope = scope.where(sale_status: allowed)
+      else
+        scope = scope.where(sale_status: Listing.sale_statuses[:available])
+      end
+    end
+
+    # ------- sorting -------
+    @sort = permitted_sort(@filters[:sort])
+    scope =
+      case @sort
+      when "price_asc"  then order_price(scope, direction: :asc)
+      when "price_desc" then order_price(scope, direction: :desc)
+      when "beds_desc"  then scope.order(bedrooms: :desc, created_at: :desc)
+      when "distance"   then origin.present? ? scope : scope.order(created_at: :desc) # .near already ordered
+      else                    scope.order(created_at: :desc) # newest
+      end
+
+    # ------- pagination (Kaminari) -------
+    @listings = defined?(Kaminari) ? scope.page(params[:page]).per(12) : scope
+
+    # Expose for the view (map pins, chips, etc.)
+    @origin             = origin
+    @radius_miles       = numeric_radius
+    @radius_km          = radius_km
+    @place_id           = params[:place_id].presence
+    @formatted_address  = params[:formatted_address].presence
   end
 
   def show
@@ -103,19 +112,25 @@ class ListingsController < ApplicationController
 
   # Normalize and whitelist incoming filter params into @filters
   def normalize_index_params
-    allowed_pts = Listing.property_types.keys
-    selected_pts = Array(params[:property_type]).reject(&:blank?) & allowed_pts
+    allowed_pts   = Listing.property_types.keys
+    selected_pts  = Array(params[:property_type]).reject(&:blank?) & allowed_pts
 
     @filters = {
-      q: params[:q].to_s.strip.presence,
-      property_types: selected_pts,                                   # <-- array
-      min_price: to_i_or_nil(params[:min_price]),
-      max_price: to_i_or_nil(params[:max_price]),
-      min_beds: to_i_or_nil(params[:min_beds]),
-      max_beds: to_i_or_nil(params[:max_beds]),
-      added_since: to_i_or_nil(params[:added_since]),
+      q:                   params[:q].to_s.strip.presence,
+      property_types:      selected_pts,                                   # array
+      min_price:           to_i_or_nil(params[:min_price]),
+      max_price:           to_i_or_nil(params[:max_price]),
+      min_beds:            to_i_or_nil(params[:min_beds]),
+      max_beds:            to_i_or_nil(params[:max_beds]),
+      added_since:         to_i_or_nil(params[:added_since]),
       include_under_offer: params[:include_under_offer].present?,
-      sort: params[:sort].presence
+      sort:                params[:sort].presence,
+      # NEW: location filters coming from the view
+      radius:              params[:radius].presence,         # "0","0.25","1",...,"national"
+      place_id:            params[:place_id].presence,
+      lat:                 params[:lat].presence,
+      lng:                 params[:lng].presence,
+      formatted_address:   params[:formatted_address].presence
     }
   end
 
@@ -132,7 +147,7 @@ class ListingsController < ApplicationController
   end
 
   def permitted_sort(raw)
-    %w[newest price_asc price_desc beds_desc].include?(raw) ? raw : "newest"
+    %w[newest price_asc price_desc beds_desc distance].include?(raw) ? raw : "newest"
   end
 
   # Price ordering with NULLS LAST fallback for adapters that don’t support it

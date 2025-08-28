@@ -27,14 +27,22 @@
   ] %>
 
   <div class="row g-3">
-    <!-- Address -->
-    <div class="col-12">
+    <!-- Address (Google Places Autocomplete) -->
+    <div class="col-12" data-controller="address-autocomplete">
       <%= f.label :address, "Property Address", class: "form-label" %>
-      <%= f.text_field :address, class: "form-control", required: true,
-        placeholder: "Start typing your address…", aria: { describedby: "addressHelp" },
-        data: { "listing-form-target": "address" } %>
-      <div id="addressHelp" class="form-text">Stores address text. Place ID stored when available.</div>
-      <%= f.hidden_field :place_id, data: { "listing-form-target": "placeId" } %>
+      <%= f.text_field :address,
+            class: "form-control",
+            required: true,
+            placeholder: "Start typing your address…",
+            aria: { describedby: "addressHelp" },
+            data: { "address-autocomplete-target": "input" } %>
+      <div id="addressHelp" class="form-text">Pick from the dropdown. We’ll store the Place ID & coordinates.</div>
+
+      <!-- Hidden fields populated by Places -->
+      <%= f.hidden_field :place_id,  data: { "address-autocomplete-target": "placeId" } %>
+      <%= f.hidden_field :latitude,  data: { "address-autocomplete-target": "lat" } %>
+      <%= f.hidden_field :longitude, data: { "address-autocomplete-target": "lng" } %>
+
       <div class="form-text mt-2">
         <a href="#" class="link-secondary small" data-bs-toggle="collapse"
            data-bs-target="#manualAddress" aria-expanded="false"
@@ -42,7 +50,7 @@
       </div>
     </div>
 
-    <!-- Manual Address Fallback -->
+    <!-- Manual Address Fallback (will auto-fill when possible) -->
     <div class="collapse col-12 mt-3" id="manualAddress">
       <div class="row g-3">
         <div class="col-12">
