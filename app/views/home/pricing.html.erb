@@ -1,214 +1,192 @@
 <%= render "shared/navbar" %>
-<section class="pricing-section">
-  <!-- Hero Section -->
+
+<section class="pricing-section"
+         data-controller="checkout"
+         data-checkout-endpoint-value="<%= sessions_checkout_index_path %>">
+  <!-- Hero -->
   <div class="pricing-hero">
     <h1 class="pricing-title">Simple, Transparent Pricing</h1>
     <p class="pricing-subtitle">Choose the perfect plan for your property journey. No hidden fees, no surprises.</p>
-    
-    <!-- Billing Toggle -->
-    <div class="billing-toggle">
-      <div class="billing-option active" data-period="monthly">Monthly</div>
-      <div class="billing-option" data-period="yearly">Yearly (Save 20%)</div>
+
+    <!-- Billing toggle (affects recurring plans only) -->
+    <div id="billingToggle" class="billing-toggle">
+      <button type="button" class="billing-option active" data-period="monthly" aria-pressed="true">Monthly</button>
+      <button type="button" class="billing-option" data-period="yearly" aria-pressed="false">Yearly (Save 20%)</button>
     </div>
   </div>
 
   <div class="container">
-    <!-- Tabs: Sellers / Agents -->
+    <!-- Tabs -->
     <div class="pricing-tabs d-flex" id="pricingTabs">
-      <button class="pricing-tab active flex-grow-1" data-bs-target="#sellers">Private Sellers</button>
-      <button class="pricing-tab flex-grow-1" data-bs-target="#agents">Estate Agents</button>
+      <button class="pricing-tab active flex-grow-1" type="button" data-bs-target="#sellers">Private Sellers</button>
+      <button class="pricing-tab flex-grow-1" type="button" data-bs-target="#agents">Estate Agents</button>
     </div>
 
     <div class="tab-content">
-      <!-- Private Sellers -->
+      <!-- ===================== Private Sellers ===================== -->
       <div class="tab-pane fade show active" id="sellers">
         <div class="row g-4">
-          <!-- Basic Plan -->
+          <!-- Starter (one-time, 3 months) -->
           <div class="col-lg-6">
-            <div class="plan-card shadow-lg">
+            <div class="plan-card shadow-lg" data-plan-card>
               <div class="plan-header">
-                <h3 class="plan-name">Basic</h3>
-                <div class="plan-price" data-monthly="£10" data-yearly="£8">£10</div>
-                <div class="plan-period">per month</div>
-                <div class="plan-savings yearly-only">Save £24 yearly</div>
+                <h3 class="plan-name">Starter (3 Months)</h3>
+                <div class="plan-price"
+                     data-fixed="true"
+                     data-monthly="£10"
+                     data-yearly="£10">£10</div>
+                <div class="plan-period" data-fixed="true">one-time for 3 months</div>
               </div>
+
               <div class="plan-features">
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>1 active property listing</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Unlimited photos + description</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Full sales journey support</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Viewing scheduling calendar</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Partner network access</span>
-                </div>
-                <button class="btn-snoofly-outline">Start with Basic</button>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> Full access to Snoofly for 3 months</div>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> 1 active property listing</div>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> Unlimited photos & detailed description</div>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> Viewing scheduling calendar</div>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> Support + partner services access</div>
+
+                <button
+                  class="btn-snoofly-outline"
+                  data-action="click->checkout#start"
+                  data-checkout-plan="priv_starter_once"
+                  data-checkout-kind="one_time"
+                  data-checkout-period="one_time">
+                  Start for £10
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Plus Plan (Featured) -->
+          <!-- Plus (recurring) -->
           <div class="col-lg-6">
-            <div class="plan-card featured shadow-lg">
+            <div class="plan-card featured shadow-lg" data-plan-card>
               <div class="plan-header">
                 <h3 class="plan-name">Plus</h3>
-                <div class="plan-price" data-monthly="£25" data-yearly="£20">£25</div>
+                <div class="plan-price"
+                     data-monthly="£25"
+                     data-yearly="£20">£25</div>
                 <div class="plan-period">per month</div>
-                <div class="plan-savings yearly-only">Save £60 yearly</div>
+                <div class="plan-savings yearly-only" style="display:none;">Save £60 yearly</div>
               </div>
+
               <div class="plan-features">
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Up to 2 active listings</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Featured placement in search</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Priority support</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>All Basic features included</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Advanced analytics dashboard</span>
-                </div>
-                <button class="btn-snoofly-price">Choose Plus</button>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> Full access, up to 2 active listings</div>
+                <div class="feature-item"><i class="bi bi-stars feature-icon"></i> <strong>Premium placement for 2 weeks</strong></div>
+                <div class="feature-item"><i class="bi bi-bell-fill feature-icon"></i> <strong>Investors notified</strong> about your listing</div>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> Priority support</div>
+                <div class="feature-item"><i class="bi bi-graph-up feature-icon"></i> Basic analytics dashboard</div>
+
+                <button
+                  class="btn-snoofly-price"
+                  data-action="click->checkout#start"
+                  data-checkout-plan="priv_plus_once"
+                  data-checkout-kind="one_time"
+                  data-checkout-period="one_time">
+                  Choose Plus
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Comparison Table -->
+        <!-- Sellers comparison -->
         <div class="comparison-table">
           <div class="comparison-header">
             <h3 class="comparison-title">Feature Comparison</h3>
           </div>
           <div class="comparison-body">
             <div class="feature-row">
+              <div class="feature-name">Billing</div>
+              <div class="feature-value">One-time (3 months)</div>
+              <div class="feature-value">Monthly / Yearly</div>
+            </div>
+            <div class="feature-row">
               <div class="feature-name">Active Listings</div>
               <div class="feature-value">1</div>
               <div class="feature-value">Up to 2</div>
             </div>
             <div class="feature-row">
-              <div class="feature-name">Featured Placement</div>
+              <div class="feature-name">Premium Placement</div>
+              <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
+              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i> 2 weeks</div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-name">Investors Notified</div>
               <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
               <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
             </div>
             <div class="feature-row">
-              <div class="feature-name">Priority Support</div>
-              <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
-            </div>
-            <div class="feature-row">
-              <div class="feature-name">Scheduling Calendar</div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
-            </div>
-            <div class="feature-row">
-              <div class="feature-name">Partner Network</div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
-            </div>
-            <div class="feature-row">
-              <div class="feature-name">Advanced Analytics</div>
-              <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
+              <div class="feature-name">Support</div>
+              <div class="feature-value">Standard</div>
+              <div class="feature-value">Priority</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Estate Agents -->
+      <!-- ===================== Estate Agents ===================== -->
       <div class="tab-pane fade" id="agents">
         <div class="row g-4">
-          <!-- Starter Plan -->
+          <!-- Basic -->
           <div class="col-lg-6">
-            <div class="plan-card shadow-lg">
+            <div class="plan-card shadow-lg" data-plan-card>
               <div class="plan-header">
-                <h3 class="plan-name">Starter (20 Active)</h3>
-                <div class="plan-price" data-monthly="£49" data-yearly="£39">£49</div>
+                <h3 class="plan-name">Basic (20 Active)</h3>
+                <div class="plan-price" data-monthly="£29" data-yearly="£23">£29</div>
                 <div class="plan-period">per month</div>
-                <div class="plan-savings yearly-only">Save £120 yearly</div>
+                <div class="plan-savings yearly-only" style="display:none;">Save £72 yearly</div>
               </div>
+
               <div class="plan-features">
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Up to 20 active listings</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>3 team seats with permissions</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Agency branding on listings</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Bulk CSV uploads</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Viewing scheduler & lead inbox</span>
-                </div>
-                <button class="btn-snoofly-outline">Choose Starter</button>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> <strong>Up to 20 active properties</strong></div>
+                <div class="feature-item"><i class="bi bi-people feature-icon"></i> 3 team seats with permissions</div>
+                <div class="feature-item"><i class="bi bi-building feature-icon"></i> Agency branding on listings</div>
+                <div class="feature-item"><i class="bi bi-file-earmark-spreadsheet feature-icon"></i> Bulk CSV uploads</div>
+                <div class="feature-item"><i class="bi bi-calendar-check feature-icon"></i> Viewing scheduler & lead inbox</div>
+
+                <button
+                  class="btn-snoofly-outline"
+                  data-action="click->checkout#start"
+                  data-checkout-plan="agent_basic_month"
+                  data-checkout-kind="subscription"
+                  data-checkout-period="monthly">
+                  Choose Basic
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Unlimited Plan (Featured) -->
+          <!-- Unlimited -->
           <div class="col-lg-6">
-            <div class="plan-card featured shadow-lg">
+            <div class="plan-card featured shadow-lg" data-plan-card>
               <div class="plan-header">
                 <h3 class="plan-name">Unlimited</h3>
-                <div class="plan-price" data-monthly="£79" data-yearly="£63">£79</div>
+                <div class="plan-price" data-monthly="£49" data-yearly="£39">£49</div>
                 <div class="plan-period">per month</div>
-                <div class="plan-savings yearly-only">Save £192 yearly</div>
+                <div class="plan-savings yearly-only" style="display:none;">Save £120 yearly</div>
               </div>
+
               <div class="plan-features">
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Unlimited active listings</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>10 team seats + branch management</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Featured slots each month</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>Advanced analytics & funnels</span>
-                </div>
-                <div class="feature-item">
-                  <i class="bi bi-check-circle-fill feature-icon"></i>
-                  <span>API/Webhooks & CRM export</span>
-                </div>
-                <button class="btn-snoofly">Choose Unlimited</button>
+                <div class="feature-item"><i class="bi bi-check-circle-fill feature-icon"></i> <strong>Unlimited properties</strong></div>
+                <div class="feature-item"><i class="bi bi-stars feature-icon"></i> <strong>Each new listing is Premium for 1 week</strong></div>
+                <div class="feature-item"><i class="bi bi-bell-fill feature-icon"></i> <strong>Investors notified for every new listing</strong></div>
+                <div class="feature-item"><i class="bi bi-people feature-icon"></i> 10 team seats + branch management</div>
+                <div class="feature-item"><i class="bi bi-graph-up feature-icon"></i> Advanced analytics & funnels</div>
+
+                <button
+                  class="btn-snoofly"
+                  data-action="click->checkout#start"
+                  data-checkout-plan="agent_unlimited_month"
+                  data-checkout-kind="subscription"
+                  data-checkout-period="monthly">
+                  Choose Unlimited
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Comparison Table -->
+        <!-- Agents comparison -->
         <div class="comparison-table">
           <div class="comparison-header">
             <h3 class="comparison-title">Feature Comparison</h3>
@@ -220,95 +198,96 @@
               <div class="feature-value">Unlimited</div>
             </div>
             <div class="feature-row">
+              <div class="feature-name">Premium Boost</div>
+              <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
+              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i> 1 week per listing</div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-name">Investors Notified</div>
+              <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
+              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
+            </div>
+            <div class="feature-row">
               <div class="feature-name">Team Seats</div>
               <div class="feature-value">3</div>
               <div class="feature-value">10 + branches</div>
             </div>
             <div class="feature-row">
-              <div class="feature-name">Featured Slots</div>
-              <div class="feature-value"><i class="bi bi-x-circle feature-cross"></i></div>
-              <div class="feature-value"><i class="bi bi-check-circle feature-check"></i></div>
-            </div>
-            <div class="feature-row">
               <div class="feature-name">Analytics</div>
-              <div class="feature-value">Basic</div>
-              <div class="feature-value">Advanced</div>
-            </div>
-            <div class="feature-row">
-              <div class="feature-name">Support</div>
               <div class="feature-value">Standard</div>
-              <div class="feature-value">Priority</div>
+              <div class="feature-value">Advanced</div>
             </div>
             <div class="feature-row">
               <div class="feature-name">Integrations</div>
               <div class="feature-value">CSV upload</div>
-              <div class="feature-value">API/Webhooks + CRM</div>
+              <div class="feature-value">API/Webhooks & CRM</div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+      </div> <!-- /#agents -->
+    </div> <!-- /.tab-content -->
+  </div> <!-- /.container -->
 </section>
 
 <%= render "shared/footer" %>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Billing toggle functionality
-    const billingOptions = document.querySelectorAll('.billing-option');
-    const priceElements = document.querySelectorAll('.plan-price');
-    const periodElements = document.querySelectorAll('.plan-period');
-    const savingsElements = document.querySelectorAll('.plan-savings');
-    
-    billingOptions.forEach(option => {
-      option.addEventListener('click', function() {
-        const period = this.getAttribute('data-period');
-        
-        // Update active state
-        billingOptions.forEach(opt => opt.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Update prices
-        priceElements.forEach(element => {
-          const monthlyPrice = element.getAttribute('data-monthly');
-          const yearlyPrice = element.getAttribute('data-yearly');
-          element.textContent = period === 'monthly' ? monthlyPrice : yearlyPrice;
+  // UI sugar only (no Stripe here): toggle monthly/yearly, tabs, and selected plan highlight
+  document.addEventListener('DOMContentLoaded', () => {
+    // Billing toggle
+    const toggleBtns = document.querySelectorAll('#billingToggle .billing-option');
+    const prices  = document.querySelectorAll('.plan-price');
+    const periods = document.querySelectorAll('.plan-period');
+    const savings = document.querySelectorAll('.plan-savings');
+
+    const updateRecurringButtons = (period) => {
+      // Update all recurring plan buttons’ data-plan-period
+      document.querySelectorAll('button[data-plan-kind="subscription"]').forEach(btn => {
+        btn.dataset.planPeriod = period; // "monthly" | "yearly"
+      });
+    };
+
+    toggleBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const period = btn.dataset.period; // "monthly" | "yearly"
+        toggleBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+        btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+
+        prices.forEach(el => {
+          if (el.dataset.fixed === 'true') return;
+          el.textContent = (period === 'monthly') ? el.dataset.monthly : el.dataset.yearly;
         });
-        
-        // Update period text
-        periodElements.forEach(element => {
-          element.textContent = period === 'monthly' ? 'per month' : 'per year';
+        periods.forEach(el => {
+          if (el.dataset.fixed === 'true') return;
+          el.textContent = (period === 'monthly') ? 'per month' : 'per year';
         });
-        
-        // Show/hide savings
-        savingsElements.forEach(element => {
-          if (period === 'yearly') {
-            element.style.display = 'block';
-          } else {
-            element.style.display = 'none';
-          }
-        });
+        savings.forEach(el => el.style.display = (period === 'yearly') ? 'block' : 'none');
+
+        updateRecurringButtons(period);
       });
     });
-    
-    // Tab functionality
-    const pricingTabs = document.querySelectorAll('.pricing-tab');
-    
-    pricingTabs.forEach(tab => {
-      tab.addEventListener('click', function() {
-        const target = this.getAttribute('data-bs-target');
-        
-        // Update active state
-        pricingTabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Show/hide tab content
-        document.querySelectorAll('.tab-pane').forEach(pane => {
-          pane.classList.remove('show', 'active');
-        });
-        document.querySelector(target).classList.add('show', 'active');
+
+    // Tabs
+    const tabs = document.querySelectorAll('.pricing-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-bs-target');
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show','active'));
+        document.querySelector(target).classList.add('show','active');
       });
     });
+
+    // Selected plan highlight
+    document.querySelectorAll('[data-select-plan]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-plan-card]').forEach(c => c.classList.remove('selected'));
+        btn.closest('[data-plan-card]')?.classList.add('selected');
+      });
+    });
+
+    // Initialize recurring buttons with default period (monthly)
+    updateRecurringButtons('monthly');
   });
 </script>

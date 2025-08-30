@@ -103,6 +103,10 @@ GEM
       responders
       warden (~> 1.2.3)
     digest (3.1.0)
+    dotenv (3.1.8)
+    dotenv-rails (3.1.8)
+      dotenv (= 3.1.8)
+      railties (>= 6.1)
     erubi (1.10.0)
     execjs (2.8.1)
     ffi (1.15.5)
@@ -244,6 +248,7 @@ GEM
       sprockets (>= 3.0.0)
     stimulus-rails (1.0.4)
       railties (>= 6.0.0)
+    stripe (15.5.0)
     strscan (3.0.3)
     thor (1.2.1)
     tilt (2.0.10)
@@ -283,6 +288,7 @@ DEPENDENCIES
   capybara
   debug
   devise
+  dotenv-rails
   geocoder
   image_processing (~> 1.12)
   importmap-rails
@@ -296,6 +302,7 @@ DEPENDENCIES
   selenium-webdriver
   sprockets-rails
   stimulus-rails
+  stripe
   turbo-rails
   tzinfo-data
   web-console

@@ -20,7 +20,14 @@ Rails.application.routes.draw do
 
   devise_for :users
   root to: "home#index"
-
+  resources :checkout, only: [] do
+    collection do
+      post :sessions       # POST /checkout/sessions
+      get  :success        # GET  /checkout/success
+      get  :cancel         # GET  /checkout/cancel
+    end
+  end
+  post "/checkout_sessions", to: "checkout#sessions"  
   # -------------------------
   # Authenticated Seller area
   # -------------------------
@@ -62,7 +69,7 @@ Rails.application.routes.draw do
       end
     end
   end
-
+  
   # Public invite acceptance (no auth required)
   get "seller/invites/:token/accept",
       to: "seller/invites#accept",

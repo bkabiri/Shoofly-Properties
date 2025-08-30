@@ -20,3 +20,7 @@ import LoginController from "./login_controller.js"
 application.register("login", LoginController)
 import AddressAutocompleteController from "./address_autocomplete_controller.js"
 application.register("address-autocomplete", AddressAutocompleteController)
+
+import CheckoutController from "./checkout_controller"
+application.register("checkout", CheckoutController)
+

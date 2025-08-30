@@ -25,7 +25,8 @@ gem "redis", "~> 4.0"
 
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]
 gem "bootsnap", require: false
-
+gem "stripe"
+gem "dotenv-rails", groups: [:development, :test] # if you want
 # UI
 gem "bootstrap", "~> 5.1.3"
 gem "kaminari"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_28_233049) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_30_204640) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -116,6 +116,40 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_28_233049) do
     t.index ["user_id"], name: "index_listings_on_user_id"
   end
 
+  create_table "payments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "listing_id"
+    t.bigint "plan_id", null: false
+    t.string "stripe_session_id", null: false
+    t.string "stripe_payment_intent_id"
+    t.string "stripe_subscription_id"
+    t.integer "amount_cents", null: false
+    t.string "currency", null: false
+    t.string "status", default: "pending", null: false
+    t.jsonb "stripe_payload"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id"], name: "index_payments_on_listing_id"
+    t.index ["plan_id"], name: "index_payments_on_plan_id"
+    t.index ["stripe_session_id"], name: "index_payments_on_stripe_session_id"
+    t.index ["user_id"], name: "index_payments_on_user_id"
+  end
+
+  create_table "plans", force: :cascade do |t|
+    t.string "code", null: false
+    t.string "name", null: false
+    t.string "kind", null: false
+    t.integer "amount_cents", null: false
+    t.string "currency", default: "gbp", null: false
+    t.string "interval"
+    t.integer "duration_months"
+    t.boolean "gives_premium", default: false
+    t.integer "premium_weeks"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_plans_on_code", unique: true
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.string "email"
     t.datetime "created_at", null: false
@@ -150,4 +184,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_28_233049) do
   add_foreign_key "favorites", "listings"
   add_foreign_key "favorites", "users"
   add_foreign_key "listings", "users"
+  add_foreign_key "payments", "listings"
+  add_foreign_key "payments", "plans"
+  add_foreign_key "payments", "users"
 end
