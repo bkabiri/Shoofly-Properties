@@ -2,14 +2,14 @@
 
 <section class="pricing-section"
          data-controller="checkout"
-         data-checkout-endpoint-value="<%= sessions_checkout_index_path %>">
+         data-checkout-listing-id-value="<%= @listing&.id %>">
   <!-- Hero -->
   <div class="pricing-hero">
     <h1 class="pricing-title">Simple, Transparent Pricing</h1>
     <p class="pricing-subtitle">Choose the perfect plan for your property journey. No hidden fees, no surprises.</p>
 
     <!-- Billing toggle (affects recurring plans only) -->
-    <div id="billingToggle" class="billing-toggle">
+    <div id="billingToggle" class="billing-toggle" role="tablist" aria-label="Billing period">
       <button type="button" class="billing-option active" data-period="monthly" aria-pressed="true">Monthly</button>
       <button type="button" class="billing-option" data-period="yearly" aria-pressed="false">Yearly (Save 20%)</button>
     </div>
@@ -17,14 +17,14 @@
 
   <div class="container">
     <!-- Tabs -->
-    <div class="pricing-tabs d-flex" id="pricingTabs">
-      <button class="pricing-tab active flex-grow-1" type="button" data-bs-target="#sellers">Private Sellers</button>
-      <button class="pricing-tab flex-grow-1" type="button" data-bs-target="#agents">Estate Agents</button>
+    <div class="pricing-tabs d-flex" id="pricingTabs" role="tablist" aria-label="Audience">
+      <button class="pricing-tab active flex-grow-1" type="button" data-bs-target="#sellers" aria-controls="sellers" aria-selected="true">Private Sellers</button>
+      <button class="pricing-tab flex-grow-1" type="button" data-bs-target="#agents" aria-controls="agents" aria-selected="false">Estate Agents</button>
     </div>
 
     <div class="tab-content">
       <!-- ===================== Private Sellers ===================== -->
-      <div class="tab-pane fade show active" id="sellers">
+      <div class="tab-pane fade show active" id="sellers" role="tabpanel">
         <div class="row g-4">
           <!-- Starter (one-time, 3 months) -->
           <div class="col-lg-6">
@@ -47,6 +47,7 @@
 
                 <button
                   class="btn-snoofly-outline"
+                  data-select-plan
                   data-action="click->checkout#start"
                   data-checkout-plan="priv_starter_once"
                   data-checkout-kind="one_time"
@@ -57,7 +58,7 @@
             </div>
           </div>
 
-          <!-- Plus (recurring) -->
+          <!-- Plus (one-off per your latest setup) -->
           <div class="col-lg-6">
             <div class="plan-card featured shadow-lg" data-plan-card>
               <div class="plan-header">
@@ -78,6 +79,7 @@
 
                 <button
                   class="btn-snoofly-price"
+                  data-select-plan
                   data-action="click->checkout#start"
                   data-checkout-plan="priv_plus_once"
                   data-checkout-kind="one_time"
@@ -125,7 +127,7 @@
       </div>
 
       <!-- ===================== Estate Agents ===================== -->
-      <div class="tab-pane fade" id="agents">
+      <div class="tab-pane fade" id="agents" role="tabpanel">
         <div class="row g-4">
           <!-- Basic -->
           <div class="col-lg-6">
@@ -146,10 +148,10 @@
 
                 <button
                   class="btn-snoofly-outline"
+                  data-select-plan
                   data-action="click->checkout#start"
                   data-checkout-plan="agent_basic_month"
-                  data-checkout-kind="subscription"
-                  data-checkout-period="monthly">
+                  data-checkout-kind="subscription">
                   Choose Basic
                 </button>
               </div>
@@ -175,10 +177,10 @@
 
                 <button
                   class="btn-snoofly"
+                  data-select-plan
                   data-action="click->checkout#start"
                   data-checkout-plan="agent_unlimited_month"
-                  data-checkout-kind="subscription"
-                  data-checkout-period="monthly">
+                  data-checkout-kind="subscription">
                   Choose Unlimited
                 </button>
               </div>
@@ -240,10 +242,9 @@
     const periods = document.querySelectorAll('.plan-period');
     const savings = document.querySelectorAll('.plan-savings');
 
-    const updateRecurringButtons = (period) => {
-      // Update all recurring plan buttons’ data-plan-period
-      document.querySelectorAll('button[data-plan-kind="subscription"]').forEach(btn => {
-        btn.dataset.planPeriod = period; // "monthly" | "yearly"
+    const setRecurringButtonsPeriod = (period) => {
+      document.querySelectorAll('button[data-checkout-kind="subscription"]').forEach(btn => {
+        btn.dataset.checkoutPeriod = period; // "monthly" | "yearly"
       });
     };
 
@@ -263,7 +264,7 @@
         });
         savings.forEach(el => el.style.display = (period === 'yearly') ? 'block' : 'none');
 
-        updateRecurringButtons(period);
+        setRecurringButtonsPeriod(period);
       });
     });
 
@@ -288,6 +289,6 @@
     });
 
     // Initialize recurring buttons with default period (monthly)
-    updateRecurringButtons('monthly');
+    setRecurringButtonsPeriod('monthly');
   });
 </script>

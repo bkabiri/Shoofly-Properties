@@ -8,7 +8,21 @@ class Plan < ApplicationRecord
 
   validates :code, :name, :kind, :amount_cents, :currency, presence: true
   validates :kind, inclusion: { in: %w[one_time subscription] }
+  def features_list
+    (features.presence || [])
+  end
 
+  def short_description_or_fallback
+    short_description.presence || name
+  end
+
+  def image_asset_or_fallback
+    image_asset.presence || "snoofly-card.png"
+  end
+
+  def submit_note_or_fallback
+    submit_note.presence || "You’re paying Snoofly for “#{name}”."
+  end
   # Convenience
   def one_time?
     kind == "one_time"

@@ -6,12 +6,21 @@
 #   movies = Movie.create([{ name: "Star Wars" }, { name: "Lord of the Rings" }])
 #   Character.create(name: "Luke", movie: movies.first)
 Plan.find_or_create_by!(code: "priv_starter_once") do |p|
-  p.name = "Private Starter (3 months)"
+  p.name = "Starter (3 Months)"
   p.kind = "one_time"
   p.amount_cents = 1000
   p.currency = "gbp"
   p.duration_months = 3
-  p.gives_premium = false
+  p.short_description = "Full access for 3 months"
+  p.features = [
+    "Full access to Snoofly for 3 months",
+    "1 active property listing",
+    "Unlimited photos & detailed description",
+    "Viewing scheduling calendar",
+    "Support + partner services access"
+  ]
+  p.image_asset = "starter.png"
+  p.submit_note = "You’re paying Snoofly for Starter (3 Months)."
 end
 
 Plan.find_or_create_by!(code: "priv_plus_once") do |p|
@@ -19,24 +28,14 @@ Plan.find_or_create_by!(code: "priv_plus_once") do |p|
   p.kind = "one_time"
   p.amount_cents = 2500
   p.currency = "gbp"
-  p.premium_weeks = 2
-  p.gives_premium = true
-end
-
-Plan.find_or_create_by!(code: "agent_basic_month") do |p|
-  p.name = "Agent Basic (20 listings)"
-  p.kind = "subscription"
-  p.amount_cents = 2900
-  p.currency = "gbp"
-  p.interval = "month"
-end
-
-Plan.find_or_create_by!(code: "agent_unlimited_month") do |p|
-  p.name = "Agent Unlimited"
-  p.kind = "subscription"
-  p.amount_cents = 4900
-  p.currency = "gbp"
-  p.interval = "month"
-  p.premium_weeks = 1
-  p.gives_premium = true
+  p.short_description = "Premium placement, investor reach, priority support"
+  p.features = [
+    "Full access, up to 2 active listings",
+    "Premium placement for 2 weeks",
+    "Investors notified",
+    "Priority support",
+    "Basic analytics dashboard"
+  ]
+  p.image_asset = "plus.png"
+  p.submit_note = "You’re paying Snoofly for Private Plus."
 end

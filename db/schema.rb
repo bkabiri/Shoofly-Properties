@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_30_204640) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_30_225750) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -147,6 +147,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_30_204640) do
     t.integer "premium_weeks"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "short_description"
+    t.jsonb "features"
+    t.string "image_asset"
+    t.string "submit_note"
     t.index ["code"], name: "index_plans_on_code", unique: true
   end
 
