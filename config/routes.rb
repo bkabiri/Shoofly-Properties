@@ -71,4 +71,5 @@ Rails.application.routes.draw do
   # Nice alias for the dashboard
   get "/dashboard", to: "seller/dashboards#show", as: :dashboard
   get "/pricing", to: "home#pricing", as: :pricing
+  get "/coming_soon", to: "home#coming_soon", as: :coming_soon
 end

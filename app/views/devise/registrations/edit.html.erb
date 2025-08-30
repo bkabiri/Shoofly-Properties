@@ -1,65 +1,182 @@
+<%= render "shared/navbar" %>
+
 <div class="container py-5">
-  <div class="mx-auto" style="max-width: 520px;">
-
-    <!-- Title -->
-    <h1 class="text-center fw-bold mb-4">Edit <%= resource_name.to_s.humanize %></h1>
-
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
-                 html: { method: :put, class: "w-100", id: "snooflyEditForm" }) do |f| %>
-      <%= render "devise/shared/error_messages", resource: resource %>
-
-      <!-- Email -->
-      <div class="mb-3">
-        <%= f.label :email, class: "form-label" %>
-        <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control form-control-lg" %>
-      </div>
-
-      <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-        <div class="alert alert-warning small">
-          Currently waiting confirmation for: <%= resource.unconfirmed_email %>
+  <div class="row">
+    <!-- Sidebar Navigation -->
+    <div class="col-lg-3 mb-4">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center p-4">
+          <!-- Profile Avatar -->
+          <div class="mb-3">
+            <div class="avatar-placeholder rounded-circle bg-snoofly-light text-snoofly mx-auto d-flex align-items-center justify-content-center" 
+                 style="width: 100px; height: 100px; font-size: 2.5rem;">
+              <%= resource.email[0].upcase %>
+            </div>
+          </div>
+          
+          <!-- User Name -->
+          <h5 class="fw-bold mb-1"><%= resource.full_name.present? ? resource.name : resource.email.split('@').first %></h5>
+          <p class="text-muted small mb-3"><%= resource.email %></p>
+          
+          <!-- Navigation -->
+          <div class="list-group list-group-flush">
+            <%= link_to "Profile", edit_user_registration_path, class: "list-group-item list-group-item-action active bg-snoofly border-0" %>
+            <%= link_to "My Listings", "#", class: "list-group-item list-group-item-action border-0" %>
+            <%= link_to "Favorites", "#", class: "list-group-item list-group-item-action border-0" %>
+            <%= link_to "Notifications", "#", class: "list-group-item list-group-item-action border-0" %>
+          </div>
         </div>
-      <% end %>
-
-      <!-- Password -->
-      <div class="mb-3">
-        <%= f.label :password, class: "form-label" %>
-        <small class="form-text text-muted">(leave blank if you don't want to change it)</small>
-        <%= f.password_field :password, autocomplete: "new-password", class: "form-control form-control-lg" %>
-        <% if @minimum_password_length %>
-          <small class="form-text text-muted">(<%= @minimum_password_length %> characters minimum)</small>
-        <% end %>
       </div>
-
-      <!-- Password confirmation -->
-      <div class="mb-3">
-        <%= f.label :password_confirmation, class: "form-label" %>
-        <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control form-control-lg" %>
-      </div>
-
-      <!-- Current password -->
-      <div class="mb-3">
-        <%= f.label :current_password, class: "form-label" %>
-        <small class="form-text text-muted">(we need your current password to confirm your changes)</small>
-        <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control form-control-lg" %>
-      </div>
-
-      <!-- Submit -->
-      <div class="mb-4">
-        <%= f.submit "Update", class: "btn w-100 btn-lg btn-dark", id: "updateBtn" %>
-      </div>
-    <% end %>
-
-    <!-- Cancel account -->
-    <div class="text-center mt-5">
-      <h3 class="h5 mb-3">Cancel my account</h3>
-      <%= button_to "Cancel my account",
-            registration_path(resource_name),
-            data: { confirm: "Are you sure?" },
-            method: :delete,
-            class: "btn btn-lg btn-danger w-100 mb-3" %>
-
-      <%= link_to "Back", :back, class: "btn btn-link text-muted" %>
     </div>
 
+    <!-- Main Content -->
+    <div class="col-lg-9">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-0 py-3">
+          <h4 class="card-title mb-0 fw-bold text-snoofly">
+            <i class="bi bi-person-gear me-2"></i>Edit Profile
+          </h4>
+        </div>
+        
+        <div class="card-body p-4">
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+                       html: { method: :put, class: "w-100", id: "snooflyEditForm" }) do |f| %>
+            <%= render "devise/shared/error_messages", resource: resource %>
+
+            <!-- Profile Section -->
+            <div class="mb-4 pb-3 border-bottom">
+              <h5 class="fw-semibold mb-3 text-dark">Profile Information</h5>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <%= f.label :full_name, "Full Name", class: "form-label fw-semibold" %>
+                  <%= f.text_field :full_name, class: "form-control form-control-lg", placeholder: "Enter your Full name" %>
+                </div>
+                
+              
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :email, "Email Address", class: "form-label fw-semibold" %>
+                <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control form-control-lg" %>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :phone, "Phone Number", class: "form-label fw-semibold" %>
+                <%= f.text_field :mobile_phone, class: "form-control form-control-lg", placeholder: "+44 123 456 7890" %>
+              </div>
+
+            
+            </div>
+
+            <!-- Password Section -->
+            <div class="mb-4 pb-3 border-bottom">
+              <h5 class="fw-semibold mb-3 text-dark">Change Password</h5>
+              
+              <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+                <div class="alert alert-warning small">
+                  <i class="bi bi-exclamation-circle me-2"></i>
+                  Currently waiting confirmation for: <%= resource.unconfirmed_email %>
+                </div>
+              <% end %>
+
+              <div class="mb-3">
+                <%= f.label :password, "New Password", class: "form-label fw-semibold" %>
+                <small class="form-text text-muted d-block mb-2">(leave blank if you don't want to change it)</small>
+                <%= f.password_field :password, autocomplete: "new-password", 
+                    class: "form-control form-control-lg", placeholder: "Enter new password" %>
+                <% if @minimum_password_length %>
+                  <small class="form-text text-muted">(<%= @minimum_password_length %> characters minimum)</small>
+                <% end %>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :password_confirmation, "Confirm New Password", class: "form-label fw-semibold" %>
+                <%= f.password_field :password_confirmation, autocomplete: "new-password", 
+                    class: "form-control form-control-lg", placeholder: "Confirm your new password" %>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :current_password, "Current Password", class: "form-label fw-semibold" %>
+                <small class="form-text text-muted d-block mb-2">(we need your current password to confirm your changes)</small>
+                <%= f.password_field :current_password, autocomplete: "current-password", 
+                    class: "form-control form-control-lg", placeholder: "Enter your current password" %>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mb-4">
+              <%= f.submit "Update Profile", class: "btn btn-snoofly btn-lg w-100 py-3 fw-bold", id: "updateBtn" %>
+            </div>
+          <% end %>
+
+          <!-- Account Deletion Section -->
+          <div class="mt-5 pt-4 border-top">
+            <h5 class="fw-semibold mb-3 text-danger">Danger Zone</h5>
+            <div class="alert alert-light border">
+              <p class="mb-3">Once you delete your account, there is no going back. Please be certain.</p>
+              <%= button_to "Cancel my account", registration_path(resource_name),
+                  data: { confirm: "Are you sure you want to delete your account? This action cannot be undone." },
+                  method: :delete,
+                  class: "btn btn-outline-danger" %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<%= render "shared/footer" %>
+
+<style>
+  /* Add these styles to your SCSS file */
+  .avatar-placeholder {
+    background-color: #ffecee;
+    color: #ff4a5f;
+    font-weight: bold;
+  }
+  
+  .text-snoofly {
+    color: #ff4a5f !important;
+  }
+  
+  .bg-snoofly {
+    background-color: #ff4a5f !important;
+    color: white !important;
+  }
+  
+  .bg-snoofly-light {
+    background-color: #ffecee !important;
+  }
+  
+  .btn-snoofly {
+    background-color: #ff4a5f;
+    border-color: #ff4a5f;
+    color: white;
+  }
+  
+  .btn-snoofly:hover {
+    background-color: #e53a4e;
+    border-color: #e53a4e;
+    color: white;
+  }
+  
+  .list-group-item.active {
+    background-color: #ff4a5f;
+    border-color: #ff4a5f;
+  }
+  
+  .list-group-item-action:hover {
+    background-color: #ffecee;
+  }
+  
+  .card {
+    border-radius: 12px;
+  }
+  
+  .form-control:focus {
+    border-color: #ff4a5f;
+    box-shadow: 0 0 0 0.2rem rgba(255, 74, 95, 0.25);
+  }
+</style>

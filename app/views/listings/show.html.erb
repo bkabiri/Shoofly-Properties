@@ -336,76 +336,146 @@
 </div>
 
 <%= render "shared/footer" %>
+<!-- Snoofly Gallery Modal -->
+<div class="modal fade snoofly-gallery" id="galleryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen-sm-down modal-xl modal-dialog-centered">
+    <div class="modal-content bg-black position-relative">
 
-<%# ========= Modal carousel ========= %>
-<div class="modal fade gallery-modal" id="galleryModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content bg-black">
+      <!-- Top bar -->
+      <div class="sng-topbar d-flex align-items-center justify-content-between">
+        <div class="sng-brand d-flex align-items-center gap-2">
+          <!-- Snoofly house-heart icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
+            <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+            <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+          </svg>
+          <span class="sng-title"><%= @listing.title %></span>
+  <span class="sng-price"><%= @listing.guide_price  %></span>
+        </div>
+
+        <div class="sng-counter-wrap">
+          <span id="galleryCounter" class="sng-counter">1/<%= gallery_blobs.size %></span>
+        </div>
+
+        <div class="sng-actions d-flex align-items-center gap-2">
+          <!-- (optional future) share / download / save -->
+          <button type="button" class="btn btn-sng-ghost" data-bs-dismiss="modal" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
       <div class="modal-body p-0">
-        <div id="galleryCarousel" class="carousel slide" data-bs-interval="false">
+        <div id="galleryCarousel"
+             class="carousel slide"
+             data-bs-ride="false"
+             data-bs-interval="false"
+             data-bs-touch="true"
+             data-bs-keyboard="true">
           <div class="carousel-inner">
             <% gallery_blobs.each_with_index do |blob, idx| %>
               <div class="carousel-item <%= 'active' if idx.zero? %>">
-                <%= image_tag blob.variant(resize_to_limit: [3000, 2000]),
-                              alt: "Photo #{idx + 1}" %>
+                <div class="sng-center">
+                  <%= image_tag blob.variant(resize_to_limit: [3000, 2000]),
+                                class: "sng-image",
+                                draggable: "false",
+                                alt: "Photo #{idx + 1}" %>
+                </div>
               </div>
             <% end %>
           </div>
 
-          <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
+          <!-- Prev / Next -->
+          <button class="carousel-control-prev sng-nav" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev" aria-label="Previous">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
           </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
+          <button class="carousel-control-next sng-nav" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next" aria-label="Next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
           </button>
+
+          <!-- Swipe hint -->
+          <div class="sng-swipe-hint d-none d-md-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left-right"></i> Swipe or use arrows
+          </div>
         </div>
       </div>
-      <div class="modal-footer justify-content-between">
-        <div class="text-white-50 small">
-          <span id="galleryCounter">1/<%= gallery_blobs.size %></span>
+
+      <% if gallery_blobs.size > 1 %>
+        <!-- Thumb strip (inside modal) -->
+        <div class="sng-thumbs d-none d-md-flex align-items-center gap-2">
+          <% gallery_blobs.each_with_index do |blob, idx| %>
+            <button class="sng-thumb js-open-gallery" data-index="<%= idx %>" type="button" aria-label="Open image <%= idx+1 %>">
+              <%= image_tag blob.variant(resize_to_fill: [120, 80]), alt: "Thumb #{idx+1}" %>
+            </button>
+          <% end %>
         </div>
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-      </div>
+      <% end %>
     </div>
   </div>
 </div>
-
 <script>
-  // -------- Gallery modal logic --------
-  document.addEventListener('DOMContentLoaded', function () {
-    const thumbs     = document.querySelectorAll('.js-open-gallery');
+(function () {
+  let bound = false;
+
+  function initSnooflyGallery() {
+    if (bound) return;
+
     const modalEl    = document.getElementById('galleryModal');
     const carouselEl = document.getElementById('galleryCarousel');
     const counterEl  = document.getElementById('galleryCounter');
-    if (!carouselEl) return;
 
-    const carousel = new bootstrap.Carousel(carouselEl, { interval: false, ride: false });
+    if (!modalEl || !carouselEl) return;
 
-    thumbs.forEach(t => {
-      t.addEventListener('click', () => {
-        const idx = parseInt(t.getAttribute('data-index') || '0', 10);
-        const items = carouselEl.querySelectorAll('.carousel-item');
-        items.forEach(i => i.classList.remove('active'));
-        if (items[idx]) items[idx].classList.add('active');
-        if (counterEl) counterEl.textContent = `${idx+1}/${items.length}`;
-        new bootstrap.Modal(modalEl).show();
-      });
+    const modal    = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true });
+    const carousel = bootstrap.Carousel.getOrCreateInstance(carouselEl, {
+      interval: false, ride: false, touch: true, keyboard: true, wrap: true
     });
 
-    carouselEl.addEventListener('slid.bs.carousel', function () {
+    // Launch from page thumbnails or modal thumbs
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.js-open-gallery');
+      if (!trigger) return;
+      const idx = parseInt(trigger.dataset.index || '0', 10);
+      carousel.to(idx);
+      modal.show();
+      updateCounter();
+    });
+
+    // Keep counter in sync with slide changes
+    function updateCounter() {
       const items = carouselEl.querySelectorAll('.carousel-item');
-      const activeIndex = Array.prototype.indexOf.call(items, carouselEl.querySelector('.carousel-item.active'));
-      if (counterEl) counterEl.textContent = `${activeIndex+1}/${items.length}`;
-    });
-  });
+      const activeIndex = Array.prototype.findIndex.call(items, el => el.classList.contains('active'));
+      if (counterEl && activeIndex >= 0) counterEl.textContent = `${activeIndex + 1}/${items.length}`;
+    }
+    carouselEl.addEventListener('slid.bs.carousel', updateCounter);
+    updateCounter();
 
-  // -------- Google Maps + Street View init (no extra script tag needed) --------
-  (function() {
+    // Help touch events reach the carousel
+    carouselEl.querySelectorAll('.carousel-item img').forEach(img => {
+      img.style.pointerEvents = 'none';
+      img.setAttribute('draggable','false');
+    });
+
+    // One-time swipe hint
+    const hint = modalEl.querySelector('.sng-swipe-hint');
+    if (hint && !window.__snooflyHintShown) {
+      window.__snooflyHintShown = true;
+      hint.classList.add('show-hint');
+      setTimeout(() => hint.classList.remove('show-hint'), 2200);
+    }
+
+    bound = true;
+  }
+
+  document.addEventListener('turbo:load', () => { bound = false; initSnooflyGallery(); });
+  document.addEventListener('DOMContentLoaded', initSnooflyGallery);
+})();
+</script>
+<script>
+  // Google Maps + Street View (Turbo-safe)
+  (function () {
     const address = <%= raw(display_address.to_json) %>;
     const mapsEnabled = <%= maps_api_key_present ? 'true' : 'false' %>;
-
     if (!mapsEnabled) return;
 
     function initMap() {
@@ -417,11 +487,11 @@
         zoom: 16,
         mapTypeControl: false,
         streetViewControl: false,
-        fullscreenControl: true,
+        fullscreenControl: true
       });
 
       const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: address }, function(results, status) {
+      geocoder.geocode({ address: address }, function (results, status) {
         if (status === "OK" && results[0]) {
           const loc = results[0].geometry.location;
           map.setCenter(loc);
@@ -443,22 +513,18 @@
       });
     }
 
-    // Wait for Google Maps to be available (since it's loaded globally in layout)
     function whenGoogleReady(cb) {
       if (window.google && google.maps) { cb(); return; }
       let tries = 0;
       const iv = setInterval(() => {
         tries += 1;
-        if (window.google && google.maps) {
-          clearInterval(iv); cb();
-        } else if (tries > 50) {
-          clearInterval(iv);
-          // Give up silently after ~5s
-        }
+        if (window.google && google.maps) { clearInterval(iv); cb(); }
+        else if (tries > 50) { clearInterval(iv); }
       }, 100);
     }
 
-    document.addEventListener("turbo:load", () => whenGoogleReady(initMap));
-    document.addEventListener("DOMContentLoaded", () => whenGoogleReady(initMap));
+    const bindInit = () => whenGoogleReady(initMap);
+    document.addEventListener("turbo:load", bindInit);
+    document.addEventListener("DOMContentLoaded", bindInit);
   })();
 </script>
