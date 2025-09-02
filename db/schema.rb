@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_30_225750) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_02_182619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -160,6 +160,22 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_30_225750) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "tickets", force: :cascade do |t|
+    t.string "subject", null: false
+    t.text "body"
+    t.integer "status", default: 0, null: false
+    t.integer "priority", default: 1, null: false
+    t.bigint "requester_id"
+    t.bigint "assigned_to_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_to_id"], name: "index_tickets_on_assigned_to_id"
+    t.index ["priority"], name: "index_tickets_on_priority"
+    t.index ["requester_id"], name: "index_tickets_on_requester_id"
+    t.index ["status"], name: "index_tickets_on_status"
+    t.index ["updated_at"], name: "index_tickets_on_updated_at"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -178,7 +194,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_30_225750) do
     t.string "mobile_phone"
     t.string "estate_agent_name"
     t.string "full_name"
+    t.boolean "requested_estate_agent", default: false, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["requested_estate_agent"], name: "index_users_on_requested_estate_agent"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"
   end
@@ -191,4 +209,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_30_225750) do
   add_foreign_key "payments", "listings"
   add_foreign_key "payments", "plans"
   add_foreign_key "payments", "users"
+  add_foreign_key "tickets", "users", column: "assigned_to_id"
+  add_foreign_key "tickets", "users", column: "requester_id"
 end

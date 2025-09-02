@@ -9,7 +9,9 @@ module Seller
       # OPTIONAL: auto-promote to :seller when a signed-in user lands here.
       # Comment out if you don’t want to change roles automatically.
       if defined?(User) && User.respond_to?(:roles) && User.roles.key?("seller")
-        current_user.update_column(:role, User.roles["seller"]) unless current_user.seller?
+        if current_user.no_role?
+          current_user.update_column(:role, User.roles["seller"])
+        end
       end
 
       # Example KPIs / placeholders (replace with real queries)

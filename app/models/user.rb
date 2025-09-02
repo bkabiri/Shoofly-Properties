@@ -27,6 +27,9 @@ class User < ApplicationRecord
   def estate_agent?
     role == "estate_agent"
   end
+  def no_role?
+  role.nil?
+  end
 
   # --- Estate Agent validations ---
   with_options if: :estate_agent? do
@@ -35,7 +38,7 @@ class User < ApplicationRecord
     validates :landline_phone, :mobile_phone, presence: true
     validate  :logo_must_be_attached
   end
-
+  scope :agent_switch_requests, -> { where(role: :seller, requested_estate_agent: true) }
   private
 
   def logo_must_be_attached

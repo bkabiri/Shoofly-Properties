@@ -116,6 +116,14 @@
                 <span>Dashboard</span>
               <% end %>
             </li>
+            <% if current_user.admin? %>
+              <li class="slideout-menu__item">
+                <%= link_to admin_dashboard_path, class: "slideout-menu__link" do %>
+                  <i class="bi bi-shield-lock slideout-menu__icon"></i>
+                  <span>Admin Dashboard</span>
+                <% end %>
+              </li>
+            <% end %>
             <li class="slideout-menu__item">
               <%= link_to edit_user_registration_path, class: "slideout-menu__link" do %>
                 <i class="bi bi-gear slideout-menu__icon"></i>

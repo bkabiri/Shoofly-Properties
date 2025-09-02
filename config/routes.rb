@@ -1,6 +1,8 @@
 # config/routes.rb
 Rails.application.routes.draw do
-  # Public listings
+  # -------------------------
+  # Public Listings
+  # -------------------------
   resources :listings, only: [:index, :show] do
     post   :favorite,   to: "favorites#create"
     delete :unfavorite, to: "favorites#destroy"
@@ -15,44 +17,50 @@ Rails.application.routes.draw do
   # Tidy legacy/incorrect paths
   get "/listings/index", to: redirect("/listings")
 
-  # Devise + home
+  # -------------------------
+  # Devise + Home
+  # -------------------------
   get "home/index"
-
- devise_for :users, controllers: { registrations: "users/registrations" }
+  devise_for :users, controllers: { registrations: "users/registrations" }
   root to: "home#index"
 
+  # -------------------------
+  # Checkout
+  # -------------------------
   resources :checkout, only: [] do
     collection do
-      post :sessions
-      get  :success
-      get  :cancel
+      post :sessions      # POST /checkout/sessions (Stripe session create)
+      get  :success       # GET  /checkout/success
+      get  :cancel        # GET  /checkout/cancel
     end
   end
-  post "/checkout_sessions", to: "checkout#sessions"  
+  # (Alias kept if something calls this directly)
+  post "/checkout_sessions", to: "checkout#sessions"
+
   # -------------------------
-  # Authenticated Seller area
+  # Authenticated Seller Area
   # -------------------------
   authenticate :user do
     namespace :seller do
-      # Dashboard (controller is Seller::DashboardsController)
+      # Dashboard
       resource :dashboard, only: :show, controller: "dashboards"
 
-      # Account type switching + office details (controller: Seller::AccountsController)
+      # Account type switching + office details
       resource :account, only: :show, controller: "accounts" do
         patch :switch_to_estate_agent
         patch :switch_to_private_seller
         patch :update_office_details
       end
 
-      # Team management (controller: Seller::TeamMembersController)
+      # Team management
       resources :team_members, only: [:index, :create, :update, :destroy], controller: "team_members"
 
-      # Invite management (controller: Seller::InvitesController)
+      # Invite management
       resources :invites, only: [:index, :create, :destroy], controller: "invites" do
         post :resend, on: :member
       end
 
-      # Listings (with feature/unfeature/bump and assets purging)
+      # Seller Listings (full CRUD + utilities)
       resources :listings do
         collection { post :generate_description }
         member do
@@ -70,14 +78,60 @@ Rails.application.routes.draw do
       end
     end
   end
-  
+
   # Public invite acceptance (no auth required)
   get "seller/invites/:token/accept",
       to: "seller/invites#accept",
       as: :accept_seller_invite
 
-  # Nice alias for the dashboard
+  # Nice alias for the seller dashboard
   get "/dashboard", to: "seller/dashboards#show", as: :dashboard
-  get "/pricing", to: "home#pricing", as: :pricing
-  get "/coming_soon", to: "home#coming_soon", as: :coming_soon
+
+  # Marketing / static
+  get "/pricing",      to: "home#pricing",      as: :pricing
+  get "/coming_soon",  to: "home#coming_soon",  as: :coming_soon
+
+  # -------------------------
+  # Admin Area (authenticated + admin-only)
+  # -------------------------
+      authenticate :user, lambda { |u| u.respond_to?(:admin?) && u.admin? } do
+  # Handy alias so /admin goes to the dashboard
+        get "/admin", to: "admin/dashboards#show", as: :admin_root
+
+        namespace :admin do
+          # Main Dashboard
+          resource :dashboard, only: :show, controller: "dashboards" # admin_dashboard_path
+
+          # Users management
+          resources :users, only: [:index, :show] do
+            patch :suspend, on: :member  # suspend_admin_user_path(user)
+          end
+
+          # Listings moderation
+          resources :listings, only: [:index, :edit, :update] do
+            patch :approve, on: :member  # approve_admin_listing_path(listing)
+            patch :reject,  on: :member  # reject_admin_listing_path(listing)
+          end
+
+          # Requests to switch to Estate Agent
+          patch "agent_requests/:user_id/approve",
+                to: "agent_requests#approve",
+                as: :agent_request_approve
+          patch "agent_requests/:user_id/decline",
+                to: "agent_requests#decline",
+                as: :agent_request_decline
+
+          # Support / Tickets
+          resources :tickets, only: [:index, :show, :new, :create] do
+            patch :close, on: :member     # close_admin_ticket_path(ticket)
+          end
+
+          # Billing / Plans
+          resource  :billing_settings, only: [:show, :update] # admin_billing_settings_path
+          resources :plans                                     # admin_plans_path, etc.
+
+          # Impersonation
+          resources :impersonations, only: :create            # admin_impersonations_path
+        end
+      end
 end

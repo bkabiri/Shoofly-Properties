@@ -1,0 +1,444 @@
+<%= render "shared/navbar" %>
+
+
+<section class="admin-wrap py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <div class="admin-title">Admin Dashboard</div>
+      <div class="admin-sub">Manage users, approvals, listings and support</div>
+    </div>
+    <div class="toolbar">
+      <%= link_to "View site", root_path, class: "btn btn-ghost" %>
+      <%= link_to "Sign out", destroy_user_session_path, data: { turbo_method: :delete }, class: "btn btn-outline-dark" %>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid mb-4">
+    <div class="kpi">
+      <div class="label">Active Listings</div>
+      <div class="value"><%= @kpis[:active_listings] || 0 %></div>
+      <% if @kpis[:active_listings_delta] %><div class="delta delta-up">+<%= @kpis[:active_listings_delta] %>% vs last week</div><% end %>
+    </div>
+    <div class="kpi">
+      <div class="label">Private Sellers</div>
+      <div class="value"><%= @kpis[:private_sellers] || 0 %></div>
+      <% if @kpis[:private_sellers_delta] %><div class="delta delta-up">+<%= @kpis[:private_sellers_delta] %>%</div><% end %>
+    </div>
+    <div class="kpi">
+      <div class="label">Estate Agents</div>
+      <div class="value"><%= @kpis[:estate_agents] || 0 %></div>
+      <% if @kpis[:estate_agents_delta] %><div class="delta delta-up">+<%= @kpis[:estate_agents_delta] %>%</div><% end %>
+    </div>
+    <div class="kpi">
+      <div class="label">Open Support Tickets</div>
+      <div class="value"><%= @kpis[:open_tickets] || 0 %></div>
+      <% if @kpis[:tickets_sla_breach].to_i > 0 %><div class="delta delta-down"><%= @kpis[:tickets_sla_breach] %> breaching SLA</div><% end %>
+    </div>
+  </div>
+
+  <div class="admin-shell">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="mb-2 text-uppercase small fw-bold text-muted">Navigation</div>
+
+      <a href="#tab-users" class="side-link active" data-bs-toggle="tab" role="tab">
+        <i class="bi bi-people"></i> Users
+      </a>
+      <a href="#tab-approvals" class="side-link" data-bs-toggle="tab" role="tab">
+        <i class="bi bi-shield-check"></i> Approvals
+        <% pending_count = (@pending_listings&.size.to_i + @agent_requests&.size.to_i) %>
+        <span class="ms-auto chip red"><i class="bi bi-dot"></i> <%= pending_count %></span>
+      </a>
+      <a href="#tab-properties" class="side-link" data-bs-toggle="tab" role="tab">
+        <i class="bi bi-building"></i> Properties
+        <span class="ms-auto chip gray"><%= @properties&.size || 0 %></span>
+      </a>
+      <a href="#tab-support" class="side-link" data-bs-toggle="tab" role="tab">
+        <i class="bi bi-life-preserver"></i> Support
+        <span class="ms-auto chip gray"><%= @tickets&.size || 0 %></span>
+      </a>
+      <hr>
+      <a href="#tab-audit" class="side-link" data-bs-toggle="tab" role="tab">
+        <i class="bi bi-clipboard-data"></i> Audit & Logs
+      </a>
+      <a href="#tab-settings" class="side-link" data-bs-toggle="tab" role="tab">
+        <i class="bi bi-gear"></i> Settings
+      </a>
+    </aside>
+
+    <!-- Main content -->
+    <div class="tab-content">
+
+      <!-- USERS -->
+      <div id="tab-users" class="tab-pane fade show active">
+        <div class="section-card mb-4">
+          <div class="section-head">
+            <h5 class="mb-0">Private Sellers</h5>
+            <div class="toolbar">
+              <%= form_with url: admin_users_path, method: :get, local: true, class: "d-flex gap-2" do %>
+                <input type="hidden" name="role" value="seller">
+                <input name="q" class="form-control" placeholder="Search by name or email">
+                <button class="btn btn-ghost" type="submit"><i class="bi bi-search"></i></button>
+              <% end %>
+              <span class="chip gray"><%= @private_sellers&.size || 0 %> total</span>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Seller</th>
+                  <th>Email</th>
+                  <th>Listings</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@private_sellers || []).each do |u| %>
+                  <tr>
+                    <td class="fw-semibold"><%= u.full_name.presence || u.email.split("@").first %></td>
+                    <td><%= u.email %></td>
+                    <td><%= u.listings.count rescue 0 %></td>
+                    <td><%= l(u.created_at, format: :short) %></td>
+                    <td class="text-end">
+                      <%= link_to "View", admin_user_path(u), class: "btn btn-sm btn-ghost" %>
+                      <%= link_to "Impersonate", admin_impersonations_path(user_id: u.id),
+                                  data: { turbo_method: :post }, class: "btn btn-sm btn-outline-dark" %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if (@private_sellers || []).empty? %>
+                  <tr><td colspan="5" class="text-center text-muted py-4">No private sellers found.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">Estate Agents</h5>
+            <div class="toolbar">
+              <%= form_with url: admin_users_path, method: :get, local: true, class: "d-flex gap-2" do %>
+                <input type="hidden" name="role" value="estate_agent">
+                <input name="q" class="form-control" placeholder="Search by agency or email">
+                <button class="btn btn-ghost" type="submit"><i class="bi bi-search"></i></button>
+              <% end %>
+              <span class="chip gray"><%= @estate_agents&.size || 0 %> total</span>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Agency</th>
+                  <th>Contact</th>
+                  <th>Phone</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@estate_agents || []).each do |u| %>
+                  <tr>
+                    <td class="fw-semibold"><%= u.estate_agent_name.presence || "—" %></td>
+                    <td><%= (u.full_name.presence || u.email.split("@").first) + " · " + u.email %></td>
+                    <td><%= u.landline_phone.presence || u.mobile_phone.presence || "—" %></td>
+                    <td><%= l(u.created_at, format: :short) %></td>
+                    <td class="text-end">
+                      <%= link_to "View", admin_user_path(u), class: "btn btn-sm btn-ghost" %>
+                      <%= link_to "Suspend", admin_user_suspend_path(u),
+                                  data: { turbo_method: :patch, turbo_confirm: "Suspend this account?" },
+                                  class: "btn btn-sm btn-outline-danger" %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if (@estate_agents || []).empty? %>
+                  <tr><td colspan="5" class="text-center text-muted py-4">No estate agents found.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- APPROVALS -->
+      <div id="tab-approvals" class="tab-pane fade">
+        <div class="section-card mb-4">
+          <div class="section-head">
+            <h5 class="mb-0">Listings awaiting approval</h5>
+            <span class="chip red"><i class="bi bi-hourglass-split"></i> <%= @pending_listings&.size || 0 %> pending</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Seller</th>
+                  <th>Submitted</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@pending_listings || []).each do |listing| %>
+                  <tr>
+                    <td class="fw-semibold"><%= listing.title %></td>
+                    <td><%= listing.user&.email %></td>
+                    <td><%= l(listing.created_at, format: :short) %></td>
+                    <td><span class="chip gray"><%= listing.status.humanize %></span></td>
+                    <td class="text-end">
+                      <%= link_to "Preview", listing_path(listing), class: "btn btn-sm btn-ghost", target: "_blank" %>
+                      <%= button_to "Approve",
+                                    admin_listing_approve_path(listing),
+                                    method: :patch,
+                                    form: { data: { turbo_confirm: "Approve this listing?" } },
+                                    class: "btn btn-sm btn-snoofly-red" %>
+                      <%= button_to "Reject",
+                                    admin_listing_reject_path(listing),
+                                    method: :patch,
+                                    form: { data: { turbo_confirm: "Reject and notify the seller?" } },
+                                    class: "btn btn-sm btn-outline-danger" %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if (@pending_listings || []).empty? %>
+                  <tr><td colspan="5" class="text-center text-muted py-4">No listings awaiting approval.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">Requests to switch to Estate Agent</h5>
+            <span class="chip red"><i class="bi bi-hourglass-split"></i> <%= @agent_requests&.size || 0 %> pending</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Agency name</th>
+                  <th>Phone</th>
+                  <th>Requested</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@agent_requests || []).each do |user| %>
+                  <tr>
+                    <td class="fw-semibold"><%= user.full_name.presence || user.email %></td>
+                    <td><%= user.estate_agent_name.presence || "—" %></td>
+                    <td><%= user.landline_phone.presence || user.mobile_phone.presence || "—" %></td>
+                    <td><%= l(user.updated_at, format: :short) %></td>
+                    <td class="text-end">
+                      <%= link_to "Profile", admin_user_path(user), class: "btn btn-sm btn-ghost" %>
+                      <%= button_to "Approve switch",
+                                    admin_agent_requests_approve_path(user_id: user.id),
+                                    method: :patch,
+                                    form: { data: { turbo_confirm: "Approve this account as Estate Agent?" } },
+                                    class: "btn btn-sm btn-snoofly-red" %>
+                      <%= button_to "Decline",
+                                    admin_agent_requests_decline_path(user_id: user.id),
+                                    method: :patch,
+                                    form: { data: { turbo_confirm: "Decline this request?" } },
+                                    class: "btn btn-sm btn-outline-danger" %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if (@agent_requests || []).empty? %>
+                  <tr><td colspan="5" class="text-center text-muted py-4">No pending agent requests.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROPERTIES -->
+      <div id="tab-properties" class="tab-pane fade">
+        <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">All Properties</h5>
+            <div class="toolbar">
+              <%= form_with url: admin_listings_path, method: :get, local: true, class: "d-flex gap-2" do %>
+                <select name="status" class="form-select">
+                  <option value="">All statuses</option>
+                  <option value="draft">Draft</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="published">Published</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <input name="q" class="form-control" placeholder="Search title or address">
+                <button class="btn btn-ghost" type="submit"><i class="bi bi-search"></i></button>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Owner</th>
+                  <th>Status</th>
+                  <th>Price</th>
+                  <th>Updated</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@properties || []).each do |listing| %>
+                  <tr>
+                    <td class="fw-semibold"><%= listing.title %></td>
+                    <td><%= listing.user&.email %></td>
+                    <td><span class="chip gray"><%= listing.status.humanize %></span></td>
+                    <td>
+                      <% if listing.respond_to?(:guide_price) && listing.guide_price.present? %>
+                        <%= number_to_currency(listing.guide_price, unit: "£", precision: 0, delimiter: ",") %>
+                      <% else %>—<% end %>
+                    </td>
+                    <td><%= l(listing.updated_at, format: :short) %></td>
+                    <td class="text-end">
+                      <%= link_to "Open", listing_path(listing), class: "btn btn-sm btn-ghost", target: "_blank" %>
+                      <%= link_to "Edit", edit_admin_listing_path(listing), class: "btn btn-sm btn-outline-dark" %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if (@properties || []).empty? %>
+                  <tr><td colspan="6" class="text-center text-muted py-4">No properties found.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPPORT -->
+      <div id="tab-support" class="tab-pane fade">
+        <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">Support Enquiries</h5>
+            <div class="toolbar">
+              <span class="chip gray"><%= (@tickets || []).count { |t| t.status == "open" } %> open</span>
+              <%= link_to "New ticket", new_admin_ticket_path, class: "btn btn-ghost" %>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Subject</th>
+                  <th>Requester</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% (@tickets || []).each do |t| %>
+                  <tr>
+                    <td>#<%= t.id %></td>
+                    <td class="fw-semibold"><%= t.subject %></td>
+                    <td><%= t.user&.email || "—" %></td>
+                    <td>
+                      <% badge = case t.status
+                        when "open" then "chip red"
+                        when "pending" then "chip gray"
+                        else "chip gray"
+                      end %>
+                      <span class="<%= badge %>"><%= t.status.humanize %></span>
+                    </td>
+                    <td><%= l(t.updated_at, format: :short) %></td>
+                    <td class="text-end">
+                      <%= link_to "View", admin_ticket_path(t), class: "btn btn-sm btn-ghost" %>
+                      <% if t.status != "closed" %>
+                        <%= link_to "Close", close_admin_ticket_path(t),
+                                    data: { turbo_method: :patch, turbo_confirm: "Close this ticket?" },
+                                    class: "btn btn-sm btn-outline-dark" %>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+                <% if (@tickets || []).empty? %>
+                  <tr><td colspan="6" class="text-center text-muted py-4">No support enquiries.</td></tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDIT -->
+      <div id="tab-audit" class="tab-pane fade">
+        <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">Audit & Activity</h5>
+            <div class="toolbar">
+              <span class="chip gray">Last 7 days</span>
+            </div>
+          </div>
+          <div class="text-muted">Hook this up to your audit trail (e.g., PublicActivity / Audited). Show recent admin actions, listing state changes, payments, etc.</div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="tab-settings" class="tab-pane fade">
+        <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">Admin Settings</h5>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3">
+                <h6 class="fw-bold mb-2">Payments</h6>
+                <p class="text-muted mb-3">Connect your Stripe keys, toggle live/test mode.</p>
+                <%= link_to "Open Billing Settings", admin_billing_settings_path, class: "btn btn-outline-dark btn-sm" %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3">
+                <h6 class="fw-bold mb-2">Plans & Pricing</h6>
+                <p class="text-muted mb-3">Manage plan catalog (one-off & subscriptions).</p>
+                <%= link_to "Manage Plans", admin_plans_path, class: "btn btn-outline-dark btn-sm" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-content -->
+  </div><!-- /admin-shell -->
+</section>
+
+<script>
+  // Make sidebar tab links behave if user deep-links via hash
+  document.addEventListener("turbo:load", () => {
+    if (location.hash) {
+      const trigger = document.querySelector(`a[href="${location.hash}"][data-bs-toggle="tab"]`);
+      if (trigger) new bootstrap.Tab(trigger).show();
+      document.querySelectorAll(".side-link").forEach(a => a.classList.remove("active"));
+      const side = document.querySelector(`.side-link[href="${location.hash}"]`);
+      if (side) side.classList.add("active");
+    }
+    // Keep sidebar highlight in sync with active tab
+    document.querySelectorAll('.side-link[data-bs-toggle="tab"]').forEach(link => {
+      link.addEventListener('shown.bs.tab', () => {
+        document.querySelectorAll(".side-link").forEach(a => a.classList.remove("active"));
+        link.classList.add("active");
+        history.replaceState(null, "", link.getAttribute("href"));
+      });
+    });
+  });
+</script>

@@ -8,41 +8,32 @@ module Seller
     end
 
     # PATCH /seller/account/switch_to_estate_agent
-    #
-    # 1) Assign attributes (so the form keeps values if invalid)
-    # 2) Attach uploaded logo BEFORE validation
-    # 3) Flip role to :estate_agent (make sure your enum includes it!)
-    # 4) Save or re-render dashboard with inline errors
+    # Collect agency details + logo, mark the account as "requested_estate_agent",
+    # and let an admin approve the switch in the Admin dashboard.
     def switch_to_estate_agent
       @user = current_user
 
-      # Assign office/contact/name first
+      # 1) Assign office/contact/name first so values stick on validation errors
       @user.assign_attributes(account_params)
 
-      # Attach uploaded logo BEFORE validation (if provided)
-      uploaded_logo = params.dig(:user, :logo)
-      if uploaded_logo.present?
+      # 2) Handle logo upload BEFORE save
+      if (uploaded_logo = params.dig(:user, :logo)).present?
         @user.logo.purge_later if @user.logo.attached?
         @user.logo.attach(uploaded_logo)
       end
 
-      # Flip role so estate_agent? validations apply in the model
-      # Ensure your User enum contains :estate_agent
-      @user.role = :estate_agent if User.roles.key?("estate_agent")
+      # 3) Mark as pending request (do NOT flip role here)
+      @user.requested_estate_agent = true
 
       if @user.save
-        redirect_to seller_dashboard_path, notice: "Your account is now Estate Agent."
+        redirect_to seller_dashboard_path,
+          notice: "Thanks! Your request to become an Estate Agent has been submitted. We'll notify you once it's approved."
       else
-        # Keep the form open and show inline errors without losing input
+        # Keep the modal open and render dashboard with inline errors
         flash.now[:show_agent_form] = true
 
-        # Ensure the dashboard has the data it expects
-        @stats ||= {
-          active_listings: 0,
-          unread_messages: 0,
-          upcoming_viewings: 0,
-          this_month_views: 0
-        }
+        # Provide dashboard fallbacks
+        @stats ||= { active_listings: 0, unread_messages: 0, upcoming_viewings: 0, this_month_views: 0 }
         @billing_overview ||= { plan: "Free", next_invoice_on: nil, amount: "£0.00" }
 
         render "seller/dashboards/show", status: :unprocessable_entity
@@ -54,7 +45,7 @@ module Seller
       @user = current_user
       target_role = User.roles.key?("seller") ? :seller : :buyer
 
-      if @user.update(role: target_role)
+      if @user.update(role: target_role, requested_estate_agent: false)
         redirect_to seller_dashboard_path, notice: "Your account is now Private Seller."
       else
         redirect_back fallback_location: seller_dashboard_path,
@@ -66,8 +57,7 @@ module Seller
     def update_office_details
       @user = current_user
 
-      uploaded_logo = params.dig(:user, :logo)
-      if uploaded_logo.present?
+      if (uploaded_logo = params.dig(:user, :logo)).present?
         @user.logo.purge_later if @user.logo.attached?
         @user.logo.attach(uploaded_logo)
       end
@@ -76,12 +66,7 @@ module Seller
         redirect_to seller_dashboard_path, notice: "Office details updated."
       else
         flash.now[:show_agent_form] = true
-        @stats ||= {
-          active_listings: 0,
-          unread_messages: 0,
-          upcoming_viewings: 0,
-          this_month_views: 0
-        }
+        @stats ||= { active_listings: 0, unread_messages: 0, upcoming_viewings: 0, this_month_views: 0 }
         @billing_overview ||= { plan: "Free", next_invoice_on: nil, amount: "£0.00" }
         render "seller/dashboards/show", status: :unprocessable_entity
       end
