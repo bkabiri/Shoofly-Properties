@@ -1,292 +1,169 @@
-<div class="signup-container">
-    <div class="signup-header">
-      <div class="logo">SNOOFLY</div>
-      <div class="logo-subtitle">Revolutionizing the UK property market</div>
-    </div>
-    
-    <div class="signup-content">
-      <div class="social-login">
-        <div class="social-title">Sign up with</div>
-        <div class="social-icons">
-          <a href="#" class="social-btn google">
-            <i class="fab fa-google"></i>
-          </a>
-          <a href="#" class="social-btn facebook">
-            <i class="fab fa-facebook-f"></i>
-          </a>
-          <a href="#" class="social-btn apple">
-            <i class="fab fa-apple"></i>
-          </a>
+<%= render "shared/navbar" %>
+
+<div class="auth-wrap">
+  <div class="container py-5">
+    <div class="row justify-content-center g-4">
+      <!-- Brand / Benefits panel -->
+      <div class="col-12 col-lg-6 d-none d-lg-block">
+        <div class="auth-brand card shadow-sm border-0">
+          <div class="auth-brand-inner">
+            <!-- Your provided logo -->
+            <div class="brand-row mb-2">
+              <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
+                  <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+                  <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+                </svg>
+                <span class="fw-bold fs-4" style="color:#ff4a5f;">Snoofly</span>
+              <% end %>
+            </div>
+
+            <h2 class="display-6 fw-800 mt-2 mb-2">Create your account</h2>
+            <p class="text-muted mb-4">Join Snoofly to save properties, message sellers & agents, and list with confidence.</p>
+
+            <ul class="list-unstyled auth-benefits">
+              <li><i class="bi bi-check-circle-fill"></i> Post a property in minutes</li>
+              <li><i class="bi bi-check-circle-fill"></i> Schedule & manage viewings</li>
+              <li><i class="bi bi-check-circle-fill"></i> Real-time buyer/agent messaging</li>
+              <li><i class="bi bi-check-circle-fill"></i> Favourites & instant alerts</li>
+            </ul>
+
+            <div class="auth-illustration mt-auto">
+              <div class="glow"></div>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <h1 class="form-title">Create Your Account</h1>
-      
-      <form class="signup-form">
-        <div class="form-group">
-          <label for="email" class="form-label">Email</label>
-          <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+
+      <!-- Sign up card -->
+      <div class="col-12 col-lg-6">
+        <div class="auth-card card shadow-sm border-0">
+          <div class="card-body p-4 p-md-5">
+            <!-- Social sign up -->
+            <div class="d-flex justify-content-center gap-3 mb-4">
+              <%= link_to "#", class: "social-btn", title: "Sign up with Google", aria: { label: "Sign up with Google" } do %>
+                <i class="bi bi-google"></i>
+              <% end %>
+              <%= link_to "#", class: "social-btn", title: "Sign up with Facebook", aria: { label: "Sign up with Facebook" } do %>
+                <i class="bi bi-facebook"></i>
+              <% end %>
+              <%= link_to "#", class: "social-btn", title: "Sign up with Apple", aria: { label: "Sign up with Apple" } do %>
+                <i class="bi bi-apple"></i>
+              <% end %>
+            </div>
+
+            <div class="text-center mb-4">
+              <h1 class="fw-800 mb-1">Sign up</h1>
+              <div class="text-muted">Use your email to get started</div>
+            </div>
+
+            <%= render "devise/shared/error_messages", resource: resource %>
+
+            <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+                         html: { id: "snooflySignupForm", class: "w-100" }) do |f| %>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label class="form-label fw-600">Email <span class="text-danger">*</span></label>
+                <%= f.email_field :email,
+                      autofocus: true,
+                      autocomplete: "email",
+                      class: "form-control form-control-lg input-elevated",
+                      placeholder: "you@example.com" %>
+              </div>
+
+              <!-- Password -->
+              <div class="mb-3">
+                <label class="form-label fw-600">Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <%= f.password_field :password,
+                        autocomplete: "new-password",
+                        class: "form-control form-control-lg input-elevated",
+                        id: "signupPassword",
+                        placeholder: "Create a password" %>
+                  <button class="btn btn-outline-secondary btn-eye" type="button" id="toggleSignupPassword" aria-label="Show password">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div class="form-text">At least 8 characters, mix of letters & numbers.</div>
+              </div>
+
+              <!-- Confirm -->
+              <div class="mb-3">
+                <label class="form-label fw-600">Confirm password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <%= f.password_field :password_confirmation,
+                        autocomplete: "new-password",
+                        class: "form-control form-control-lg input-elevated",
+                        id: "signupPasswordConfirm",
+                        placeholder: "Repeat your password" %>
+                  <button class="btn btn-outline-secondary btn-eye" type="button" id="toggleSignupPasswordConfirm" aria-label="Show password">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <div class="invalid-feedback d-none" id="pwdMatchMsg">Passwords don’t match.</div>
+              </div>
+
+              <!-- Terms (optional; remove if not needed) -->
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="1" id="tosCheck" required>
+                <label class="form-check-label" for="tosCheck">
+                  I agree to Snoofly’s <a href="#" class="auth-link">Terms</a> and <a href="#" class="auth-link">Privacy Policy</a>.
+                </label>
+              </div>
+
+              <!-- Submit -->
+              <div class="d-grid gap-2 mb-3">
+                <%= f.submit "Create account", class: "btn btn-snoofly-red btn-lg", id: "signupBtn" %>
+              </div>
+
+              <!-- Divider -->
+              <div class="auth-divider my-3"><span>or</span></div>
+
+              <!-- Back to log in -->
+              <p class="text-center text-muted mb-0">
+                Already have a Snoofly account?
+                <%= link_to "Log in", new_session_path(resource_name), class: "auth-link" %>
+              </p>
+            <% end %>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label for="password" class="form-label">Password</label>
-          <input type="password" id="password" class="form-input" placeholder="Create a password" required>
-          <div class="password-requirements">At least 8 characters with a mix of letters and numbers</div>
-        </div>
-        
-        <div class="form-group">
-          <label for="confirmPassword" class="form-label">Confirm Password</label>
-          <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm your password" required>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Create Account</button>
-      </form>
-      
-      <div class="login-redirect">
-        Already have a Snoofly account? <a href="#" class="login-link">Log in</a>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const form = document.querySelector('.signup-form');
-      
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        
-        if (password !== confirmPassword) {
-          alert('Passwords do not match. Please try again.');
-          return;
-        }
-        
-        // In a real application, you would submit the form here
-        alert('Account created successfully!');
-      });
-    });
-  </script>
+<!-- Tiny JS: toggle eyes + live password match hint -->
+<script>
+  document.addEventListener("turbo:load", () => {
+    const pwd = document.getElementById("signupPassword");
+    const confirm = document.getElementById("signupPasswordConfirm");
+    const msg = document.getElementById("pwdMatchMsg");
+    const toggle = (btnId, fieldId) => {
+      const btn = document.getElementById(btnId);
+      const field = document.getElementById(fieldId);
+      if (btn && field) {
+        btn.addEventListener("click", () => {
+          const isPwd = field.type === "password";
+          field.type = isPwd ? "text" : "password";
+          const icon = btn.querySelector("i");
+          icon.classList.toggle("bi-eye");
+          icon.classList.toggle("bi-eye-slash");
+        });
+      }
+    };
+    toggle("toggleSignupPassword", "signupPassword");
+    toggle("toggleSignupPasswordConfirm", "signupPasswordConfirm");
 
-<style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --secondary: #f8fafc;
-      --text: #1e293b;
-      --text-light: #64748b;
-      --border: #e2e8f0;
-      --error: #ef4444;
-      --success: #10b981;
+    if (pwd && confirm && msg) {
+      const check = () => {
+        if (!confirm.value) { msg.classList.add("d-none"); confirm.classList.remove("is-invalid"); return; }
+        const ok = pwd.value === confirm.value;
+        confirm.classList.toggle("is-invalid", !ok);
+        msg.classList.toggle("d-none", ok);
+      };
+      pwd.addEventListener("input", check);
+      confirm.addEventListener("input", check);
     }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f9fafb;
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .signup-container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-      width: 100%;
-      max-width: 480px;
-      overflow: hidden;
-    }
-    
-    .signup-header {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      padding: 2.5rem;
-      text-align: center;
-      color: white;
-    }
-    
-    .logo {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    
-    .logo-subtitle {
-      font-size: 1rem;
-      opacity: 0.9;
-      font-weight: 400;
-    }
-    
-    .signup-content {
-      padding: 2.5rem;
-    }
-    
-    .social-login {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    
-    .social-title {
-      font-size: 0.9rem;
-      color: var(--text-light);
-      margin-bottom: 1rem;
-      position: relative;
-    }
-    
-    .social-title:before,
-    .social-title:after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      height: 1px;
-      width: 30%;
-      background-color: var(--border);
-    }
-    
-    .social-title:before {
-      left: 0;
-    }
-    
-    .social-title:after {
-      right: 0;
-    }
-    
-    .social-icons {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-    
-    .social-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: white;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    
-    .social-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .social-btn.google {
-      color: #DB4437;
-    }
-    
-    .social-btn.facebook {
-      color: #4267B2;
-    }
-    
-    .social-btn.apple {
-      color: #000;
-    }
-    
-    .form-title {
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-    }
-    
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    
-    .form-label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-    
-    .form-input {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: all 0.2s;
-    }
-    
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    
-    .password-requirements {
-      font-size: 0.75rem;
-      color: var(--text-light);
-      margin-top: 0.25rem;
-    }
-    
-    .btn {
-      width: 100%;
-      padding: 1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-    
-    .login-redirect {
-      text-align: center;
-      margin-top: 1.5rem;
-      font-size: 0.9rem;
-      color: var(--text-light);
-    }
-    
-    .login-link {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    
-    .login-link:hover {
-      text-decoration: underline;
-    }
-    
-    .error-message {
-      color: var(--error);
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 576px) {
-      .signup-header {
-        padding: 2rem;
-      }
-      
-      .signup-content {
-        padding: 2rem;
-      }
-    }
-  </style>
+  });
+</script>

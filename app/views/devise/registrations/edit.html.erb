@@ -15,7 +15,9 @@
           </div>
           
           <!-- User Name -->
-          <h5 class="fw-bold mb-1"><%= resource.full_name.present? ? resource.name : resource.email.split('@').first %></h5>
+          <h5 class="fw-bold mb-1">
+            <%= resource.full_name.presence || resource.email.to_s.split('@').first %>
+          </h5>
           <p class="text-muted small mb-3"><%= resource.email %></p>
           
           <!-- Navigation -->

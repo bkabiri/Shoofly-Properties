@@ -18,13 +18,14 @@ Rails.application.routes.draw do
   # Devise + home
   get "home/index"
 
-  devise_for :users
+ devise_for :users, controllers: { registrations: "users/registrations" }
   root to: "home#index"
+
   resources :checkout, only: [] do
     collection do
-      post :sessions       # POST /checkout/sessions
-      get  :success        # GET  /checkout/success
-      get  :cancel         # GET  /checkout/cancel
+      post :sessions
+      get  :success
+      get  :cancel
     end
   end
   post "/checkout_sessions", to: "checkout#sessions"  

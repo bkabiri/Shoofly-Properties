@@ -1,78 +1,107 @@
 // app/javascript/controllers/checkout_controller.js
 import { Controller } from "@hotwired/stimulus"
 
+// Requires Bootstrap's JS to be loaded globally (for Modal)
 export default class extends Controller {
   static values = {
-    listingId: Number // optional: set data-checkout-listing-id-value="123" on the root section
+    listingId: Number,                 // optional: passes a listing_id along
+    endpoint: { type: String, default: "/checkout/sessions" } // if you use a named route, set via data-checkout-endpoint-value
   }
 
+  connect() {
+    this.modalEl   = document.getElementById("planPreviewModal")
+    this.bsModal   = this.modalEl ? new bootstrap.Modal(this.modalEl) : null
+    this.confirmEl = this.modalEl?.querySelector("[data-checkout-confirm]")
+
+    if (this.confirmEl) {
+      this.confirmEl.addEventListener("click", () => this.confirm())
+    }
+  }
+
+  // Step 1: open modal with details from the clicked card
+  preview(event) {
+    const btn  = event.currentTarget
+    const card = btn.closest("[data-plan-card]")
+    if (!card || !this.bsModal) return
+
+    // Read visible data from the card
+    const name   = card.querySelector(".plan-name")?.textContent?.trim() || "Selected plan"
+    const price  = card.querySelector(".plan-price")?.textContent?.trim() || "£—"
+    const period = card.querySelector(".plan-period")?.textContent?.trim() || ""
+
+    const features = Array.from(card.querySelectorAll(".plan-features .feature-item"))
+      .map(el => el.textContent.trim())
+      .filter(Boolean)
+
+    // Stash payload for confirm()
+    this.pending = {
+      plan_code: btn.dataset.checkoutPlan,
+      plan_kind: btn.dataset.checkoutKind || "subscription",
+      period:    btn.dataset.checkoutPeriod || "monthly",
+      listing_id: this.hasListingIdValue ? this.listingIdValue : null
+    }
+
+    // Populate modal
+    this.modalEl.querySelector("#previewPlanName").textContent   = name
+    this.modalEl.querySelector("#previewPlanPrice").textContent  = price
+    this.modalEl.querySelector("#previewPlanPeriod").textContent = period
+
+    const container = this.modalEl.querySelector("#previewPlanFeatures")
+    container.innerHTML = ""
+    features.forEach(txt => {
+      const row = document.createElement("div")
+      row.className = "feat"
+      row.innerHTML = `<i class="bi bi-check-circle-fill"></i><div>${txt}</div>`
+      container.appendChild(row)
+    })
+
+    this.bsModal.show()
+  }
+
+  // Step 2: user clicks "Continue to Checkout"
+  confirm() {
+    if (!this.pending) return
+    this.startWith(this.pending)
+  }
+
+  // Fallback direct-start (if you still call data-action="click->checkout#start" somewhere)
   start(event) {
-    event.preventDefault()
-
-    const btn = event.currentTarget
-    if (btn.dataset.loading === "1") return // double-submit guard
-
-    // Which plan?
-    const planCode = btn.dataset.checkoutPlan
-    if (!planCode) {
-      console.error("Missing data-checkout-plan on clicked button")
-      return alert("Something went wrong. Please refresh and try again.")
+    const btn = event?.currentTarget
+    const payload = {
+      plan_code: btn?.dataset.checkoutPlan,
+      plan_kind: btn?.dataset.checkoutKind || "subscription",
+      period:    btn?.dataset.checkoutPeriod || "monthly",
+      listing_id: this.hasListingIdValue ? this.listingIdValue : null
     }
+    this.startWith(payload, btn)
+  }
 
-    // Which period?
-    // 1) button can explicitly set data-checkout-period ("one_time" | "monthly" | "yearly")
-    // 2) otherwise read from the UI's billing toggle (.billing-option.active data-period)
-    let period = btn.dataset.checkoutPeriod
-    if (!period) {
-      const activeToggle = document.querySelector(".billing-toggle .billing-option.active")
-      period = activeToggle?.dataset.period || "monthly"
-      // Normalize to what the server expects
-      if (period === "annually" || period === "annual") period = "yearly"
-    }
+  startWith(payload, btn = null) {
+    if (btn) btn.disabled = true
+    if (this.confirmEl) this.confirmEl.disabled = true
 
-    // Optional listing context
-    const listingId = this.hasListingIdValue ? this.listingIdValue : (btn.dataset.listingId || null)
-
-    // UI: loading state
-    const originalText = btn.innerHTML
-    btn.dataset.loading = "1"
-    btn.disabled = true
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Redirecting…`
-
-    // CSRF
-    const token = document.querySelector('meta[name="csrf-token"]')?.content
-
-    fetch("/checkout/sessions", {
+    fetch(this.endpointValue || "/checkout/sessions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "X-CSRF-Token": token || ""
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
       },
-      body: JSON.stringify({
-        plan_code: planCode,
-        period: period,
-        listing_id: listingId
-      })
+      body: JSON.stringify(payload)
     })
-      .then(async (res) => {
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) {
-          const msg = data?.error || `HTTP ${res.status}`
-          throw new Error(msg)
-        }
-        return data
-      })
-      .then(({ url }) => {
-        if (!url) throw new Error("No checkout URL returned")
+      .then(r => r.json())
+      .then(({ url, error }) => {
+        if (error) throw new Error(error)
+        // Close modal before redirecting
+        if (this.bsModal) this.bsModal.hide()
         window.location = url
       })
-      .catch((err) => {
-        console.error("[Checkout] Failed:", err)
-        alert(`Payment setup failed: ${err.message}`)
-        btn.innerHTML = originalText
-        btn.disabled = false
-        btn.dataset.loading = "0"
+      .catch(err => {
+        console.error(err)
+        alert(`Could not start checkout: ${err.message}`)
+      })
+      .finally(() => {
+        if (btn) btn.disabled = false
+        if (this.confirmEl) this.confirmEl.disabled = false
       })
   }
 }

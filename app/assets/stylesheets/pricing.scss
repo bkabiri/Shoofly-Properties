@@ -295,3 +295,30 @@
   }
   .feature-name, .feature-value { flex: none; }
 }
+.plan-card { position: relative; border:1px solid #eceff3; border-radius:24px; overflow: visible; }
+  .plan-card.selected { border: 2px solid #ff4a5f; box-shadow: 0 14px 30px rgba(255,74,95,0.18); }
+  .plan-ribbon {
+    position:absolute; top:14px; right:-46px; z-index:5;
+    background:#ff4a5f; color:#fff; font-weight:800; font-size:.72rem;
+    padding:.45rem 2.25rem; transform: rotate(45deg);
+    letter-spacing:.04em; box-shadow:0 8px 18px rgba(0,0,0,.12);
+  }
+  /* Snoofly modal */
+  .snoofly-modal .modal-content{ border:0; border-radius:16px; overflow:hidden; }
+  .snoofly-modal .modal-header{
+    background:linear-gradient(135deg,#ff4a5f,#ff7b4a);
+    color:#fff; border:0; padding:1.25rem 1.25rem;
+  }
+  .snoofly-modal .plan-chip{
+    background: rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.32);
+    padding:.25rem .6rem; border-radius:999px; font-weight:700;
+  }
+  .snoofly-modal .modal-body{ padding:1.25rem; }
+  .snoofly-modal .feat{
+    display:flex; align-items:flex-start; gap:.6rem; padding:.45rem 0;
+    border-bottom:1px dashed #f0f1f3;
+  }
+  .snoofly-modal .feat:last-child{ border-bottom:0; }
+  .snoofly-modal .feat i{ color:#ff4a5f; margin-top:.2rem; }
+  .snoofly-modal .modal-footer{ border:0; padding:1.25rem; }
