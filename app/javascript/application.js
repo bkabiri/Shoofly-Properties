@@ -1,6 +1,9 @@
 // Entry point for the build
 import "@hotwired/turbo-rails"
 import "controllers"
+
+window.Turbo = Turbo
+Turbo.session.drive = true
 // Ensure Bootstrap Offcanvas opens even with Turbo
 document.addEventListener("turbo:load", () => {
   const el = document.getElementById("mainMenu");

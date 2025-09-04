@@ -1,0 +1,19 @@
+<%= render "shared/navbar" %>
+
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="mb-1 fw-bold">Create Ticket</h1>
+      <div class="text-muted">Log a new support request on behalf of a user</div>
+    </div>
+    <%= link_to admin_tickets_path, class: "btn btn-outline-dark" do %>
+      <i class="bi bi-arrow-left"></i> Back
+    <% end %>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <%= render "form" %>
+    </div>
+  </div>
+</div>

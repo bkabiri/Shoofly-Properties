@@ -1,0 +1,15 @@
+<%# locals: priority: (Symbol/String) %>
+<% p = priority.to_s %>
+<% cls =
+  case p
+  when "urgent" then "bg-danger text-white"
+  when "high"   then "bg-warning text-dark"
+  when "medium" then "bg-primary text-white"
+  when "low"    then "bg-secondary text-white"
+  else               "bg-light text-dark border"
+  end %>
+
+<span class="badge rounded-pill <%= cls %> px-3 py-2 text-capitalize">
+  <i class="bi <%= p == "urgent" ? "bi-lightning-fill" : "bi-thermometer-half" %> me-1"></i>
+  <%= p.presence || "n/a" %>
+</span>

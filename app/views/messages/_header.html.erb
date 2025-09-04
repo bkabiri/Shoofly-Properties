@@ -1,0 +1,11 @@
+<!-- app/views/messages/_header.html.erb -->
+<% l = conversation.listing %>
+<div class="d-flex align-items-center gap-3">
+  <% if l&.banner_image&.attached? %>
+    <%= image_tag l.banner_image.variant(resize_to_fill: [56, 40]).processed, class: "rounded", alt: l.title %>
+  <% end %>
+  <div>
+    <div class="fw-bold"><%= l&.title %></div>
+    <div class="text-muted small"><i class="bi bi-geo-alt"></i> <%= l&.address %></div>
+  </div>
+</div>

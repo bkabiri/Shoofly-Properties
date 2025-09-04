@@ -1,0 +1,66 @@
+<%= form_with model: [:admin, @ticket], class: "ticket-form", data: { turbo: true } do |f| %>
+  <% if @ticket.errors.any? %>
+    <div class="alert alert-danger border-0 shadow-sm">
+      <strong>We found <%= @ticket.errors.count %> problem<%= "s" unless @ticket.errors.count == 1 %>:</strong>
+      <ul class="mb-0 mt-2">
+        <% @ticket.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="row g-3">
+    <div class="col-md-8">
+      <%= f.label :subject, "Subject", class: "form-label fw-semibold" %>
+      <%= f.text_field :subject, class: "form-control form-control-lg", placeholder: "Short, clear summary" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.label :category, "Category", class: "form-label fw-semibold" %>
+      <%= f.select :category,
+            [["Billing","billing"],["Technical","technical"],["Listings","listings"],["Account","account"],["Other","other"]],
+            { include_blank: "Select category" },
+            class: "form-select form-select-lg" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.label :priority, "Priority", class: "form-label fw-semibold" %>
+      <%= f.select :priority,
+            [["Low","low"],["Medium","medium"],["High","high"],["Urgent","urgent"]],
+            { include_blank: "Select priority" },
+            class: "form-select" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.label :status, "Status", class: "form-label fw-semibold" %>
+      <%= f.select :status,
+            [["Open","open"],["Pending","pending"],["Closed","closed"]],
+            {},
+            class: "form-select" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.label :assignee_id, "Assignee", class: "form-label fw-semibold" %>
+      <%= f.collection_select :assignee_id, User.where(role: :admin).order(:email), :id, :email,
+            { include_blank: "Unassigned" }, class: "form-select" %>
+    </div>
+
+    <div class="col-12">
+      <%= f.label :body, "Description", class: "form-label fw-semibold" %>
+      <%= f.text_area :body, rows: 7, class: "form-control", placeholder: "Describe the issue, steps to reproduce, and any expected behaviour…" %>
+    </div>
+
+    <div class="col-12">
+      <%= f.label :attachment, "Attachment", class: "form-label fw-semibold" %>
+      <%= f.file_field :attachment, class: "form-control", accept: ".png,.jpg,.jpeg,.pdf,.txt,.csv,.doc,.docx" %>
+      <div class="form-text">Optional: include screenshots, PDFs, or text files.</div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 mt-4">
+    <%= f.submit (@ticket.new_record? ? "Create Ticket" : "Update Ticket"),
+                 class: "btn btn-snoofly px-4" %>
+    <%= link_to "Cancel", admin_tickets_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>

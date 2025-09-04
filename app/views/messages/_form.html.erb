@@ -1,0 +1,8 @@
+<!-- app/views/messages/_form.html.erb -->
+<%= form_with model: [conversation, message], data: { controller: "chatinput", action: "turbo:submit-end->chatinput#clear" } do |f| %>
+  <div class="input-group">
+    <%= f.text_area :body, rows: 1, class: "form-control", placeholder: "Type a message…",
+          data: { action: "keydown.enter->chatinput#enter" } %>
+    <button class="btn btn-snoofly" type="submit"><i class="bi bi-send"></i></button>
+  </div>
+<% end %>

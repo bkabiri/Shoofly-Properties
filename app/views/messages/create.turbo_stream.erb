@@ -1,0 +1,4 @@
+<!-- app/views/messages/create.turbo_stream.erb -->
+<%= turbo_stream.append "messages_list_#{@conversation.id}" do %>
+  <%= render "messages/message", message: @message %>
+<% end %>

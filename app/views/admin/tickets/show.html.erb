@@ -1,0 +1,102 @@
+<%= render "shared/navbar" %>
+
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex align-items-start justify-content-between mb-3">
+    <div>
+      <div class="d-flex align-items-center gap-2">
+        <h1 class="fw-bold mb-0"><%= @ticket.subject.presence || "(no subject)" %></h1>
+        <%= render "status_badge", status: @ticket.status %>
+        <%= render "priority_badge", priority: @ticket.priority %>
+      </div>
+      <div class="text-muted mt-2">
+        Ticket #<%= @ticket.id %> •
+        Opened <%= time_ago_in_words(@ticket.created_at) %> ago
+        by <strong><%= @ticket.requester&.email || @ticket.requester_email || "Unknown" %></strong>
+        <% if @ticket.category.present? %> • <i class="bi bi-tag ms-1 me-1"></i><%= @ticket.category.humanize %><% end %>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <% if @ticket.open? %>
+        <%= link_to close_admin_ticket_path(@ticket),
+                    class: "btn btn-success",
+                    data: { turbo_method: :patch, turbo_confirm: "Close this ticket?" } do %>
+          <i class="bi bi-check2-circle me-1"></i> Close
+        <% end %>
+      <% end %>
+      <%= link_to edit_admin_ticket_path(@ticket), class: "btn btn-outline-dark disabled", aria: { disabled: true } do %>
+        <i class="bi bi-pencil"></i>
+      <% end %>
+      <%= link_to admin_tickets_path, class: "btn btn-outline-secondary" do %>
+        <i class="bi bi-arrow-left"></i> Back
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white fw-semibold">Description</div>
+        <div class="card-body">
+          <pre class="mb-0" style="white-space: pre-wrap; font-family: var(--bs-font-sans-serif);"><%= @ticket.body.presence || "No description provided." %></pre>
+        </div>
+      </div>
+
+      <%# Conversation / comments (optional if you add TicketComment model) %>
+      <% if defined?(@comments) %>
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white fw-semibold">Conversation</div>
+          <div class="list-group list-group-flush">
+            <% @comments.each do |c| %>
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between">
+                  <div class="fw-semibold"><%= c.user&.email || "System" %></div>
+                  <small class="text-muted"><%= time_ago_in_words(c.created_at) %> ago</small>
+                </div>
+                <div class="mt-2"><%= simple_format c.body %></div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">Details</div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-5 text-muted">Requester</dt>
+            <dd class="col-7"><%= @ticket.requester&.email || @ticket.requester_email || "—" %></dd>
+
+            <dt class="col-5 text-muted">Assignee</dt>
+            <dd class="col-7"><%= @ticket.assignee&.email || "Unassigned" %></dd>
+
+            <dt class="col-5 text-muted">Status</dt>
+            <dd class="col-7 text-capitalize"><%= @ticket.status %></dd>
+
+            <dt class="col-5 text-muted">Priority</dt>
+            <dd class="col-7 text-capitalize"><%= @ticket.priority %></dd>
+
+            <dt class="col-5 text-muted">Created</dt>
+            <dd class="col-7"><%= l @ticket.created_at, format: :long %></dd>
+
+            <dt class="col-5 text-muted">Updated</dt>
+            <dd class="col-7"><%= l @ticket.updated_at, format: :long %></dd>
+
+            <% if @ticket.attachment.attached? %>
+              <dt class="col-5 text-muted">Attachment</dt>
+              <dd class="col-7">
+                <%= link_to url_for(@ticket.attachment), target: "_blank", rel: "noopener" do %>
+                  <i class="bi bi-paperclip me-1"></i> Download
+                <% end %>
+              </dd>
+            <% end %>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

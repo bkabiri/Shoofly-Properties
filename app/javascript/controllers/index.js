@@ -18,9 +18,16 @@ application.register("listing-form", ListingFormController)
 
 import LoginController from "./login_controller.js"
 application.register("login", LoginController)
+
 import AddressAutocompleteController from "./address_autocomplete_controller.js"
 application.register("address-autocomplete", AddressAutocompleteController)
 
-import CheckoutController from "./checkout_controller"
+import CheckoutController from "./checkout_controller.js"
 application.register("checkout", CheckoutController)
 
+// ✅ Chat controllers
+import ChatAutoscrollController from "./chat_autoscroll_controller.js"
+application.register("chat-autoscroll", ChatAutoscrollController)
+
+import ChatinputController from "./chatinput_controller.js"
+application.register("chatinput", ChatinputController)

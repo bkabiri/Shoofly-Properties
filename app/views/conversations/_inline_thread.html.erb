@@ -1,0 +1,108 @@
+<!-- app/views/conversations/_inline_thread.html.erb -->
+<div id="<%= dom_id(conversation, :thread) %>" class="chat-shell">
+  <!-- Subscribe THIS viewer to updates for this conversation -->
+  <%= turbo_stream_from [:conversation, conversation.id, :user, current_user.id] %>
+
+  <!-- Header -->
+  <div class="chat-thread-head">
+    <div class="d-flex align-items-center gap-2">
+      <div class="avatar-circle-sm"><i class="bi bi-person-fill"></i></div>
+      <div>
+        <div class="fw-semibold">
+          <%= conversation.try(:other_party_name).presence ||
+              conversation.try(:seller)&.try(:estate_agent_name).presence ||
+              conversation.try(:seller)&.try(:email) || "Contact" %>
+        </div>
+        <% if conversation.listing %>
+          <div class="small text-muted">
+            About:
+            <%= link_to conversation.listing.title, listing_path(conversation.listing), class: "text-decoration-none" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <% if conversation.listing %>
+      <%= link_to listing_path(conversation.listing), class: "btn btn-sm btn-ghost" do %>
+        <i class="bi bi-box-arrow-up-right me-1"></i> Open listing
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Body (scrollable + auto-scroll on updates) -->
+  <div class="chat-body"
+       id="chatBody_<%= conversation.id %>"
+       data-controller="chat-autoscroll"
+       data-chat-autoscroll-target-id-value="messages_list_<%= conversation.id %>">
+
+    <% if conversation.listing.present? %>
+      <div class="lp-card mb-3">
+        <div class="lp-thumb-wrapper">
+          <% if conversation.listing.banner_image&.attached? %>
+            <%= image_tag(
+                  (conversation.listing.banner_image.variable? ?
+                    conversation.listing.banner_image.variant(resize_to_fill: [1200, 600]).processed :
+                    conversation.listing.banner_image),
+                  class: "lp-thumb",
+                  alt: conversation.listing.title
+                ) %>
+          <% else %>
+            <div class="lp-thumb"></div>
+          <% end %>
+        </div>
+        <div class="lp-body">
+          <div class="lp-meta">
+            <i class="bi bi-grid-3x3-gap me-1"></i> Snoofly · Property
+            <% if conversation.listing.respond_to?(:guide_price) && conversation.listing.guide_price.present? %>
+              · <%= number_to_currency(conversation.listing.guide_price, unit: "£", precision: 0, delimiter: ",") %>
+            <% end %>
+          </div>
+          <div class="fw-semibold mt-1"><%= conversation.listing.title %></div>
+          <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i><%= conversation.listing.address %></div>
+        </div>
+        <div class="lp-actions">
+          <%= link_to "View on Snoofly", listing_path(conversation.listing), class: "btn btn-outline-dark btn-sm" %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Messages stream -->
+    <div id="messages_list_<%= conversation.id %>" class="chat-stream">
+      <%= render partial: "messages/message",
+                 collection: messages,
+                 as: :message,
+                 locals: { viewer_id: current_user.id } %>
+    </div>
+  </div>
+
+  <!-- Composer (Stimulus clears on submit & Enter-to-send) -->
+  <div class="chat-composer">
+    <%= form_with url: conversation_messages_path(conversation),
+                  method: :post,
+                  data: {
+                    turbo: true,
+                    controller: "chatinput",
+                    action: "turbo:submit-start->chatinput#afterSubmitStart turbo:submit-end->chatinput#afterSubmitEnd"
+                  },
+                  class: "composer-shell" do %>
+      <div class="composer-input">
+        <%= hidden_field_tag :redirect_to,
+              dashboard_path(tab: "buying", anchor: "messages", conversation_id: conversation.id) %>
+
+        <%= text_area_tag "message[body]", nil,
+              rows: 1, autocomplete: "off",
+              class: "composer-textarea",
+              placeholder: "Write your message…",
+              data: { chatinput_target: "textarea",
+                      action: "input->chatinput#input keydown->chatinput#keydown" } %>
+
+        <button class="composer-send"
+                type="submit"
+                data-chatinput-target="submit"
+                title="Send">
+          <i class="bi bi-send"></i>
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>

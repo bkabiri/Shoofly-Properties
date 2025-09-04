@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_02_182619) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_02_215512) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -65,6 +65,19 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_182619) do
     t.index ["user_id"], name: "index_agency_memberships_on_user_id"
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.bigint "listing_id", null: false
+    t.bigint "buyer_id", null: false
+    t.bigint "seller_id", null: false
+    t.datetime "last_message_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_id"], name: "index_conversations_on_buyer_id"
+    t.index ["listing_id", "buyer_id", "seller_id"], name: "idx_convo_unique_triplet", unique: true
+    t.index ["listing_id"], name: "index_conversations_on_listing_id"
+    t.index ["seller_id"], name: "index_conversations_on_seller_id"
+  end
+
   create_table "favorites", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "listing_id", null: false
@@ -116,6 +129,18 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_182619) do
     t.index ["user_id"], name: "index_listings_on_user_id"
   end
 
+  create_table "messages", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.bigint "user_id", null: false
+    t.text "body", null: false
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["created_at"], name: "index_messages_on_created_at"
+    t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
   create_table "payments", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "listing_id"
@@ -158,6 +183,16 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_182619) do
     t.string "email"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "ticket_messages", force: :cascade do |t|
+    t.bigint "ticket_id", null: false
+    t.bigint "user_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ticket_id"], name: "index_ticket_messages_on_ticket_id"
+    t.index ["user_id"], name: "index_ticket_messages_on_user_id"
   end
 
   create_table "tickets", force: :cascade do |t|
@@ -203,12 +238,19 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_182619) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "conversations", "listings"
+  add_foreign_key "conversations", "users", column: "buyer_id"
+  add_foreign_key "conversations", "users", column: "seller_id"
   add_foreign_key "favorites", "listings"
   add_foreign_key "favorites", "users"
   add_foreign_key "listings", "users"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users"
   add_foreign_key "payments", "listings"
   add_foreign_key "payments", "plans"
   add_foreign_key "payments", "users"
+  add_foreign_key "ticket_messages", "tickets"
+  add_foreign_key "ticket_messages", "users"
   add_foreign_key "tickets", "users", column: "assigned_to_id"
   add_foreign_key "tickets", "users", column: "requester_id"
 end

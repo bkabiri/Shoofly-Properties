@@ -1,0 +1,22 @@
+<!-- app/views/conversations/show.html.erb -->
+<%= render "shared/navbar" %>
+
+<section class="container py-4">
+  <div class="dashboard-card card">
+    <div class="dashboard-card-header d-flex align-items-center justify-content-between" id="conversation_header_<%= @conversation.id %>">
+      <%= render "messages/header", conversation: @conversation %>
+    </div>
+
+    <div class="dashboard-card-body">
+      <turbo-frame id="messages_frame_<%= @conversation.id %>">
+        <div id="messages_list_<%= @conversation.id %>" data-controller="autoscroll" class="list-group" style="max-height: 50vh; overflow:auto;">
+          <%= render partial: "messages/message", collection: @messages, as: :message %>
+        </div>
+      </turbo-frame>
+    </div>
+
+    <div class="card-footer bg-white">
+      <%= render "messages/form", conversation: @conversation, message: @message %>
+    </div>
+  </div>
+</section>

@@ -281,9 +281,15 @@
             </div>
           <% end %>
 
-          <%= mail_to contact_email, "Message Seller",
-                      subject: "Enquiry about #{@listing.title}",
-                      class: "btn btn-snoofly w-100" %>
+          <%= button_to "Message Seller",
+              conversations_path,
+              method: :post,
+              params: {
+                recipient_id: @listing.user_id, # not required by the controller, but harmless
+                listing_id:   @listing.id,
+                redirect_to:  dashboard_path(tab: "buying", anchor: "messages")
+              },
+              class: "btn btn-snoofly-red w-100" %>
 
           <% if seller.respond_to?(:estate_agent?) && seller.estate_agent? %>
             <div class="text-center mt-2">

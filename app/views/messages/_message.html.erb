@@ -1,0 +1,10 @@
+<!-- app/views/messages/_message.html.erb -->
+<%# locals: message, viewer_id (REQUIRED) %>
+<% mine = (message.user_id == viewer_id) %>
+
+<div class="chat-bubble-row <%= mine ? 'me' : 'them' %>">
+  <div class="chat-bubble <%= mine ? 'bubble-me' : 'bubble-them' %>">
+    <div><%= simple_format(h(message.body)) %></div>
+    <div class="bubble-meta"><%= l(message.created_at, format: :short) %></div>
+  </div>
+</div>

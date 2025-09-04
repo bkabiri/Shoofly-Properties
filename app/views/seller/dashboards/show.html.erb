@@ -21,6 +21,16 @@
     end
 
   display_name = current_user.try(:full_name).presence || current_user.email.split("@").first
+
+  # Support CTA
+  support_button_html = if current_user&.admin?
+    link_to "New Support Ticket", new_admin_ticket_path, class: "btn btn-sm btn-snoofly"
+  else
+    mail_to "support@snoofly.com",
+            "New Support Ticket",
+            subject: "Snoofly support request from #{display_name}",
+            class: "btn btn-sm btn-snoofly"
+  end
 %>
 
 <section class="container py-4">
@@ -306,79 +316,120 @@
           </div>
         </div>
 
-        <div class="dashboard-card card">
-          <div class="dashboard-card-header">
-            <span><i class="bi bi-chat-dots me-2"></i> Contacts & Messages</span>
+        <%# =================== Contacts & Messages (chat) =================== %>
+       <div class="dashboard-card mb-4" id="messages">
+  <div class="dashboard-card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-chat-dots me-2"></i> Contacts & Messages</span>
+    <div class="d-flex align-items-center gap-2"><%= support_button_html %></div>
+  </div>
+
+  <div class="dashboard-card-body">
+    <!-- Fixed-height pane; tweak --chat-h to suit your page -->
+    <div class="chat-pane" style="--chat-h: 72vh;">
+      <div class="chat-grid">
+        <!-- Sidebar (recent chats) -->
+        <aside class="chat-sidebar">
+          <div class="search">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input type="search" class="form-control" placeholder="Search" data-chat-search>
+            </div>
           </div>
-          <div class="dashboard-card-body">
-            <div class="row g-4">
-              <div class="col-md-6">
-                <h6 class="mb-3 text-muted text-uppercase small fw-bold">Recent Sellers</h6>
-                <% if sellers_from_favs.present? %>
-                  <div class="list-group list-group-flush">
-                    <% sellers_from_favs.each do |seller| %>
-                      <div class="list-group-item border-0 px-0 py-2">
-                        <div class="d-flex align-items-center">
-                          <div class="bg-snoofly-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
-                               style="width: 40px; height: 40px;">
-                            <i class="bi bi-person text-snoofly-primary"></i>
-                          </div>
-                          <div class="flex-grow-1">
-                            <div class="fw-semibold"><%= seller.try(:estate_agent_name).presence || seller.try(:company_name).presence || seller.email %></div>
-                            <% if seller.respond_to?(:mobile_phone) && seller.mobile_phone.present? %>
-                              <small class="text-muted"><i class="bi bi-telephone me-1"></i><%= seller.mobile_phone %></small>
-                            <% end %>
-                          </div>
-                          <div>
-                            <%= mail_to seller.email, "Contact", class: "btn btn-sm btn-outline-snoofly" %>
-                          </div>
-                        </div>
+
+          <%= render "conversations/sidebar",
+                     conversations: @conversations,
+                     open_conversation: @open_conversation %>
+        </aside>
+
+        <!-- Main thread -->
+        <section class="chat-main">
+          <% if @open_conversation %>
+            <div class="chat-thread-shell w-100">
+              <!-- Header -->
+              <div class="chat-thread-head">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-circle-sm"><i class="bi bi-person-fill"></i></div>
+                  <div>
+                    <div class="fw-semibold">
+                      <%= @open_conversation.try(:other_party_name).presence ||
+                          @open_conversation.try(:seller)&.try(:estate_agent_name).presence ||
+                          @open_conversation.try(:seller)&.try(:email) || "Contact" %>
+                    </div>
+                    <% if @open_conversation.listing %>
+                      <div class="small text-muted">
+                        About:
+                        <%= link_to @open_conversation.listing.title,
+                                    listing_path(@open_conversation.listing),
+                                    class: "text-decoration-none" %>
                       </div>
                     <% end %>
                   </div>
-                <% else %>
-                  <div class="text-center py-4 text-muted">
-                    <i class="bi bi-people fs-1 d-block mb-2"></i>
-                    <p>No seller contacts yet</p>
-                  </div>
+                </div>
+                <% if @open_conversation.listing %>
+                  <%= link_to listing_path(@open_conversation.listing), class: "btn btn-sm btn-ghost" do %>
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Open listing
+                  <% end %>
                 <% end %>
               </div>
 
-              <div class="col-md-6">
-                <h6 class="mb-3 text-muted text-uppercase small fw-bold">Recent Messages</h6>
-                <% if recent_messages.present? %>
-                  <div class="list-group list-group-flush">
-                    <% recent_messages.each do |message| %>
-                      <div class="list-group-item border-0 px-0 py-3">
-                        <div class="d-flex align-items-start">
-                          <div class="bg-snoofly-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
-                               style="width: 40px; height: 40px;">
-                            <i class="bi bi-chat-text text-snoofly-primary"></i>
-                          </div>
-                          <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                              <div class="fw-semibold"><%= message.try(:from_name).presence || "Seller" %></div>
-                              <small class="text-muted"><%= message.try(:sent_at)&.strftime("%d %b") %></small>
-                            </div>
-                            <p class="mb-0 text-truncate message-preview"><%= message.try(:body).presence || "No message content" %></p>
-                          </div>
-                        </div>
-                      </div>
-                    <% end %>
+              <!-- Body (scrolls) -->
+              <div class="chat-body" id="chatBody_<%= @open_conversation.id %>" data-controller="autoscroll">
+                <% if @open_conversation.listing.present? %>
+                  <div class="mb-3">
+                    <%= render "conversations/listing_preview",
+                               listing: @open_conversation.listing,
+                               size: :sm %>
                   </div>
-                  <div class="text-center mt-3">
-                    <%= link_to "View All Messages", "#", class: "btn btn-sm btn-outline-snoofly" %>
-                  </div>
-                <% else %>
-                  <div class="text-center py-4 text-muted">
-                    <i class="bi bi-chat fs-1 d-block mb-2"></i>
-                    <p>No messages yet</p>
+                <% end %>
+
+                <div id="messages_list_<%= @open_conversation.id %>" class="chat-stream">
+                  <%= render partial: "messages/message",
+                             collection: @messages,
+                             as: :message,
+                             locals: { viewer_id: current_user.id } %>
+                </div>
+              </div>
+
+              <!-- Composer -->
+              <div class="chat-composer">
+                <%= form_with url: conversation_messages_path(@open_conversation),
+                              method: :post,
+                              data: { turbo: true },
+                              class: "composer-shell" do %>
+                  <div class="composer-input">
+                    <button type="button" class="composer-icon" title="Aa"><i class="bi bi-type"></i></button>
+                    <button type="button" class="composer-icon" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
+                    <button type="button" class="composer-icon" title="Attachment"><i class="bi bi-paperclip"></i></button>
+                    <button type="button" class="composer-icon" title="More"><i class="bi bi-plus-lg"></i></button>
+
+                    <%= hidden_field_tag :redirect_to,
+                          dashboard_path(tab: "buying",
+                                         anchor: "messages",
+                                         conversation_id: @open_conversation.id) %>
+
+                    <%= text_area_tag "message[body]", nil,
+                          rows: 1,
+                          class: "composer-textarea",
+                          placeholder: "Write your message…" %>
+
+                    <button class="composer-send" type="submit" title="Send">
+                      <i class="bi bi-send"></i>
+                    </button>
                   </div>
                 <% end %>
               </div>
             </div>
-          </div>
-        </div>
+          <% else %>
+            <div class="d-flex w-100 align-items-center justify-content-center text-muted" style="height: 60vh;">
+              Select a chat on the left, or start one from a property page.
+            </div>
+          <% end %>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+        <%# =================== /Contacts & Messages =================== %>
       </div> <!-- /col-lg-8 -->
     </div> <!-- /row -->
 

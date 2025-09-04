@@ -1,0 +1,14 @@
+<%# locals: status: (Symbol/String) %>
+<% s = status.to_s %>
+<% cls =
+  case s
+  when "open"    then "bg-danger-subtle text-danger border-danger"
+  when "pending" then "bg-warning-subtle text-warning border-warning"
+  when "closed"  then "bg-success-subtle text-success border-success"
+  else               "bg-secondary-subtle text-secondary border-secondary"
+  end %>
+
+<span class="badge rounded-pill border <%= cls %> px-3 py-2 text-capitalize">
+  <i class="bi <%= s == "open" ? "bi-life-preserver" : s == "pending" ? "bi-hourglass-split" : "bi-check2-circle" %> me-1"></i>
+  <%= s %>
+</span>

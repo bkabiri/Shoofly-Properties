@@ -1,0 +1,62 @@
+<%# locals: conversations, open_conversation %>
+
+<div class="p-2">
+  <div class="input-group input-group-sm mb-2">
+    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+    <input type="search"
+           class="form-control"
+           placeholder="Search"
+           aria-label="Search conversations"
+           data-chat-search>
+  </div>
+</div>
+
+<div class="chat-list" data-chat-list style="max-height: 520px; overflow:auto;">
+  <% if conversations.present? %>
+    <% conversations.each do |c| %>
+      <% active = (open_conversation && c.id == open_conversation.id) %>
+      <%= link_to dashboard_path(tab: "buying", conversation_id: c.id, anchor: "messages"),
+                  class: "chat-list-item d-flex align-items-start gap-2 px-3 py-2 text-decoration-none #{'active' if active}",
+                  data: { chat_name: (c.try(:other_party_name) || c.try(:seller)&.try(:estate_agent_name) || c.try(:seller)&.try(:email) || "").downcase } do %>
+
+        <div class="flex-shrink-0">
+          <%# 40x40 avatar/thumbnail (≈50% smaller vibe) %>
+          <% if c.listing&.banner_image&.attached? %>
+            <%= image_tag(
+                  (c.listing.banner_image.variable? ?
+                    c.listing.banner_image.variant(resize_to_fill: [40, 40]).processed :
+                    c.listing.banner_image),
+                  alt: c.listing.title,
+                  class: "rounded") %>
+          <% else %>
+            <div class="avatar-circle-sm bg-light d-flex align-items-center justify-content-center">
+              <i class="bi bi-person text-muted"></i>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="flex-grow-1 min-w-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="fw-semibold text-dark text-truncate">
+              <%= c.try(:other_party_name).presence ||
+                  c.try(:seller)&.try(:estate_agent_name).presence ||
+                  c.try(:seller)&.try(:email) || "Contact" %>
+            </div>
+            <small class="text-muted ms-2 flex-shrink-0">
+              <%= (c.last_message_at || c.updated_at)&.strftime("%d %b") %>
+            </small>
+          </div>
+          <div class="small text-muted text-truncate">
+            <%= c.listing ? c.listing.title : "Conversation" %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  <% else %>
+    <div class="text-center text-muted py-5 small">
+      <i class="bi bi-people fs-2 d-block mb-2"></i>
+      No conversations yet<br>
+      <span class="d-block mt-1">Start one from a property page with “Message Seller”.</span>
+    </div>
+  <% end %>
+</div>

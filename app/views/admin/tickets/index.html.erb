@@ -1,0 +1,131 @@
+<%= render "shared/navbar" %>
+
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="mb-1 fw-bold">Support Tickets</h1>
+      <div class="text-muted">Triage and manage customer enquiries</div>
+    </div>
+    <div class="d-flex gap-2">
+      <%= link_to new_admin_ticket_path, class: "btn btn-snoofly" do %>
+        <i class="bi bi-plus-lg me-1"></i> New Ticket
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <%= form_with url: admin_tickets_path, method: :get, local: true, class: "row g-2 align-items-end" do |f| %>
+        <div class="col-md-4">
+          <label class="form-label mb-1">Search</label>
+          <input type="search" name="q" value="<%= params[:q] %>" class="form-control" placeholder="Subject, requester email…" />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label mb-1">Status</label>
+          <select name="status" class="form-select">
+            <option value="">All</option>
+            <% %w[open pending closed].each do |s| %>
+              <option value="<%= s %>" <%= "selected" if params[:status] == s %>><%= s.titleize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label mb-1">Priority</label>
+          <select name="priority" class="form-select">
+            <option value="">All</option>
+            <% %w[low medium high urgent].each do |p| %>
+              <option value="<%= p %>" <%= "selected" if params[:priority] == p %>><%= p.titleize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label mb-1">Assignee</label>
+          <select name="assignee_id" class="form-select">
+            <option value="">Anyone</option>
+            <% User.where(role: :admin).order(:email).each do |u| %>
+              <option value="<%= u.id %>" <%= "selected" if params[:assignee_id].to_s == u.id.to_s %>><%= u.email %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="col-md-2 d-grid">
+          <button class="btn btn-outline-dark"><i class="bi bi-funnel me-1"></i> Filter</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Subject</th>
+            <th>Requester</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Assignee</th>
+            <th>Updated</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @tickets.each do |t| %>
+            <tr>
+              <td class="text-muted">#<%= t.id %></td>
+              <td>
+                <%= link_to [:admin, t], class: "text-decoration-none fw-semibold" do %>
+                  <%= t.subject.presence || "(no subject)" %>
+                <% end %>
+                <% if t.category.present? %>
+                  <div class="small text-muted"><i class="bi bi-tag me-1"></i> <%= t.category.to_s.humanize %></div>
+                <% end %>
+              </td>
+              <td>
+                <div class="fw-medium"><%= t.requester&.email || t.requester_email || "—" %></div>
+                <% if t.requester&.full_name.present? %>
+                  <div class="small text-muted"><%= t.requester.full_name %></div>
+                <% end %>
+              </td>
+              <td><%= render "status_badge", status: t.status %></td>
+              <td><%= render "priority_badge", priority: t.priority %></td>
+              <td><%= t.assignee&.email || "Unassigned" %></td>
+              <td class="text-muted"><%= time_ago_in_words(t.updated_at) %> ago</td>
+              <td class="text-end">
+                <div class="btn-group">
+                  <%= link_to [:admin, t], class: "btn btn-sm btn-outline-dark" do %>
+                    <i class="bi bi-eye"></i>
+                  <% end %>
+                  <% if t.open? %>
+                    <%= link_to close_admin_ticket_path(t),
+                                data: { turbo_method: :patch, turbo_confirm: "Close this ticket?" },
+                                class: "btn btn-sm btn-outline-success" do %>
+                      <i class="bi bi-check2"></i>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+          <% if @tickets.blank? %>
+            <tr>
+              <td colspan="8" class="text-center text-muted py-5">
+                <i class="bi bi-life-preserver d-block mb-2" style="font-size:2rem;"></i>
+                No tickets found. Try adjusting your filters.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Pagination (if you use kaminari/will_paginate) %>
+    <% if defined?(paginate) %>
+      <div class="card-footer bg-white">
+        <%= paginate @tickets %>
+      </div>
+    <% end %>
+  </div>
+</div>
