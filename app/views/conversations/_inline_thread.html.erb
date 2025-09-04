@@ -3,20 +3,34 @@
   <!-- Subscribe THIS viewer to updates for this conversation -->
   <%= turbo_stream_from [:conversation, conversation.id, :user, current_user.id] %>
 
+  <%# ---------- Name to display depending on who is viewing ---------- %>
+  <% other_party_name =
+       if current_user == conversation.seller
+         # Seller is viewing -> show buyer's identity
+         conversation.buyer&.full_name.presence ||
+         conversation.buyer&.email.presence ||
+         "Buyer"
+       else
+         # Buyer is viewing -> show seller’s identity (prefer agency name)
+         conversation.seller&.estate_agent_name.presence ||
+         conversation.seller&.full_name.presence ||
+         conversation.seller&.email.presence ||
+         "Seller"
+       end %>
+
   <!-- Header -->
   <div class="chat-thread-head">
     <div class="d-flex align-items-center gap-2">
       <div class="avatar-circle-sm"><i class="bi bi-person-fill"></i></div>
       <div>
-        <div class="fw-semibold">
-          <%= conversation.try(:other_party_name).presence ||
-              conversation.try(:seller)&.try(:estate_agent_name).presence ||
-              conversation.try(:seller)&.try(:email) || "Contact" %>
-        </div>
+        <div class="fw-semibold"><%= other_party_name %></div>
+
         <% if conversation.listing %>
           <div class="small text-muted">
             About:
-            <%= link_to conversation.listing.title, listing_path(conversation.listing), class: "text-decoration-none" %>
+            <%= link_to conversation.listing.title,
+                        listing_path(conversation.listing),
+                        class: "text-decoration-none" %>
           </div>
         <% end %>
       </div>
@@ -81,34 +95,34 @@
   <!-- Composer (Stimulus clears on submit & Enter-to-send; emits typing) -->
   <div class="chat-composer">
     <%= form_with url: conversation_messages_path(conversation),
-              method: :post,
+                  method: :post,
+                  data: {
+                    turbo: true,
+                    controller: "chatinput",
+                    chatinput_conversation_id_value: conversation.id,
+                    action: "turbo:submit-start->chatinput#afterSubmitStart turbo:submit-end->chatinput#afterSubmitEnd"
+                  },
+                  class: "composer-shell" do %>
+      <div class="composer-input">
+        <%= hidden_field_tag :redirect_to,
+              dashboard_path(tab: "buying", anchor: "messages", conversation_id: conversation.id) %>
+
+        <%= text_area_tag "message[body]", nil,
+              rows: 1, autocomplete: "off",
+              class: "composer-textarea",
+              placeholder: "Write your message…",
               data: {
-                turbo: true,
-                controller: "chatinput",
-                chatinput_conversation_id_value: conversation.id,
-                action: "turbo:submit-start->chatinput#afterSubmitStart turbo:submit-end->chatinput#afterSubmitEnd"
-              },
-              class: "composer-shell" do %>
-  <div class="composer-input">
-    <%= hidden_field_tag :redirect_to,
-          dashboard_path(tab: "buying", anchor: "messages", conversation_id: conversation.id) %>
+                chatinput_target: "textarea",
+                action: "input->chatinput#typing input->chatinput#input keydown->chatinput#keydown"
+              } %>
 
-    <%= text_area_tag "message[body]", nil,
-          rows: 1, autocomplete: "off",
-          class: "composer-textarea",
-          placeholder: "Write your message…",
-          data: {
-            chatinput_target: "textarea",
-            action: "input->chatinput#typing input->chatinput#input keydown->chatinput#keydown"
-          } %>
-
-    <button class="composer-send"
-            type="submit"
-            data-chatinput-target="submit"
-            title="Send">
-      <i class="bi bi-send"></i>
-    </button>
-  </div>
-<% end %>
+        <button class="composer-send"
+                type="submit"
+                data-chatinput-target="submit"
+                title="Send">
+          <i class="bi bi-send"></i>
+        </button>
+      </div>
+    <% end %>
   </div>
 </div>

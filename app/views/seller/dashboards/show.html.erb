@@ -317,7 +317,8 @@
         </div>
 
         <%# =================== Contacts & Messages (chat) =================== %>
-      <div class="dashboard-card mb-4" id="messages">
+      <!-- Seller dashboard – Messages card -->
+<div class="dashboard-card mb-4" id="messages">
   <div class="dashboard-card-body">
     <!-- Fixed-height pane; tweak --chat-h to suit your page -->
     <div class="chat-pane" style="--chat-h: 72vh;">
@@ -336,16 +337,28 @@
               <!-- Subscribe THIS viewer to this conversation -->
               <%= turbo_stream_from [:conversation, @open_conversation.id, :user, current_user.id] %>
 
+              <%# ---------- Name to display depending on who is viewing ---------- %>
+              <% header_name =
+                   if current_user == @open_conversation.seller
+                     # Seller viewing -> show buyer’s identity
+                     @open_conversation.buyer&.full_name.presence ||
+                     @open_conversation.buyer&.email.presence ||
+                     "Buyer"
+                   else
+                     # Buyer viewing -> show seller’s identity (prefer agency)
+                     @open_conversation.seller&.estate_agent_name.presence ||
+                     @open_conversation.seller&.full_name.presence ||
+                     @open_conversation.seller&.email.presence ||
+                     "Seller"
+                   end %>
+
               <!-- Header -->
               <div class="chat-thread-head">
                 <div class="d-flex align-items-center gap-2">
                   <div class="avatar-circle-sm"><i class="bi bi-person-fill"></i></div>
                   <div>
-                    <div class="fw-semibold">
-                      <%= @open_conversation.try(:other_party_name).presence ||
-                          @open_conversation.try(:seller)&.try(:estate_agent_name).presence ||
-                          @open_conversation.try(:seller)&.try(:email) || "Contact" %>
-                    </div>
+                    <div class="fw-semibold"><%= header_name %></div>
+
                     <% if @open_conversation.listing %>
                       <div class="small text-muted">
                         About:
@@ -356,6 +369,7 @@
                     <% end %>
                   </div>
                 </div>
+
                 <% if @open_conversation.listing %>
                   <%= link_to listing_path(@open_conversation.listing), class: "btn btn-sm btn-ghost" do %>
                     <i class="bi bi-box-arrow-up-right me-1"></i> Open listing
@@ -403,7 +417,9 @@
                     <button type="button" class="composer-icon" title="Aa"><i class="bi bi-type"></i></button>
 
                     <%= hidden_field_tag :redirect_to,
-                          dashboard_path(tab: "buying", anchor: "messages", conversation_id: @open_conversation.id) %>
+                          dashboard_path(tab: "buying",
+                                         anchor: "messages",
+                                         conversation_id: @open_conversation.id) %>
 
                     <%= text_area_tag "message[body]", nil,
                           rows: 1,
