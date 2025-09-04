@@ -89,17 +89,20 @@ Rails.application.routes.draw do
   # Messaging (authenticated)
   # -------------------------
   authenticate :user do
-    # Conversations around a listing
-    resources :conversations, only: [:show, :create]
-
-    # Top-level message create so `messages_path` works with hidden conversation_id
-    resources :messages, only: [:create]
-
-    # Keep a nested helper as well (conversation_messages_path) if you want to use it anywhere
-    post "/conversations/:conversation_id/messages",
-         to: "messages#create",
-         as: :conversation_messages
+  # Conversations around a listing (+ typing pings)
+  resources :conversations, only: [:show, :create] do
+    post :typing, on: :member
   end
+
+  # Message create (both helpers kept)
+  resources :messages, only: [:create]
+  post "/conversations/:conversation_id/messages",
+       to: "messages#create",
+       as: :conversation_messages
+end
+
+  
+  
   mount ActionCable.server => "/cable"
   # -------------------------
   # Admin Area (authenticated + admin-only)

@@ -317,24 +317,13 @@
         </div>
 
         <%# =================== Contacts & Messages (chat) =================== %>
-       <div class="dashboard-card mb-4" id="messages">
-  <div class="dashboard-card-header d-flex align-items-center justify-content-between">
-    <span><i class="bi bi-chat-dots me-2"></i> Contacts & Messages</span>
-    <div class="d-flex align-items-center gap-2"><%= support_button_html %></div>
-  </div>
-
-  <!-- =================== Contacts & Messages (chat) =================== -->
-<div class="dashboard-card mb-4" id="messages">
-  
-
+      <div class="dashboard-card mb-4" id="messages">
   <div class="dashboard-card-body">
     <!-- Fixed-height pane; tweak --chat-h to suit your page -->
     <div class="chat-pane" style="--chat-h: 72vh;">
       <div class="chat-grid">
         <!-- Sidebar (recent chats) -->
         <aside class="chat-sidebar">
-          
-
           <%= render "conversations/sidebar",
                      conversations: @conversations,
                      open_conversation: @open_conversation %>
@@ -344,7 +333,7 @@
         <section class="chat-main">
           <% if @open_conversation %>
             <div class="chat-thread-shell w-100">
-              <!-- ✅ Subscribe THIS viewer to this conversation -->
+              <!-- Subscribe THIS viewer to this conversation -->
               <%= turbo_stream_from [:conversation, @open_conversation.id, :user, current_user.id] %>
 
               <!-- Header -->
@@ -379,6 +368,7 @@
                    id="chatBody_<%= @open_conversation.id %>"
                    data-controller="chat-autoscroll"
                    data-chat-autoscroll-target-id-value="messages_list_<%= @open_conversation.id %>">
+
                 <% if @open_conversation.listing.present? %>
                   <div class="mb-3">
                     <%= render "conversations/listing_preview",
@@ -393,6 +383,9 @@
                              as: :message,
                              locals: { viewer_id: current_user.id } %>
                 </div>
+
+                <!-- Typing indicator slot -->
+                <div id="typing_<%= @open_conversation.id %>" class="typing-slot" aria-live="polite"></div>
               </div>
 
               <!-- Composer (Enter to send, clears immediately, stays focused) -->
@@ -402,12 +395,12 @@
                               data: {
                                 turbo: true,
                                 controller: "chatinput",
+                                chatinput_conversation_id_value: @open_conversation.id,  # pass convo id to Stimulus
                                 action: "turbo:submit-start->chatinput#afterSubmitStart turbo:submit-end->chatinput#afterSubmitEnd"
                               },
                               class: "composer-shell" do %>
                   <div class="composer-input">
                     <button type="button" class="composer-icon" title="Aa"><i class="bi bi-type"></i></button>
-                    
 
                     <%= hidden_field_tag :redirect_to,
                           dashboard_path(tab: "buying", anchor: "messages", conversation_id: @open_conversation.id) %>
@@ -419,7 +412,7 @@
                           placeholder: "Write your message…",
                           data: {
                             chatinput_target: "textarea",
-                            action: "input->chatinput#input keydown->chatinput#keydown"
+                            action: "input->chatinput#typing input->chatinput#input keydown->chatinput#keydown"
                           } %>
 
                     <button class="composer-send"
@@ -444,7 +437,7 @@
 </div>
 <!-- =================== /Contacts & Messages =================== -->
 </div>
-        <%# =================== /Contacts & Messages =================== %>
+        
       </div> <!-- /col-lg-8 -->
     </div> <!-- /row -->
 

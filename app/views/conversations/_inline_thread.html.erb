@@ -73,36 +73,42 @@
                  as: :message,
                  locals: { viewer_id: current_user.id } %>
     </div>
+
+    <!-- 🔵 Typing indicator slot (filled via Turbo Stream) -->
+    <div id="typing_<%= conversation.id %>" class="typing-slot" aria-live="polite"></div>
   </div>
 
-  <!-- Composer (Stimulus clears on submit & Enter-to-send) -->
+  <!-- Composer (Stimulus clears on submit & Enter-to-send; emits typing) -->
   <div class="chat-composer">
     <%= form_with url: conversation_messages_path(conversation),
-                  method: :post,
-                  data: {
-                    turbo: true,
-                    controller: "chatinput",
-                    action: "turbo:submit-start->chatinput#afterSubmitStart turbo:submit-end->chatinput#afterSubmitEnd"
-                  },
-                  class: "composer-shell" do %>
-      <div class="composer-input">
-        <%= hidden_field_tag :redirect_to,
-              dashboard_path(tab: "buying", anchor: "messages", conversation_id: conversation.id) %>
+              method: :post,
+              data: {
+                turbo: true,
+                controller: "chatinput",
+                chatinput_conversation_id_value: conversation.id,
+                action: "turbo:submit-start->chatinput#afterSubmitStart turbo:submit-end->chatinput#afterSubmitEnd"
+              },
+              class: "composer-shell" do %>
+  <div class="composer-input">
+    <%= hidden_field_tag :redirect_to,
+          dashboard_path(tab: "buying", anchor: "messages", conversation_id: conversation.id) %>
 
-        <%= text_area_tag "message[body]", nil,
-              rows: 1, autocomplete: "off",
-              class: "composer-textarea",
-              placeholder: "Write your message…",
-              data: { chatinput_target: "textarea",
-                      action: "input->chatinput#input keydown->chatinput#keydown" } %>
+    <%= text_area_tag "message[body]", nil,
+          rows: 1, autocomplete: "off",
+          class: "composer-textarea",
+          placeholder: "Write your message…",
+          data: {
+            chatinput_target: "textarea",
+            action: "input->chatinput#typing input->chatinput#input keydown->chatinput#keydown"
+          } %>
 
-        <button class="composer-send"
-                type="submit"
-                data-chatinput-target="submit"
-                title="Send">
-          <i class="bi bi-send"></i>
-        </button>
-      </div>
-    <% end %>
+    <button class="composer-send"
+            type="submit"
+            data-chatinput-target="submit"
+            title="Send">
+      <i class="bi bi-send"></i>
+    </button>
+  </div>
+<% end %>
   </div>
 </div>

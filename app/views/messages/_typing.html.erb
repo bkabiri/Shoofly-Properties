@@ -1,0 +1,7 @@
+<!-- app/views/messages/_typing.html.erb -->
+<div class="typing-bubble" role="status" aria-label="Typing">
+  <div class="typing-dots">
+    <span></span><span></span><span></span>
+  </div>
+  <small class="text-muted"><%= (user.try(:full_name).presence || "User") %> is typing…</small>
+</div>

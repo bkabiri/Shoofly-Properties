@@ -4,36 +4,16 @@ class MessagesController < ApplicationController
 
   def create
     @conversation = Conversation.find(params[:conversation_id])
-    unless @conversation.participant?(current_user)
-      return respond_to do |format|
-        format.turbo_stream { head :forbidden }
-        format.html         { head :forbidden }
-      end
-    end
+    return head :forbidden unless @conversation.participant?(current_user)
 
     @message = @conversation.messages.build(message_params.merge(user: current_user))
 
     if @message.save
       @conversation.touch(:last_message_at)
-
+      # ✔ Do not append here — the model broadcast handles *both* viewers.
       respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: turbo_stream.append(
-            "messages_list_#{@conversation.id}",
-            partial: "messages/message",
-            locals: { message: @message, viewer_id: current_user.id }
-          )
-        end
-
-        # If browser negotiated HTML, still return a turbo-stream so no navigation happens
-        format.html do
-          render turbo_stream: turbo_stream.append(
-                   "messages_list_#{@conversation.id}",
-                   partial: "messages/message",
-                   locals: { message: @message, viewer_id: current_user.id }
-                 ),
-                 content_type: "text/vnd.turbo-stream.html"
-        end
+        format.turbo_stream { head :no_content }   # Turbo request
+        format.html         { head :no_content }   # any fallback
       end
     else
       respond_to do |format|
@@ -42,6 +22,7 @@ class MessagesController < ApplicationController
       end
     end
   end
+
 
   private
 
