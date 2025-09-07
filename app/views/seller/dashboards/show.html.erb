@@ -101,13 +101,14 @@
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="dashboard-card card">
+        <div class="dashboard-card card <%= (sellers_contacted.respond_to?(:size) && sellers_contacted.size > 0) ? 'kpi-has-data' : '' %>">
           <div class="kpi-card">
             <div class="kpi-value"><%= sellers_contacted.respond_to?(:size) ? sellers_contacted.size : 0 %></div>
             <div class="kpi-label">Sellers Contacted</div>
           </div>
         </div>
       </div>
+
       <div class="col-6 col-lg-3">
         <div class="dashboard-card card">
           <div class="kpi-card">
@@ -117,7 +118,7 @@
         </div>
       </div>
       <div class="col-6 col-lg-3">
-        <div class="dashboard-card card">
+        <div class="dashboard-card card <%= (recent_messages.respond_to?(:size) && recent_messages.size > 0) ? 'kpi-has-data' : '' %>">
           <div class="kpi-card">
             <div class="kpi-value"><%= recent_messages.respond_to?(:size) ? recent_messages.size : 0 %></div>
             <div class="kpi-label">New Messages</div>
@@ -231,94 +232,116 @@
       </div>
 
       <%# Right column – Favourites + Messages %>
-      <div class="col-lg-8">
-        <div class="dashboard-card card mb-4">
-          <div class="dashboard-card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-heart me-2"></i> Favourite Properties</span>
-            <span class="text-muted small">Click the ★ to toggle</span>
-          </div>
-          <div class="dashboard-card-body p-0">
-            <% if favorites.present? %>
-              <div class="list-group list-group-flush">
-                <% favorites.each do |listing| %>
-                  <% price_text = listing.guide_price.present? ?
-                       number_to_currency(listing.guide_price, unit: "£", precision: 0, delimiter: ",") :
-                       "Guide price on request" %>
+         <div class="col-lg-8">
+          <div class="dashboard-card card mb-4">
+            <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-heart me-2"></i> Favourite Properties</span>
+              <span class="text-muted small">Click the ★ to toggle</span>
+            </div>
 
-                  <div class="list-group-item border-0 p-4">
-                    <div class="row g-3 align-items-center">
-                      <div class="col-12 col-md-3 col-lg-3">
-                        <% if listing.banner_image&.attached? %>
-                          <%= image_tag(
-                                (listing.banner_image.variable? ?
-                                   listing.banner_image.variant(resize_to_fill: [360, 220]).processed :
-                                   listing.banner_image),
-                                class: "property-thumb", alt: listing.title
-                              ) %>
-                        <% else %>
-                          <div class="property-thumb bg-light d-flex align-items-center justify-content-center text-muted">
-                            <i class="bi bi-image fs-1"></i>
+            <div class="dashboard-card-body p-0">
+              <% if favorites.present? %>
+                <!-- Scrollable favourites container -->
+                <div class="favorites-scroll list-group list-group-flush">
+                  <% favorites.each do |listing| %>
+                    <% price_text =
+                        if listing.guide_price.present?
+                          number_to_currency(listing.guide_price, unit: "£", precision: 0, delimiter: ",")
+                        else
+                          "Guide price on request"
+                        end %>
+
+                    <div class="list-group-item border-0 p-3 p-md-4">
+                      <div class="row g-3 align-items-center">
+                        <!-- Media -->
+                        <div class="col-12 col-md-3">
+                          <% if listing.banner_image&.attached? %>
+                            <%= image_tag(
+                                  (listing.banner_image.variable? ?
+                                    listing.banner_image.variant(resize_to_fill: [360, 220]).processed :
+                                    listing.banner_image),
+                                  class: "property-thumb", alt: listing.title
+                                ) %>
+                          <% else %>
+                            <div class="property-thumb bg-light d-flex align-items-center justify-content-center text-muted">
+                              <i class="bi bi-image fs-1"></i>
+                            </div>
+                          <% end %>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="col-12 col-md-7">
+                          <h5 class="mb-1">
+                            <%= link_to listing.title, listing_path(listing), class: "text-decoration-none text-dark" %>
+                          </h5>
+
+                          <div class="text-muted mb-2">
+                            <i class="bi bi-geo-alt me-1"></i><%= listing.address %>
                           </div>
-                        <% end %>
-                      </div>
 
-                      <div class="col-md-7 col-lg-7">
-                        <h5 class="mb-1">
-                          <%= link_to listing.title, listing_path(listing), class: "text-decoration-none text-dark" %>
-                        </h5>
-                        <div class="text-muted mb-2">
-                          <i class="bi bi-geo-alt me-1"></i><%= listing.address %>
-                        </div>
-                        <div class="h5 text-snoofly-primary mb-3"><%= price_text %></div>
+                          <div class="h5 text-snoofly-primary mb-3"><%= price_text %></div>
 
-                        <div class="d-flex flex-wrap gap-3 small text-muted mb-3">
-                          <% if listing.property_type.present? %>
-                            <span><i class="bi bi-house-door me-1"></i><%= listing.property_type.humanize %></span>
-                          <% end %>
-                          <% if listing.bedrooms.present? %>
-                            <span><i class="bi bi-door-closed me-1"></i><%= listing.bedrooms %> beds</span>
-                          <% end %>
-                          <% if listing.bathrooms.present? %>
-                            <span><i class="bi bi-droplet me-1"></i><%= listing.bathrooms %> baths</span>
-                          <% end %>
+                          <div class="d-flex flex-wrap gap-3 small text-muted">
+                            <% if listing.property_type.present? %>
+                              <span><i class="bi bi-house-door me-1"></i><%= listing.property_type.humanize %></span>
+                            <% end %>
+                            <% if listing.bedrooms.present? %>
+                              <span><i class="bi bi-door-closed me-1"></i><%= listing.bedrooms %> beds</span>
+                            <% end %>
+                            <% if listing.bathrooms.present? %>
+                              <span><i class="bi bi-faucet me-1"></i><%= listing.bathrooms %> baths</span>
+                            <% end %>
+                          </div>
                         </div>
 
-                        <div class="property-actions">
-                          <%= mail_to listing.user.email,
-                                      "Message Seller",
-                                      subject: "Enquiry about #{listing.title}",
-                                      class: "btn btn-outline-dark btn-sm" %>
-                          <%= link_to "View Details", listing_path(listing), class: "btn btn-snoofly btn-sm" %>
-                        </div>
-                      </div>
+                        <!-- Actions -->
+                        <div class="col-12 col-md-2">
+                          <div class="d-flex flex-column gap-2">
+                            <%= button_to "Message",
+                                          conversations_path(listing_id: listing.id,
+                                                            redirect_to: dashboard_path(tab: "buying", anchor: "messages")),
+                                          method: :post,
+                                          class: "btn btn-outline-dark btn-sm w-100" %>
 
-                      <div class="col-md-2 col-lg-2 text-end">
-                        <%= turbo_frame_tag dom_id(listing, :fav) do %>
-                          <%= render "favorites/toggle", listing: listing %>
-                        <% end %>
+                            <%= link_to "View Details",
+                                        listing_path(listing),
+                                        class: "btn btn-snoofly btn-sm w-100" %>
+
+                            <div class="text-end">
+                              <%= turbo_frame_tag dom_id(listing, :fav) do %>
+                                <%= render "favorites/toggle", listing: listing %>
+                              <% end %>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <% unless listing == favorites.last %>
-                    <hr class="my-0">
+                    <% unless listing == favorites.last %>
+                      <hr class="my-0">
+                    <% end %>
                   <% end %>
-                <% end %>
-              </div>
-            <% else %>
-              <div class="empty-state">
-                <i class="bi bi-heart"></i>
-                <h5 class="text-muted">No favourites yet</h5>
-                <p class="text-muted">Tap the ★ on a listing to save it here.</p>
-                <%= link_to "Browse Properties", listings_path, class: "btn btn-snoofly mt-2" %>
-              </div>
-            <% end %>
+                </div>
+              <% else %>
+                <div class="empty-state">
+                  <i class="bi bi-heart"></i>
+                  <h5 class="text-muted">No favourites yet</h5>
+                  <p class="text-muted">Tap the ★ on a listing to save it here.</p>
+                  <%= link_to "Browse Properties", listings_path, class: "btn btn-snoofly mt-2" %>
+                </div>
+              <% end %>
+            </div>
           </div>
-        </div>
-
+        </div>                 
+      <%# Right column – Favourites + Messages %>
+                        
         <%# =================== Contacts & Messages (chat) =================== %>
       <!-- Seller dashboard – Messages card -->
 <div class="dashboard-card mb-4" id="messages">
+<div class="dashboard-card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-chat-dots me-2"></i> Messages</span>
+    <span class="text-muted small">Your conversations with buyers & sellers</span>
+  </div>
   <div class="dashboard-card-body">
     <!-- Fixed-height pane; tweak --chat-h: -->
     <div class="chat-pane" style="--chat-h: 72vh;">
@@ -351,28 +374,78 @@
                    end %>
 
               <!-- Header -->
-              <div class="chat-thread-head">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-circle-sm"><i class="bi bi-person-fill"></i></div>
-                  <div>
-                    <div class="fw-semibold"><%= header_name %></div>
+                    <!-- Header -->
+                      <div class="chat-thread-head">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="avatar-circle-sm"><i class="bi bi-person-fill"></i></div>
+                          <div>
+                            <div class="fw-semibold"><%= header_name %></div>
 
-                    <% if @open_conversation.listing %>
-                      <div class="small text-muted">
-                        About:
-                        <%= link_to @open_conversation.listing.title,
-                                    listing_path(@open_conversation.listing),
-                                    class: "text-decoration-none" %>
+                            <% if @open_conversation.listing %>
+                              <div class="small text-muted">
+                                About:
+                                <%= link_to @open_conversation.listing.title,
+                                            listing_path(@open_conversation.listing),
+                                            class: "text-decoration-none" %>
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                          <% if @open_conversation.listing %>
+                            <%= link_to listing_path(@open_conversation.listing), class: "btn btn-sm btn-ghost" do %>
+                              <i class="bi bi-box-arrow-up-right me-1"></i> Open listing
+                            <% end %>
+                          <% end %>
+
+                          <!-- 🔴 Delete conversation (opens modal) -->
+                         
+                          
+                        </div>
                       </div>
-                    <% end %>
+
+              <!-- Modal: Confirm delete conversation (scoped to the open conversation) -->
+              <div class="modal fade"
+                   id="confirmDeleteConversation_<%= @open_conversation.id %>"
+                   tabindex="-1"
+                   aria-labelledby="confirmDeleteConversationLabel_<%= @open_conversation.id %>"
+                   aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0">
+                      <h5 class="modal-title d-flex align-items-center gap-2"
+                          id="confirmDeleteConversationLabel_<%= @open_conversation.id %>">
+                        <span class="badge bg-danger-subtle text-danger rounded-pill p-2 d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                          <i class="bi bi-trash"></i>
+                        </span>
+                        Delete conversation?
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body pt-0">
+                      <p class="mb-2">
+                        This will remove the entire conversation from <strong>your</strong> inbox, including all messages you sent and received.
+                      </p>
+                      <div class="small text-muted">
+                        The other party may still keep their copy. This action can’t be undone.
+                      </div>
+                    </div>
+
+                    <div class="modal-footer border-0">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancel
+                      </button>
+
+                      <%= button_to "Delete conversation",
+                            conversation_path(@open_conversation),
+                            method: :delete,
+                            class: "btn btn-danger",
+                            form: { data: { turbo: true } } %>
+                    </div>
                   </div>
                 </div>
-
-                <% if @open_conversation.listing %>
-                  <%= link_to listing_path(@open_conversation.listing), class: "btn btn-sm btn-ghost" do %>
-                    <i class="bi bi-box-arrow-up-right me-1"></i> Open listing
-                  <% end %>
-                <% end %>
               </div>
 
               <!-- Body (scrolls + auto-scrolls on stream appends) -->
@@ -703,3 +776,49 @@
   document.addEventListener("turbo:load", initDashboardUI);
   document.addEventListener("turbo:render", initDashboardUI);
 </script>
+
+
+<%# Modal: Confirm delete conversation (render ONLY when a conversation is open) %>
+<% if @open_conversation.present? %>
+  <div class="modal fade"
+       id="confirmDeleteConversation_<%= @open_conversation.id %>"
+       tabindex="-1"
+       aria-labelledby="confirmDeleteConversationLabel_<%= @open_conversation.id %>"
+       aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4 shadow-lg">
+        <div class="modal-header border-0">
+          <h5 class="modal-title d-flex align-items-center gap-2"
+              id="confirmDeleteConversationLabel_<%= @open_conversation.id %>">
+            <span class="badge bg-danger-subtle text-danger rounded-pill p-2 d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+              <i class="bi bi-trash"></i>
+            </span>
+            Delete conversation?
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body pt-0">
+          <p class="mb-2">
+            This will remove the entire conversation from <strong>your</strong> inbox, including all messages you sent and received.
+          </p>
+          <div class="small text-muted">
+            The other party may still keep their copy. This action can’t be undone.
+          </div>
+        </div>
+
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cancel
+          </button>
+
+          <%= button_to "Delete conversation",
+                conversation_path(@open_conversation),
+                method: :delete,
+                class: "btn btn-danger",
+                form: { data: { turbo: true } } %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

@@ -1,7 +1,7 @@
 # app/controllers/conversations_controller.rb
 class ConversationsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_conversation, only: :show
+  before_action :set_conversation, only: [:show, :destroy]
 
   def create
     listing = Listing.find(params[:listing_id])
@@ -35,6 +35,33 @@ class ConversationsController < ApplicationController
     redirect_to dashboard_path(tab: "buying",
                                conversation_id: @conversation.id,
                                anchor: "messages")
+  end
+
+  def destroy
+    unless @conversation.participant?(current_user)
+      return head :forbidden
+    end
+
+    conv_id = @conversation.id
+    @conversation.destroy
+
+    respond_to do |format|
+      format.turbo_stream do
+        # Use flash.now and replace the flash container via Turbo
+        flash.now[:notice] = "Conversation deleted."
+
+        render turbo_stream: [
+          turbo_stream.remove("conv_row_#{conv_id}"),
+          turbo_stream.update("chatMain", partial: "conversations/empty_state"),
+          turbo_stream.replace("flash", partial: "shared/flash")
+        ]
+      end
+
+      format.html do
+        redirect_to dashboard_path(tab: "buying", anchor: "messages"),
+                    notice: "Conversation deleted."
+      end
+    end
   end
 
   private

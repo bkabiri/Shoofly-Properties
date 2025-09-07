@@ -2,9 +2,21 @@
 <%# locals: message, viewer_id (REQUIRED) %>
 <% mine = (message.user_id == viewer_id) %>
 
-<div class="chat-bubble-row <%= mine ? 'me' : 'them' %>">
+<div id="<%= dom_id(message) %>" class="chat-bubble-row <%= mine ? 'me' : 'them' %>">
   <div class="chat-bubble <%= mine ? 'bubble-me' : 'bubble-them' %>">
     <div><%= simple_format(h(message.body)) %></div>
-    <div class="bubble-meta"><%= l(message.created_at, format: :short) %></div>
+    <div class="bubble-meta d-flex align-items-center gap-2">
+      <span><%= l(message.created_at, format: :short) %></span>
+
+      <% if mine %>
+        <%= link_to "Delete",
+            message_path(message),
+            data: {
+              turbo_method: :delete,
+              turbo_confirm: "Delete this message? This cannot be undone."
+            },
+            class: "text-danger small text-decoration-none" %>
+      <% end %>
+    </div>
   </div>
 </div>

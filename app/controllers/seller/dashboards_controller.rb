@@ -57,6 +57,58 @@ module Seller
       end
 
       # -------------------------------
+      # Buyer KPIs (Sellers Contacted / New Messages / Upcoming Viewings)
+      # -------------------------------
+
+      # Conversations where the current user is the buyer
+      buyer_convos = @conversations.select { |c| c.buyer_id == current_user.id }
+
+      # Sellers Contacted = distinct sellers across buyer's conversations
+      @sellers_contacted =
+        if buyer_convos.any?
+          seller_ids = buyer_convos.map(&:seller_id).compact.uniq
+          User.where(id: seller_ids).to_a
+        else
+          []
+        end
+
+      # New / Recent messages
+      @recent_messages =
+        begin
+          # Build a base scope across those conversations
+          convo_ids = buyer_convos.map(&:id)
+          if convo_ids.empty?
+            []
+          else
+            scope = Message.where(conversation_id: convo_ids)
+
+            if Message.column_names.include?("read_at") && Message.column_names.include?("recipient_id")
+              # Prefer unread messages (to the current user)
+              scope.where(recipient_id: current_user.id, read_at: nil).to_a
+            else
+              # Fallback: messages from the other party in the last 7 days
+              scope.where.not(user_id: current_user.id)
+                   .where("messages.created_at >= ?", 7.days.ago)
+                   .to_a
+            end
+          end
+        rescue
+          []
+        end
+
+      # Upcoming viewings (safe fallback if your app doesn't have Viewing)
+      @upcoming_viewings =
+        if defined?(Viewing)
+          Viewing.where(user_id: current_user.id)
+                 .where("scheduled_at >= ?", Time.current)
+                 .order(:scheduled_at)
+                 .limit(10)
+                 .to_a
+        else
+          []
+        end
+
+      # -------------------------------
       # KPIs / placeholders (keep as-is)
       # -------------------------------
       @stats = {
@@ -65,6 +117,13 @@ module Seller
         upcoming_viewings: 0,
         this_month_views:  0
       }
+
+      # Fill unread_messages if we computed a set above
+      begin
+        @stats[:unread_messages] = @recent_messages.size if @recent_messages.respond_to?(:size)
+      rescue
+        # keep default
+      end
 
       @billing_overview = {
         plan:           "Free (trial)",

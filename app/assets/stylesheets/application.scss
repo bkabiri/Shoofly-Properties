@@ -17,3 +17,14 @@ body {
   font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 /* Default navbar styles */
+
+.btn-snoofly-red {
+  background-color: #ff4a5f;
+  border-color: #ff4a5f;
+  color: #fff;
+}
+.btn-snoofly-red:hover,
+.btn-snoofly-red:focus {
+  filter: brightness(0.95);
+  color: #fff;
+}

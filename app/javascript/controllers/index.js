@@ -31,3 +31,9 @@ application.register("chat-autoscroll", ChatAutoscrollController)
 
 import ChatinputController from "./chatinput_controller.js"
 application.register("chatinput", ChatinputController)
+
+import ConfirmDeleteController from "./confirm_delete_controller.js";
+application.register("confirm-delete", ConfirmDeleteController);
+
+import ChatSearchController from "./chat_search_controller.js"
+application.register("chat-search", ChatSearchController)

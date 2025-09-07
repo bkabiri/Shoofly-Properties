@@ -23,6 +23,28 @@ class MessagesController < ApplicationController
     end
   end
 
+  def destroy
+    @message = Message.find(params[:id])
+    unless @message.user_id == current_user.id
+      return head :forbidden
+    end
+
+    @conversation = @message.conversation
+    @message.destroy
+
+    respond_to do |format|
+      format.turbo_stream do
+        # Remove the bubble in-place (use helper in controller)
+        render turbo_stream: turbo_stream.remove(helpers.dom_id(@message))
+      end
+      format.html do
+        redirect_to dashboard_path(tab: "buying",
+                                   anchor: "messages",
+                                   conversation_id: @conversation.id),
+                    notice: "Message deleted."
+      end
+    end
+  end
 
   private
 

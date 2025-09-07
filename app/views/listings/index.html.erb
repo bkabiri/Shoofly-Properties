@@ -183,8 +183,9 @@
   <% end %>
 
   <!-- Grid/List toggle (no border) -->
-  <% grid_active = params[:view].blank? || params[:view] == 'grid' %>
-  <% list_active = params[:view] == 'list' %>
+    <!-- Grid/List toggle (no border) -->
+  <% grid_active = params[:view] == 'grid' %>
+  <% list_active = params[:view].blank? || params[:view] == 'list' %>
 
   <div class="mt-3 d-flex justify-content-end align-items-center gap-2">
     <%= link_to listings_path(request.query_parameters.merge(view: "grid")),
@@ -206,43 +207,77 @@
   <% else %>
 
     <!-- RESULTS -->
-    <% if params[:view] == "list" %>
+    <% if params[:view] != "grid" %>
       <!-- LIST VIEW -->
-      <div class="list-group mt-3">
-        <% @listings.each do |l| %>
-          <!-- Make whole item clickable with JS (see script below) -->
-          <div class="list-group-item d-flex gap-3 py-3 js-card"
-               role="link" tabindex="0"
-               data-href="<%= listing_path(l) %>">
-            <!-- Thumb -->
-            <% if l.banner_image.attached? %>
-              <% if l.banner_image.variable? %>
-                <%= image_tag l.banner_image.variant(resize_to_fill: [180, 120]).processed,
-                              class: "flex-shrink-0 rounded",
-                              alt: l.title,
-                              loading: "lazy",
-                              data: { turbo_temporary: true } %>
+<div class="list-group mt-3">
+  <% @listings.each do |l| %>
+    <% # Build image set: banner first, then gallery (max 9 total: 1 main + 8 thumbs) %>
+    <% imgs = [] %>
+    <% imgs << l.banner_image if l.banner_image&.attached? %>
+    <% if l.respond_to?(:gallery_images) && l.gallery_images.attached? %>
+      <% l.gallery_images.each { |g| imgs << g } %>
+    <% end %>
+    <% main_img  = imgs.first %>
+    <% thumbs    = imgs.drop(1).first(8) %>
+
+    <div class="list-group-item p-0 js-card listing-row"
+         role="link" tabindex="0"
+         data-href="<%= listing_path(l) %>">
+
+      <div class="row g-0 align-items-stretch">
+        <!-- Left: Main banner -->
+        <div class="col-12 col-lg-6">
+          <%= link_to listing_path(l), class: "d-block listing-main-pic js-card-exempt" do %>
+            <% if main_img.present? %>
+              <% if main_img.variable? %>
+                <%= image_tag main_img.variant(resize_to_fill: [960, 540]).processed,
+                              alt: l.title, loading: "lazy",
+                              class: "w-100 h-100 object-cover" %>
               <% else %>
-                <%= image_tag l.banner_image,
-                              class: "flex-shrink-0 rounded",
-                              alt: l.title,
-                              size: "180x120",
-                              data: { turbo_temporary: true } %>
+                <%= image_tag main_img, alt: l.title, loading: "lazy",
+                              class: "w-100 h-100 object-cover" %>
               <% end %>
             <% else %>
-              <div class="bg-light d-flex align-items-center justify-content-center rounded"
-                   style="width:180px;height:120px;">No image</div>
+              <div class="listing-main-pic bg-light d-flex align-items-center justify-content-center text-muted">
+                No image
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+
+        <!-- Right: Thumbs + info/actions -->
+        <div class="col-12 col-lg-6">
+          <div class="listing-right h-100 d-flex flex-column">
+
+            <!-- 2x4 thumbs grid (only if we have any) -->
+            <% if thumbs.any? %>
+              <div class="thumbs-grid">
+                <% thumbs.each_with_index do |t, i| %>
+                  <%= link_to listing_path(l),
+                              class: "thumb cell js-card-exempt",
+                              aria: { label: "Open photo #{i+1}" } do %>
+                    <% if t.variable? %>
+                      <%= image_tag t.variant(resize_to_fill: [480, 270]).processed,
+                                    alt: "#{l.title} – photo #{i+1}",
+                                    loading: "lazy",
+                                    class: "w-100 h-100 object-cover" %>
+                    <% else %>
+                      <%= image_tag t, alt: "#{l.title} – photo #{i+1}",
+                                     loading: "lazy",
+                                     class: "w-100 h-100 object-cover" %>
+                    <% end %>
+                  <% end %>
+                <% end %>
+              </div>
             <% end %>
 
-            <!-- Content -->
-            <div class="d-flex flex-column flex-grow-1">
-              <div class="d-flex align-items-start justify-content-between">
-                <!-- Title remains a link (works even without JS) -->
-                <%= link_to listing_path(l), class: "text-decoration-none text-reset" do %>
-                  <h2 class="h6 mb-1"><%= l.title %></h2>
+            <!-- Info -->
+            <div class="p-3 p-md-4 flex-grow-1 d-flex flex-column">
+              <div class="d-flex align-items-start justify-content-between gap-2">
+                <%= link_to listing_path(l), class: "text-decoration-none text-reset js-card-exempt" do %>
+                  <h2 class="h5 mb-1"><%= l.title %></h2>
                 <% end %>
 
-                <%# Favourite star area — mark exempt so card click doesn't trigger %>
                 <div class="js-card-exempt">
                   <%= turbo_frame_tag dom_id(l, :fav) do %>
                     <%= render "favorites/toggle", listing: l %>
@@ -252,30 +287,37 @@
 
               <div class="text-muted small"><%= l.address %></div>
 
-              <div class="fw-bold mt-1">
-                <%= l.guide_price.present? ? number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") : "Guide price on request" %>
+              <div class="fw-bold mt-2">
+                <%= l.guide_price.present? ?
+                      number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") :
+                      "Guide price on request" %>
               </div>
 
-              <div class="mt-1 small text-secondary d-flex gap-3 flex-wrap">
+              <div class="mt-2 small text-secondary d-flex gap-3 flex-wrap">
                 <span><i class="bi bi-house-door"></i> <%= l.property_type.humanize %></span>
                 <span><i class="bi bi-bed"></i> <%= l.bedrooms %> beds</span>
                 <span><i class="bi bi-badge-wc"></i> <%= l.bathrooms %> baths</span>
               </div>
 
-              <!-- Message Seller — also exempt -->
-              <div class="mt-2 js-card-exempt">
-                <% if l.user&.email.present? %>
-                  <%= link_to "mailto:#{l.user.email}?subject=#{ERB::Util.url_encode("Enquiry about: #{l.title}")}",
-                              class: "btn btn-outline-dark btn-sm d-inline-flex align-items-center gap-1",
-                              data: { turbo: false } do %>
-                    <i class="bi bi-envelope"></i> Message Seller
-                  <% end %>
+              <div class="mt-3 js-card-exempt">
+                <%= button_to conversations_path,
+                              method: :post,
+                              params: {
+                                recipient_id: l.user_id, # optional, safe to include
+                                listing_id:   l.id,
+                                redirect_to:  dashboard_path(tab: "buying", anchor: "messages")
+                              },
+                              class: "btn btn-outline-dark btn-sm d-inline-flex align-items-center gap-1 w-100" do %>
+                  <i class="bi bi-chat"></i> Message Seller
                 <% end %>
               </div>
             </div>
           </div>
-        <% end %>
-      </div>
+        </div>
+      </div> <!-- /row -->
+    </div>
+  <% end %>
+</div>
 
     <% else %>
       <!-- GRID (BOX) VIEW -->

@@ -1,75 +1,103 @@
 <%# app/views/conversations/_sidebar.html.erb %>
 <%# locals: conversations, open_conversation %>
 
-<div class="p-2">
+<div class="p-2" data-controller="chat-search">
   <div class="input-group input-group-sm mb-2">
     <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
     <input type="search"
            class="form-control"
            placeholder="Search"
            aria-label="Search conversations"
-           data-chat-search>
+           data-chat-search-target="input"
+           data-action="input->chat-search#filter">
   </div>
-</div>
 
-<div class="chat-list" data-chat-list style="max-height: 520px; overflow:auto;">
-  <% if conversations.present? %>
-    <% conversations.each do |c| %>
-      <% active = (open_conversation && c.id == open_conversation.id) %>
+  <div class="chat-list" data-chat-search-target="list" style="max-height: 520px; overflow:auto;">
+    <% if conversations.present? %>
+      <% conversations.each do |c| %>
+        <% active = (open_conversation && c.id == open_conversation.id) %>
 
-      <%# Decide what name to show depending on who the current_user is %>
-      <% other_party =
-           if current_user == c.seller
-             # Seller is logged in → show buyer name/email
-             c.buyer&.full_name.presence ||
-             c.buyer&.email.presence ||
-             "Buyer"
-           else
-             # Buyer is logged in → show seller details
-             c.seller&.estate_agent_name.presence ||
-             c.seller&.full_name.presence ||
-             c.seller&.email.presence ||
-             "Seller"
-           end %>
+        <%# Decide what name to show depending on who the current_user is %>
+        <% other_party =
+             if current_user == c.seller
+               c.buyer&.full_name.presence ||
+               c.buyer&.email.presence ||
+               "Buyer"
+             else
+               c.seller&.estate_agent_name.presence ||
+               c.seller&.full_name.presence ||
+               c.seller&.email.presence ||
+               "Seller"
+             end %>
 
-      <%= link_to dashboard_path(tab: "buying", conversation_id: c.id, anchor: "messages"),
-                  class: "chat-list-item d-flex align-items-start gap-2 px-3 py-2 text-decoration-none #{'active' if active}",
-                  data: { chat_name: other_party.downcase } do %>
+        <% searchable = [other_party, (c.listing&.title || "")].join(" ").to_s.downcase %>
 
-        <div class="flex-shrink-0">
-          <%# Avatar or listing thumbnail %>
-          <% if c.listing&.banner_image&.attached? %>
-            <%= image_tag(
-                  (c.listing.banner_image.variable? ?
-                    c.listing.banner_image.variant(resize_to_fill: [40, 40]).processed :
-                    c.listing.banner_image),
-                  alt: c.listing.title,
-                  class: "rounded") %>
-          <% else %>
-            <div class="avatar-circle-sm bg-light d-flex align-items-center justify-content-center">
-              <i class="bi bi-person text-muted"></i>
-            </div>
-          <% end %>
-        </div>
+        <div id="conv_row_<%= c.id %>"
+             class="px-2"
+             data-chat-search-target="item"
+             data-chat-name="<%= searchable %>">
+          <div class="d-flex align-items-center gap-2" style="min-height:56px;">
+            <%# Clickable area (fills row, minus the delete button) %>
+            <%= link_to dashboard_path(tab: "buying", conversation_id: c.id, anchor: "messages"),
+                        class: "flex-grow-1 d-flex align-items-center gap-2 text-decoration-none rounded px-2 py-2 #{'active chat-list-item' if active}" do %>
 
-        <div class="flex-grow-1 min-w-0">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="fw-semibold text-dark text-truncate"><%= other_party %></div>
-            <small class="text-muted ms-2 flex-shrink-0">
-              <%= (c.last_message_at || c.updated_at)&.strftime("%d %b") %>
-            </small>
-          </div>
-          <div class="small text-muted text-truncate">
-            <%= c.listing ? c.listing.title : "Conversation" %>
+              <%# Fixed 40×40 thumbnail/avatar %>
+              <div class="flex-shrink-0" style="width:40px;height:40px;">
+                <% if c.listing&.banner_image&.attached? %>
+                  <%= image_tag(
+                        (c.listing.banner_image.variable? ?
+                          c.listing.banner_image.variant(resize_to_fill: [40, 40]).processed :
+                          c.listing.banner_image),
+                        alt: c.listing.title,
+                        class: "rounded",
+                        style: "width:40px;height:40px;object-fit:cover;" ) %>
+                <% else %>
+                  <div class="avatar-circle-sm bg-light d-flex align-items-center justify-content-center"
+                       style="width:40px;height:40px;border-radius:8px;">
+                    <i class="bi bi-person text-muted"></i>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# Text block (name + truncated listing title) %>
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="fw-semibold text-dark text-truncate"><%= other_party %></div>
+                  <small class="text-muted ms-2 flex-shrink-0">
+                    <%= (c.last_message_at || c.updated_at)&.strftime("%d %b") %>
+                  </small>
+                </div>
+                <div class="small text-muted text-truncate">
+                  <% if c.listing %>
+                    <%= truncate(c.listing.title.to_s, length: 20) %>
+                  <% else %>
+                    Conversation
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <%# Delete icon (fixed width so layout doesn't shift) %>
+            <button type="button"
+                    class="btn btn-link text-danger px-2 flex-shrink-0"
+                    style="width:36px;"
+                    title="Delete conversation"
+                    aria-label="Delete conversation"
+                    data-controller="confirm-delete"
+                    data-action="click->confirm-delete#open"
+                    data-delete-url="<%= conversation_path(c) %>"
+                    data-delete-text="Delete conversation with <%= j(other_party) %><% if c.listing.present? %> about “<%= j c.listing.title %>”<% end %>? This action can’t be undone.">
+              <i class="bi bi-trash"></i>
+            </button>
           </div>
         </div>
       <% end %>
+    <% else %>
+      <div class="text-center text-muted py-5 small">
+        <i class="bi bi-people fs-2 d-block mb-2"></i>
+        No conversations yet<br>
+        <span class="d-block mt-1">Start one from a property page with “Message Seller”.</span>
+      </div>
     <% end %>
-  <% else %>
-    <div class="text-center text-muted py-5 small">
-      <i class="bi bi-people fs-2 d-block mb-2"></i>
-      No conversations yet<br>
-      <span class="d-block mt-1">Start one from a property page with “Message Seller”.</span>
-    </div>
-  <% end %>
+  </div>
 </div>

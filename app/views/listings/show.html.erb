@@ -10,7 +10,6 @@
 
 <%# -------- Normalized values for the new details card -------- %>
 <%
-  # --- Parking -> display as N+ when possible (3+, 2+, etc.) ---
   if @listing.respond_to?(:parking_display)
     parking_display = @listing.parking_display.to_s
   else
@@ -28,7 +27,6 @@
       end
   end
 
-  # --- Garden -> YES/NO (uppercase), fallback to em dash ---
   garden_val = @listing.try(:garden)
   garden_text =
     case garden_val
@@ -38,20 +36,14 @@
       garden_val.present? ? garden_val.to_s.humanize.upcase : "—"
     end
 
-  # --- Council tax band -> uppercase / em dash ---
   council_tax_text = (@listing.try(:council_tax_band).presence || "—").to_s.upcase
 
-  # --- Optional fields ---
   internet_speed = @listing.try(:broadband).presence&.to_s&.upcase
   gas_supplier   = @listing.try(:gas_supplier).presence&.to_s&.upcase
   elec_supplier  = @listing.try(:electricity_supplier).presence&.to_s&.upcase
 %>
 
-<%# Who are we contacting? %>
-<%
-  seller             = @listing.user
-  contact_email      = seller.email
-%>
+<% seller = @listing.user %>
 
 <%# Build gallery list (banner first) %>
 <%
@@ -66,6 +58,9 @@
   <div class="listing-grid">
     <%# ========= MAIN CONTENT ========= %>
     <div class="main-content">
+      <%# --- Mobile placeholder to park Contact card above the banner --- %>
+      <div id="mobileContactMount"></div>
+
       <%# Hero Section %>
       <div class="creative-listing-header">
         <%# Hero Banner with Overlay Elements %>
@@ -79,13 +74,13 @@
               <i class="bi bi-house-door text-white"></i>
             </div>
           <% end %>
-          
+
           <%# Premium Badge - Creative Placement %>
           <div class="creative-premium-badge">
             <i class="bi bi-award"></i>
             <span>Featured</span>
           </div>
-          
+
           <%# Favorite Button - Modern Design %>
           <div class="creative-favorite">
             <%= turbo_frame_tag dom_id(@listing, :fav) do %>
@@ -93,83 +88,78 @@
             <% end %>
           </div>
         </div>
-        
-        <%# Compact Info Card - Moved below banner with all details integrated %>
+
+        <%# Compact Info Card - below banner %>
         <div class="creative-info-card">
           <div class="creative-info-content">
-            <%# Title Row %>
             <div class="creative-title-row">
               <h1 class="creative-title"><%= @listing.title %></h1>
               <div class="creative-price"><%= price_text %></div>
             </div>
-            
-            <%# Address %>
+
             <div class="creative-address">
               <i class="bi bi-geo-alt"></i>
               <%= @listing.address %>
             </div>
-            
-            <%# Property Features - All integrated in one section %>
+
             <div class="creative-features">
-              <%# Basic property features %>
               <div class="feature-pill">
                 <i class="bi bi-house-door"></i>
                 <span><%= @listing.property_type&.humanize || "—" %></span>
               </div>
-              
+
               <div class="feature-pill">
                 <i class="bi bi-door-closed"></i>
                 <span><%= @listing.bedrooms || "—" %> bed<%= @listing.bedrooms.to_i > 1 ? 's' : '' %></span>
               </div>
-              
+
               <div class="feature-pill">
-                <i class="bi bi-droplet"></i>
+                <i class="bi bi-faucet"></i>
                 <span><%= @listing.bathrooms || "—" %> bath<%= @listing.bathrooms.to_i > 1 ? 's' : '' %></span>
               </div>
-              
+
               <% if @listing.receptions.present? %>
                 <div class="feature-pill">
                   <i class="bi bi-columns"></i>
                   <span><%= @listing.receptions %> reception<%= @listing.receptions > 1 ? 's' : '' %></span>
                 </div>
               <% end %>
-              
-              <%# Additional features from the details card %>
+
               <% if @listing.try(:parking).present? %>
                 <div class="feature-pill">
                   <i class="bi bi-p-square"></i>
                   <span><%= parking_display %></span>
                 </div>
               <% end %>
-              
+
               <% if @listing.try(:garden) == true || garden_text == "YES" %>
                 <div class="feature-pill">
                   <i class="bi bi-tree"></i>
                   <span>Garden</span>
                 </div>
               <% end %>
-              
+
               <% if council_tax_text != "—" %>
                 <div class="feature-pill">
                   <i class="bi bi-receipt"></i>
                   <span>Council Tax: <%= council_tax_text %></span>
                 </div>
               <% end %>
-              
+
               <% if internet_speed.present? %>
                 <div class="feature-pill">
                   <i class="bi bi-wifi"></i>
                   <span>Internet: <%= internet_speed %></span>
                 </div>
               <% end %>
-              
+
               <% if gas_supplier.present? %>
                 <div class="feature-pill">
                   <i class="bi bi-fire"></i>
                   <span>Gas: <%= gas_supplier %></span>
                 </div>
               <% end %>
-              
+
               <% if elec_supplier.present? %>
                 <div class="feature-pill">
                   <i class="bi bi-lightning"></i>
@@ -208,7 +198,7 @@
            [@listing.try(:title), @listing.try(:office_address_line1), @listing.try(:office_city), @listing.try(:office_postcode)]
              .compact.join(", ") %>
 
-      <div class="content-section">
+      <div class="content-section" id="locationSection">
         <h2 class="section-title">Location</h2>
 
         <% if maps_api_key_present %>
@@ -231,12 +221,15 @@
           <%= display_address.presence || "Address not provided" %>
         </div>
       </div>
+
+      <%# --- Mobile placeholder to park Amenities after Location --- %>
+      <div id="mobileAmenitiesMount"></div>
     </div>
 
     <%# ========= SIDEBAR ========= %>
     <div class="sidebar">
-      <%# Contact Card %>
-      <div class="sidebar-card">
+      <%# Contact Card (will be moved above banner on mobile) %>
+      <div class="sidebar-card" id="contactCard">
         <h3 class="section-title">Contact Agent</h3>
 
         <div class="agent-info">
@@ -285,7 +278,7 @@
               conversations_path,
               method: :post,
               params: {
-                recipient_id: @listing.user_id, # not required by the controller, but harmless
+                recipient_id: @listing.user_id,
                 listing_id:   @listing.id,
                 redirect_to:  dashboard_path(tab: "buying", anchor: "messages")
               },
@@ -301,8 +294,8 @@
         </div>
       </div>
 
-      <%# Nearby Amenities %>
-      <div class="sidebar-card">
+      <%# Nearby Amenities (will be moved under Location on mobile) %>
+      <div class="sidebar-card nearby-amenities" id="amenitiesCard">
         <h3 class="section-title">Nearby Amenities</h3>
 
         <div class="mb-3">
@@ -342,21 +335,19 @@
 </div>
 
 <%= render "shared/footer" %>
-<!-- Snoofly Gallery Modal -->
+
+<!-- Snoofly Gallery Modal (unchanged) -->
 <div class="modal fade snoofly-gallery" id="galleryModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-fullscreen-sm-down modal-xl modal-dialog-centered">
     <div class="modal-content bg-black position-relative">
-
-      <!-- Top bar -->
       <div class="sng-topbar d-flex align-items-center justify-content-between">
         <div class="sng-brand d-flex align-items-center gap-2">
-          <!-- Snoofly house-heart icon -->
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
             <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
             <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
           </svg>
           <span class="sng-title"><%= @listing.title %></span>
-  <span class="sng-price"><%= @listing.guide_price  %></span>
+          <span class="sng-price"><%= @listing.guide_price %></span>
         </div>
 
         <div class="sng-counter-wrap">
@@ -364,7 +355,6 @@
         </div>
 
         <div class="sng-actions d-flex align-items-center gap-2">
-          <!-- (optional future) share / download / save -->
           <button type="button" class="btn btn-sng-ghost" data-bs-dismiss="modal" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
@@ -391,7 +381,6 @@
             <% end %>
           </div>
 
-          <!-- Prev / Next -->
           <button class="carousel-control-prev sng-nav" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev" aria-label="Previous">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
           </button>
@@ -399,7 +388,6 @@
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
           </button>
 
-          <!-- Swipe hint -->
           <div class="sng-swipe-hint d-none d-md-flex align-items-center gap-2">
             <i class="bi bi-arrow-left-right"></i> Swipe or use arrows
           </div>
@@ -407,7 +395,6 @@
       </div>
 
       <% if gallery_blobs.size > 1 %>
-        <!-- Thumb strip (inside modal) -->
         <div class="sng-thumbs d-none d-md-flex align-items-center gap-2">
           <% gallery_blobs.each_with_index do |blob, idx| %>
             <button class="sng-thumb js-open-gallery" data-index="<%= idx %>" type="button" aria-label="Open image <%= idx+1 %>">
@@ -419,6 +406,7 @@
     </div>
   </div>
 </div>
+
 <script>
 (function () {
   let bound = false;
@@ -437,7 +425,6 @@
       interval: false, ride: false, touch: true, keyboard: true, wrap: true
     });
 
-    // Launch from page thumbnails or modal thumbs
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('.js-open-gallery');
       if (!trigger) return;
@@ -447,7 +434,6 @@
       updateCounter();
     });
 
-    // Keep counter in sync with slide changes
     function updateCounter() {
       const items = carouselEl.querySelectorAll('.carousel-item');
       const activeIndex = Array.prototype.findIndex.call(items, el => el.classList.contains('active'));
@@ -456,13 +442,11 @@
     carouselEl.addEventListener('slid.bs.carousel', updateCounter);
     updateCounter();
 
-    // Help touch events reach the carousel
     carouselEl.querySelectorAll('.carousel-item img').forEach(img => {
       img.style.pointerEvents = 'none';
       img.setAttribute('draggable','false');
     });
 
-    // One-time swipe hint
     const hint = modalEl.querySelector('.sng-swipe-hint');
     if (hint && !window.__snooflyHintShown) {
       window.__snooflyHintShown = true;
@@ -477,11 +461,13 @@
   document.addEventListener('DOMContentLoaded', initSnooflyGallery);
 })();
 </script>
+
 <script>
   // Google Maps + Street View (Turbo-safe)
   (function () {
-    const address = <%= raw(display_address.to_json) %>;
-    const mapsEnabled = <%= maps_api_key_present ? 'true' : 'false' %>;
+    const address = <%= raw((@listing.try(:address).presence ||
+                              [@listing.try(:title), @listing.try(:office_address_line1), @listing.try(:office_city), @listing.try(:office_postcode)].compact.join(", ")).to_json) %>;
+    const mapsEnabled = <%= (ENV["GOOGLE_MAPS_API_KEY"].present? ? 'true' : 'false') %>;
     if (!mapsEnabled) return;
 
     function initMap() {
@@ -532,5 +518,44 @@
     const bindInit = () => whenGoogleReady(initMap);
     document.addEventListener("turbo:load", bindInit);
     document.addEventListener("DOMContentLoaded", bindInit);
+  })();
+</script>
+
+<script>
+  // Responsive "teleport": move Contact card above banner and Amenities after Location on mobile
+  (function () {
+    function placeCards() {
+      const contact   = document.getElementById("contactCard");
+      const amenities = document.getElementById("amenitiesCard");
+      const mobileContactMount   = document.getElementById("mobileContactMount");
+      const mobileAmenitiesMount = document.getElementById("mobileAmenitiesMount");
+      const sidebar   = contact ? contact.parentElement : null;
+      const locationSection = document.getElementById("locationSection");
+      const isMobile = window.innerWidth < 992; // Bootstrap lg breakpoint
+
+      if (!contact || !amenities) return;
+
+      if (isMobile) {
+        if (mobileContactMount && contact.parentElement !== mobileContactMount) {
+          mobileContactMount.insertAdjacentElement("afterend", contact);
+        }
+        if (locationSection && amenities.parentElement !== locationSection.parentElement) {
+          locationSection.insertAdjacentElement("afterend", amenities);
+        }
+      } else {
+        // Restore to sidebar if not already there
+        if (sidebar && contact.parentElement !== sidebar) {
+          sidebar.insertBefore(contact, sidebar.firstElementChild);
+        }
+        if (sidebar && amenities.parentElement !== sidebar) {
+          sidebar.appendChild(amenities);
+        }
+      }
+    }
+
+    const run = () => placeCards();
+    document.addEventListener("turbo:load", run);
+    document.addEventListener("DOMContentLoaded", run);
+    window.addEventListener("resize", () => { clearTimeout(window.__cardMoveT); window.__cardMoveT = setTimeout(run, 120); });
   })();
 </script>

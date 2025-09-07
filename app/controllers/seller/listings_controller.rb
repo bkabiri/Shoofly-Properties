@@ -175,9 +175,18 @@ module Seller
     end
 
     def ensure_seller!
-      unless current_user.respond_to?(:seller?) && current_user.seller?
-        redirect_to(root_path, alert: "Seller access only.")
-      end
+    return if current_user.respond_to?(:seller?) && current_user.seller?
+
+    # Allow buyers to become private sellers when they start a listing
+    if action_name.in?(%w[new create]) &&
+      defined?(User) && User.respond_to?(:roles) &&
+      current_user.respond_to?(:update_column) &&
+      User.roles.key?("seller")
+      current_user.update_column(:role, User.roles["seller"])
+      return
+    end
+
+    redirect_to(root_path, alert: "Seller access only.")
     end
 
     # Permit everything except status

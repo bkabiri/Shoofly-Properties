@@ -23,7 +23,8 @@ Rails.application.routes.draw do
   get "home/index"
   devise_for :users, controllers: {
     registrations: "users/registrations",
-    sessions:      "users/sessions"
+    sessions:      "users/sessions",
+    passwords:     "users/passwords"
   }
   root to: "home#index"
 
@@ -93,12 +94,12 @@ Rails.application.routes.draw do
   # -------------------------
   authenticate :user do
   # Conversations around a listing (+ typing pings)
-  resources :conversations, only: [:show, :create] do
+  resources :conversations, only: [:show, :create, :destroy] do
     post :typing, on: :member
   end
 
   # Message create (both helpers kept)
-  resources :messages, only: [:create]
+  resources :messages, only: [:create, :destroy]
   post "/conversations/:conversation_id/messages",
        to: "messages#create",
        as: :conversation_messages
