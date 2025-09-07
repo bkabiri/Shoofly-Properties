@@ -35,7 +35,21 @@
 </head>
 <body>
   <%= yield %>
-  <p class="notice"><%= notice %></p>
-  <p class="alert"><%= alert %></p>
+    <div class="container mt-3">
+    <%= render "shared/flash" %>
+    </div>
+    <script>
+    document.addEventListener("turbo:load", () => {
+      const flashes = document.querySelectorAll("#flash .alert");
+      flashes.forEach(el => {
+        setTimeout(() => {
+          if (el.classList.contains("show")) {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+            bsAlert.close();
+          }
+        }, 4000);
+      });
+    });
+  </script>
 </body>
 </html>

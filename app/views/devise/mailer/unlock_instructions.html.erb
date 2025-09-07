@@ -1,7 +1,93 @@
-<p>Hello <%= @resource.email %>!</p>
+<!-- Preheader -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+  Unlock your Snoofly account securely.
+</div>
 
-<p>Your account has been locked due to an excessive number of unsuccessful sign in attempts.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f7fb;margin:0;padding:0;">
+  <tr>
+    <td align="center" style="padding:24px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background:#ffffff;border-radius:16px;box-shadow:0 6px 24px rgba(20,20,20,.06);overflow:hidden;">
+        
+        <!-- Brand -->
+        <tr>
+          <td style="background:#ffffff;padding:20px 24px;border-bottom:1px solid #f0f1f5;">
+            <table role="presentation" width="100%">
+              <tr>
+                <td style="font-family:Inter,Segoe UI,Arial,sans-serif;">
+                  <a href="<%= root_url %>" style="text-decoration:none;display:inline-flex;align-items:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 16 16" fill="#ff4a5f" style="margin-right:10px;">
+                      <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+                      <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a.5.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+                    </svg>
+                    <span style="font-weight:800;font-size:20px;color:#ff4a5f;">Snoofly</span>
+                  </a>
+                </td>
+                <td align="right" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#98a0ab;">
+                  Unlock account
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
 
-<p>Click the link below to unlock your account:</p>
+        <!-- Hero -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#ff4a5f 0%, #ff6f7f 100%);padding:32px 28px;color:#fff;">
+            <div style="font-family:Inter,Segoe UI,Arial,sans-serif;">
+              <div style="font-size:14px;opacity:.9;margin-bottom:6px;">Account Security</div>
+              <h1 style="margin:0 0 10px;font-size:26px;font-weight:800;">Your account is locked</h1>
+              <p style="margin:0;font-size:15px;line-height:1.6;opacity:.95;">
+                Hello <%= @resource.email %>, we’ve temporarily locked your Snoofly account after too many unsuccessful sign-in attempts.
+              </p>
+            </div>
+          </td>
+        </tr>
 
-<p><%= link_to 'Unlock my account', unlock_url(@resource, unlock_token: @token) %></p>
+        <!-- Body -->
+        <tr>
+          <td style="padding:28px;">
+            <div style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;">
+              <p style="margin:0 0 18px 0;">
+                To restore access, please confirm it’s really you by clicking the button below:
+              </p>
+
+              <p style="margin:0 0 22px 0;text-align:center;">
+                <a href="<%= unlock_url(@resource, unlock_token: @token) %>"
+                   style="display:inline-block;padding:14px 22px;background:#ff4a5f;color:#ffffff;font-weight:700;border-radius:10px;text-decoration:none;">
+                  Unlock my account
+                </a>
+              </p>
+
+              <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#6b7280;">
+                If this wasn’t you, we recommend resetting your password to keep your account secure.
+              </p>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:22px 24px;border-top:1px solid #f0f1f5;">
+            <table role="presentation" width="100%">
+              <tr>
+                <td align="left" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;">
+                  © <%= Time.zone.now.year %> Snoofly • All rights reserved
+                </td>
+                <td align="right">
+                  <a href="#" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;text-decoration:none;margin-left:12px;">Twitter</a>
+                  <a href="#" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;text-decoration:none;margin-left:12px;">Instagram</a>
+                  <a href="#" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;text-decoration:none;margin-left:12px;">Facebook</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+
+<style>
+@media only screen and (max-width: 600px) { .hide-mobile { display:none !important; } }
+</style>

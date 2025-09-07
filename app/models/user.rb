@@ -2,7 +2,7 @@
 class User < ApplicationRecord
   # Devise modules
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable, :confirmable
 
   # --- Associations ---
   has_many :listings, dependent: :destroy
@@ -11,7 +11,9 @@ class User < ApplicationRecord
 
   # --- Attachments ---
   has_one_attached :logo   # used as company logo for estate agents
-
+  def after_confirmation
+    WelcomeMailer.welcome_email(id).deliver_later
+  end
   # --- Roles ---
   # If you’ve already added estate_agent via migration:
   # enum role: { buyer: 0, seller: 1, estate_agent: 2, admin: 3 }

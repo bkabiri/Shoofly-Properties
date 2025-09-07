@@ -7,7 +7,6 @@
       <div class="col-12 col-lg-6 d-none d-lg-block">
         <div class="auth-brand card shadow-sm border-0">
           <div class="auth-brand-inner">
-            <!-- Your provided logo -->
             <div class="brand-row mb-2">
               <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
                 <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
@@ -57,10 +56,15 @@
               <div class="text-muted">Use your email to get started</div>
             </div>
 
+            <!-- Top-of-form Devise errors (kept) -->
             <%= render "devise/shared/error_messages", resource: resource %>
 
             <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
                          html: { id: "snooflySignupForm", class: "w-100" }) do |f| %>
+
+              <% email_msgs = f.object.errors.full_messages_for(:email) %>
+              <% pwd_msgs   = f.object.errors.full_messages_for(:password) %>
+              <% conf_msgs  = f.object.errors.full_messages_for(:password_confirmation) %>
 
               <!-- Email -->
               <div class="mb-3">
@@ -68,8 +72,11 @@
                 <%= f.email_field :email,
                       autofocus: true,
                       autocomplete: "email",
-                      class: "form-control form-control-lg input-elevated",
+                      class: ["form-control form-control-lg input-elevated", ("is-invalid" if email_msgs.present?)].compact.join(" "),
                       placeholder: "you@example.com" %>
+                <% if email_msgs.present? %>
+                  <div class="invalid-feedback d-block"><%= email_msgs.join(", ") %></div>
+                <% end %>
               </div>
 
               <!-- Password -->
@@ -78,7 +85,7 @@
                 <div class="input-group">
                   <%= f.password_field :password,
                         autocomplete: "new-password",
-                        class: "form-control form-control-lg input-elevated",
+                        class: ["form-control form-control-lg input-elevated", ("is-invalid" if pwd_msgs.present?)].compact.join(" "),
                         id: "signupPassword",
                         placeholder: "Create a password" %>
                   <button class="btn btn-outline-secondary btn-eye" type="button" id="toggleSignupPassword" aria-label="Show password">
@@ -86,6 +93,9 @@
                   </button>
                 </div>
                 <div class="form-text">At least 8 characters, mix of letters & numbers.</div>
+                <% if pwd_msgs.present? %>
+                  <div class="invalid-feedback d-block"><%= pwd_msgs.join(", ") %></div>
+                <% end %>
               </div>
 
               <!-- Confirm -->
@@ -94,17 +104,20 @@
                 <div class="input-group">
                   <%= f.password_field :password_confirmation,
                         autocomplete: "new-password",
-                        class: "form-control form-control-lg input-elevated",
+                        class: ["form-control form-control-lg input-elevated", ("is-invalid" if conf_msgs.present?)].compact.join(" "),
                         id: "signupPasswordConfirm",
                         placeholder: "Repeat your password" %>
                   <button class="btn btn-outline-secondary btn-eye" type="button" id="toggleSignupPasswordConfirm" aria-label="Show password">
                     <i class="bi bi-eye"></i>
                   </button>
                 </div>
-                <div class="invalid-feedback d-none" id="pwdMatchMsg">Passwords don’t match.</div>
+                <!-- fall back text only shows if Devise didn’t supply one -->
+                <div class="invalid-feedback <%= conf_msgs.present? ? 'd-block' : 'd-none' %>" id="pwdMatchMsg">
+                  <%= (conf_msgs.presence || ["Passwords don’t match."]).join(", ") %>
+                </div>
               </div>
 
-              <!-- Terms (optional; remove if not needed) -->
+              <!-- Terms -->
               <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" value="1" id="tosCheck" required>
                 <label class="form-check-label" for="tosCheck">
@@ -115,6 +128,10 @@
               <!-- Submit -->
               <div class="d-grid gap-2 mb-3">
                 <%= f.submit "Create account", class: "btn btn-snoofly-red btn-lg", id: "signupBtn" %>
+              </div>
+
+              <div class="container mt-3">
+                <%= render "shared/flash" %>
               </div>
 
               <!-- Divider -->
@@ -133,12 +150,11 @@
   </div>
 </div>
 
+<%= render "shared/footer" %>
+
 <!-- Tiny JS: toggle eyes + live password match hint -->
 <script>
   document.addEventListener("turbo:load", () => {
-    const pwd = document.getElementById("signupPassword");
-    const confirm = document.getElementById("signupPasswordConfirm");
-    const msg = document.getElementById("pwdMatchMsg");
     const toggle = (btnId, fieldId) => {
       const btn = document.getElementById(btnId);
       const field = document.getElementById(fieldId);
@@ -155,6 +171,10 @@
     toggle("toggleSignupPassword", "signupPassword");
     toggle("toggleSignupPasswordConfirm", "signupPasswordConfirm");
 
+    // Live mismatch hint (only when confirm has a value)
+    const pwd = document.getElementById("signupPassword");
+    const confirm = document.getElementById("signupPasswordConfirm");
+    const msg = document.getElementById("pwdMatchMsg");
     if (pwd && confirm && msg) {
       const check = () => {
         if (!confirm.value) { msg.classList.add("d-none"); confirm.classList.remove("is-invalid"); return; }

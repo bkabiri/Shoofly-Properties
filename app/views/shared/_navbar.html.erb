@@ -62,12 +62,16 @@
     <%# User info section %>
     <div class="slideout-menu__user">
       <% if user_signed_in? %>
+        <%# build safe strings for display %>
+        <% display_name = (current_user&.full_name.presence || current_user&.email.to_s.split('@').first.to_s) %>
+        <% display_email = current_user&.email.to_s %>
+
         <div class="slideout-menu__avatar">
           <i class="bi bi-person-circle"></i>
         </div>
         <div class="slideout-menu__user-info">
-          <div class="slideout-menu__user-name">Hello, <%= current_user.full_name || current_user.email.split('@').first %></div>
-          <div class="slideout-menu__user-email"><%= current_user.email %></div>
+          <div class="slideout-menu__user-name">Hello, <%= display_name %></div>
+          <div class="slideout-menu__user-email"><%= display_email %></div>
         </div>
       <% else %>
         <div class="slideout-menu__avatar">
@@ -116,7 +120,7 @@
                 <span>Dashboard</span>
               <% end %>
             </li>
-            <% if current_user.admin? %>
+            <% if current_user&.respond_to?(:admin?) && current_user.admin? %>
               <li class="slideout-menu__item">
                 <%= link_to admin_dashboard_path, class: "slideout-menu__link" do %>
                   <i class="bi bi-shield-lock slideout-menu__icon"></i>

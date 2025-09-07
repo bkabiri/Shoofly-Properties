@@ -20,7 +20,7 @@
       false
     end
 
-  display_name = current_user.try(:full_name).presence || current_user.email.split("@").first
+  display_name = current_user&.full_name.presence || current_user&.email.to_s.split("@").first
 
   # Support CTA
   support_button_html = if current_user&.admin?
@@ -146,7 +146,7 @@
                   <i class="bi bi-person-fill text-snoofly-primary fs-4"></i>
                 </div>
                 <div class="ms-3">
-                  <h5 class="mb-0"><%= current_user.try(:full_name).presence || "Not set" %></h5>
+                  <h5 class="mb-0"><%= current_user&.full_name.to_s.presence || "Not set" %></h5>
                   <small class="text-muted">Buyer Account</small>
                 </div>
               </div>
@@ -154,18 +154,18 @@
               <div class="border-top pt-3">
                 <div class="mb-3">
                   <div class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i> Email</div>
-                  <div class="fw-semibold"><%= current_user.email %></div>
+                  <div class="fw-semibold"><%= current_user&.email.to_s.presence || "—" %></div>
                 </div>
 
                 <div class="mb-3">
                   <div class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i> Mobile</div>
-                  <div class="fw-semibold"><%= current_user.try(:mobile_phone).presence || "Not provided" %></div>
+                  <div class="fw-semibold"><%= current_user&.mobile_phone.to_s.presence || "Not provided" %></div>
                 </div>
 
                 <% if current_user.try(:buyer_type).present? %>
                   <div class="mb-1">
                     <div class="text-muted small mb-1"><i class="bi bi-person-badge me-1"></i> Buyer Type</div>
-                    <div class="fw-semibold"><%= current_user.buyer_type.humanize %></div>
+                    <div class="fw-semibold"><%= current_user.try(:buyer_type).to_s.humanize %></div>
                   </div>
                 <% end %>
               </div>
@@ -320,7 +320,7 @@
       <!-- Seller dashboard – Messages card -->
 <div class="dashboard-card mb-4" id="messages">
   <div class="dashboard-card-body">
-    <!-- Fixed-height pane; tweak --chat-h to suit your page -->
+    <!-- Fixed-height pane; tweak --chat-h: -->
     <div class="chat-pane" style="--chat-h: 72vh;">
       <div class="chat-grid">
         <!-- Sidebar (recent chats) -->
@@ -340,12 +340,10 @@
               <%# ---------- Name to display depending on who is viewing ---------- %>
               <% header_name =
                    if current_user == @open_conversation.seller
-                     # Seller viewing -> show buyer’s identity
                      @open_conversation.buyer&.full_name.presence ||
                      @open_conversation.buyer&.email.presence ||
                      "Buyer"
                    else
-                     # Buyer viewing -> show seller’s identity (prefer agency)
                      @open_conversation.seller&.estate_agent_name.presence ||
                      @open_conversation.seller&.full_name.presence ||
                      @open_conversation.seller&.email.presence ||

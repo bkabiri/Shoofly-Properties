@@ -1,3 +1,4 @@
+# config/environments/development.rb
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
@@ -8,6 +9,7 @@ Rails.application.configure do
   # since you don't have to restart the web server when you make code changes.
   config.cache_classes = false
   config.active_storage.service = :local
+
   # Do not eager load code on boot.
   config.eager_load = false
 
@@ -16,8 +18,11 @@ Rails.application.configure do
 
   # Enable server timing
   config.server_timing = true
+
+  # Action Cable
   config.action_cable.url = ENV.fetch("ACTION_CABLE_URL", "ws://localhost:3000/cable")
   config.action_cable.allowed_request_origins = [/http:\/\/localhost:\d+/, /http:\/\/127\.0\.0\.1:\d+/]
+
   # Enable/disable caching. By default caching is disabled.
   # Run rails dev:cache to toggle caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?
@@ -30,17 +35,36 @@ Rails.application.configure do
     }
   else
     config.action_controller.perform_caching = false
-
     config.cache_store = :null_store
   end
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
+  # Store uploaded files on the local file system.
   config.active_storage.service = :local
+  config.middleware.delete Rack::ETag
+  # ======== Action Mailer (SendGrid for development) ========
+  # Host used in Devise links (confirmation/reset), etc.
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "localhost"),
+    port: ENV.fetch("APP_PORT", 3000)
+  }
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
-
+  # Actually send emails in development (so you can test end-to-end)
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
   config.action_mailer.perform_caching = false
+
+  # Deliver via SendGrid SMTP
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    user_name: "apikey",                                # literal string per SendGrid
+    password:  ENV.fetch("SENDGRID_API_KEY"),           # set in your .env or container env
+    domain:    ENV.fetch("APP_HOST", "localhost"),
+    address:   "smtp.sendgrid.net",
+    port:      587,
+    authentication: :plain,
+    enable_starttls_auto: true
+  }
+  # ==========================================================
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -60,19 +84,11 @@ Rails.application.configure do
   # Suppress logger output for asset requests.
   config.assets.quiet = true
 
-  # Set actionmailer host to localhost
-  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
-
-  # Raises error for missing translations.
-  # config.i18n.raise_on_missing_translations = true
-
-  # Annotate rendered view with file names.
-  # config.action_view.annotate_rendered_view_with_filenames = true
-
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
+
   config.action_cable.cable = {
-  adapter: "redis",
-  url: ENV.fetch("REDIS_URL", "redis://redis:6379/1")
-  } 
+    adapter: "redis",
+    url: ENV.fetch("REDIS_URL", "redis://redis:6379/1")
+  }
 end

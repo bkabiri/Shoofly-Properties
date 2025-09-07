@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_02_215512) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_05_091713) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -230,6 +230,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_02_215512) do
     t.string "estate_agent_name"
     t.string "full_name"
     t.boolean "requested_estate_agent", default: false, null: false
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "confirmation_sent_at"
+    t.string "unconfirmed_email"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["requested_estate_agent"], name: "index_users_on_requested_estate_agent"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true

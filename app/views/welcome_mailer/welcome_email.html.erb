@@ -1,6 +1,6 @@
-<!-- Preheader (hidden) -->
+<!-- Preheader (hidden in most clients) -->
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-  Confirm your Snoofly account to start saving properties and messaging sellers.
+  Welcome to Snoofly — save properties, message sellers & agents, and list with confidence.
 </div>
 
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f6f7fb;margin:0;padding:0;">
@@ -8,13 +8,14 @@
     <td align="center" style="padding:24px;">
       <!--[if mso]><table role="presentation" cellpadding="0" cellspacing="0" width="600"><tr><td><![endif]-->
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;background:#ffffff;border-radius:16px;box-shadow:0 6px 24px rgba(20,20,20,.06);overflow:hidden;">
-        <!-- Brand / Top -->
+        <!-- Brand / Top bar -->
         <tr>
           <td style="background:#ffffff;padding:20px 24px;border-bottom:1px solid #f0f1f5;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="left" style="font-family:Inter,Segoe UI,Arial,sans-serif;">
                   <a href="<%= root_url %>" style="text-decoration:none;display:inline-flex;align-items:center;">
+                    <!-- Inline SVG icon (works in modern clients) -->
                     <span style="display:inline-block;vertical-align:middle;margin-right:10px;">
                       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true" style="display:block;">
                         <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
@@ -25,65 +26,102 @@
                   </a>
                 </td>
                 <td align="right" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#98a0ab;">
-                  Confirm your email
+                  Welcome
                 </td>
               </tr>
             </table>
           </td>
         </tr>
 
-        <!-- Hero -->
+        <!-- Hero / Welcome -->
         <tr>
           <td style="background:linear-gradient(135deg,#ff4a5f 0%, #ff6f7f 100%);padding:36px 28px;color:#fff;">
             <div style="font-family:Inter,Segoe UI,Arial,sans-serif;">
-              <div style="font-size:14px;opacity:.9;margin-bottom:6px;">Welcome</div>
+              <div style="font-size:14px;opacity:.9;margin-bottom:6px;">Hello</div>
               <h1 style="margin:0 0 8px 0;font-size:28px;line-height:1.25;font-weight:800;">
-                <%= @email %>, let’s activate your Snoofly account
+                <%= @user.try(:full_name).presence || @user.email.split("@").first %>,
+                welcome to Snoofly!
               </h1>
               <p style="margin:0;font-size:15px;line-height:1.6;opacity:.95;">
-                Please confirm your email to start saving properties, messaging sellers & agents, and more.
+                Your account is ready. Start saving properties, messaging sellers & agents, and managing viewings.
               </p>
             </div>
           </td>
         </tr>
 
-        <!-- Body -->
+        <!-- Card body -->
         <tr>
           <td style="padding:28px;">
             <div style="font-family:Inter,Segoe UI,Arial,sans-serif;color:#1f2330;">
-              <p style="margin:0 0 10px 0;font-size:15px;line-height:1.7;color:#4b5563;">
-                Click the button below to verify your email address.
-              </p>
+              <!-- Benefits -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:8px;">
+                <tr>
+                  <td style="padding:0 0 12px 0;font-size:16px;font-weight:700;">
+                    Here’s what you can do now:
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 8px 0;">
+                <tr>
+                  <td valign="top" width="28" style="padding:6px 0 6px 0;">
+                    <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#ffedf0;text-align:center;line-height:22px;color:#ff4a5f;font-weight:700;">★</span>
+                  </td>
+                  <td style="padding:6px 0 6px 8px;font-size:14px;line-height:1.6;color:#4b5563;">
+                    Save favourite properties and get back to them instantly.
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top" width="28" style="padding:6px 0 6px 0;">
+                    <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#ffedf0;text-align:center;line-height:22px;color:#ff4a5f;font-weight:700;">✉</span>
+                  </td>
+                  <td style="padding:6px 0 6px 8px;font-size:14px;line-height:1.6;color:#4b5563;">
+                    Message sellers & estate agents in real time.
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top" width="28" style="padding:6px 0 6px 0;">
+                    <span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#ffedf0;text-align:center;line-height:22px;color:#ff4a5f;font-weight:700;">🗓</span>
+                  </td>
+                  <td style="padding:6px 0 6px 8px;font-size:14px;line-height:1.6;color:#4b5563;">
+                    Schedule and manage property viewings with ease.
+                  </td>
+                </tr>
+              </table>
 
               <!-- CTA Button -->
-              <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:18px auto 10px auto;">
+              <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:22px auto 8px auto;">
                 <tr>
                   <td align="center" bgcolor="#ff4a5f" style="border-radius:10px;">
-                    <a href="<%= confirmation_url(@resource, confirmation_token: @token) %>"
+                    <a href="<%= dashboard_url %>"
                        style="display:inline-block;padding:14px 22px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;">
-                      Confirm my account
+                      Go to your dashboard
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <!-- Fallback link -->
+              <!-- Secondary link -->
               <p style="text-align:center;font-size:12px;color:#94a3b8;margin:8px 0 0 0;">
-                Or paste this link into your browser:<br>
-                <a href="<%= confirmation_url(@resource, confirmation_token: @token) %>" style="color:#ff4a5f;text-decoration:none;">
-                  <%= confirmation_url(@resource, confirmation_token: @token) %>
-                </a>
+                Or paste this into your browser:
+                <br>
+                <a href="<%= dashboard_url %>" style="color:#ff4a5f;text-decoration:none;"><%= dashboard_url %></a>
               </p>
-
-              <!-- Tip -->
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top:22px;background:#fafbff;border:1px solid #eef0f6;border-radius:12px;">
-                <tr>
-                  <td style="padding:14px 16px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.6;color:#475569;">
-                    If you didn’t create a Snoofly account, you can safely ignore this email.
-                  </td>
-                </tr>
-              </table>
             </div>
+          </td>
+        </tr>
+
+        <!-- Helpful tips strip -->
+        <tr>
+          <td style="padding:0 28px 24px 28px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#fafbff;border:1px solid #eef0f6;border-radius:12px;">
+              <tr>
+                <td style="padding:16px 18px;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.6;color:#475569;">
+                  <strong style="display:block;margin-bottom:4px;">Pro tip:</strong>
+                  Complete your profile in the dashboard to personalize recommendations and speed up messaging with sellers.
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
@@ -93,11 +131,13 @@
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;" align="left">
-                  Need help? <a href="mailto:support@snoofly.com" style="color:#ff4a5f;text-decoration:none;">Contact support</a>.
+                  You’re receiving this email because you created a Snoofly account.
+                  If this wasn’t you, please <a href="mailto:support@snoofly.com" style="color:#ff4a5f;text-decoration:none;">contact support</a>.
                   <br><br>
                   © <%= Time.zone.now.year %> Snoofly • All rights reserved
                 </td>
                 <td align="right" style="white-space:nowrap;">
+                  <!-- Simple social row (optional) -->
                   <a href="#" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;text-decoration:none;margin-left:12px;">Twitter</a>
                   <a href="#" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;text-decoration:none;margin-left:12px;">Instagram</a>
                   <a href="#" style="font-family:Inter,Segoe UI,Arial,sans-serif;font-size:12px;color:#94a3b8;text-decoration:none;margin-left:12px;">Facebook</a>
@@ -114,7 +154,9 @@
   </tr>
 </table>
 
-<!-- Minimal mobile tweak -->
+<!-- Mobile tweaks -->
 <style>
-@media only screen and (max-width: 600px) { .hide-mobile { display:none !important; } }
+@media only screen and (max-width: 600px) {
+  .hide-mobile { display:none !important; }
+}
 </style>
