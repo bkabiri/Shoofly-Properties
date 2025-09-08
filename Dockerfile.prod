@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
   && rm -rf /var/lib/apt/lists/*
 # Debian provides /usr/bin/nodejs but ExecJS expects /usr/bin/node (for asset builds)
-RUN ln -sf /usr/bin/nodejs /usr/bin/node && node -v
+# Ensure /usr/bin/node exists for ExecJS (only if missing)
+RUN (command -v node >/dev/null 2>&1 || ln -s /usr/bin/nodejs /usr/bin/node) && node -v
 
 WORKDIR /usr/src/app
 
