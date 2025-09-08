@@ -69,26 +69,28 @@ Rails.application.configure do
   # ======== Action Mailer (SendGrid) ========
   # Host used in links (Devise, etc.)
   config.action_mailer.default_url_options = {
-    host: ENV.fetch("APP_HOST", "app.snoofly.co.uk"),
-    protocol: "https"
+  host: ENV.fetch("APP_HOST", "snoofly.co.uk"),
+  protocol: "https"
   }
-  config.action_mailer.asset_host = "https://#{ENV.fetch("APP_HOST", "app.snoofly.co.uk")}"
+  config.action_mailer.asset_host = "https://#{ENV.fetch("APP_HOST", "snoofly.co.uk")}"
 
+  # Mailer behavior
   config.action_mailer.perform_caching = false
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = true
 
+  # SMTP via SendGrid
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    user_name: "apikey",                             # literal per SendGrid
-    password:  ENV.fetch("SENDGRID_API_KEY"),        # required
-    domain:    ENV.fetch("APP_HOST", "app.snoofly.com"),
+    user_name: "apikey",                                # literal, per SendGrid docs
+    password:  ENV.fetch("SENDGRID_API_KEY") { raise "Missing SENDGRID_API_KEY" },
+    domain:    ENV.fetch("APP_HOST", "snoofly.co.uk"),
     address:   "smtp.sendgrid.net",
     port:      587,
     authentication: :plain,
     enable_starttls_auto: true
   }
-  # ============================================
+    # ============================================
 
   # I18n fallbacks
   config.i18n.fallbacks = true
