@@ -6,12 +6,6 @@
 ARG RUBY_VERSION=3.0.3
 FROM ruby:${RUBY_VERSION} AS builder
 
-ENV RAILS_ENV=production \
-    BUNDLE_DEPLOYMENT=1 \
-    BUNDLE_WITHOUT="development:test" \
-    RAILS_LOG_TO_STDOUT=1 \
-    RAILS_SERVE_STATIC_FILES=1
-
 # System deps for build (has Node/Yarn for ExecJS during asset compile)
 RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
@@ -31,19 +25,6 @@ COPY . .
 
 # ---- Build-time args just to satisfy boot during precompile ----
 # (Provide real values in your CI or `docker build --build-arg ...`)
-ARG SECRET_KEY_BASE=dummy
-ARG RAILS_MASTER_KEY
-ARG SENDGRID_API_KEY=dummy
-ARG APP_HOST=snoofly.co.uk
-ARG STRIPE_SECRET_KEY=dummy
-ENV SECRET_KEY_BASE=${SECRET_KEY_BASE} \
-    RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
-    SENDGRID_API_KEY=${SENDGRID_API_KEY} \
-    APP_HOST=${APP_HOST} \
-    STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-
-# Precompile assets (ExecJS runs here; fine)
-RUN bundle exec rake assets:precompile
 
 #############
 # Final image
@@ -61,11 +42,6 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app /usr/src/app
 COPY --from=builder /usr/local/bundle /usr/local/bundle
 
-ENV RAILS_ENV=production \
-    BUNDLE_DEPLOYMENT=1 \
-    BUNDLE_WITHOUT="development:test" \
-    RAILS_LOG_TO_STDOUT=1 \
-    RAILS_SERVE_STATIC_FILES=1
 
 # Ensure your entrypoint does NOT recompile
 ENTRYPOINT ["./entrypoint.sh"]
