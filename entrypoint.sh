@@ -1,17 +1,22 @@
 #!/bin/bash
 set -e
 
-# Remove a potentially pre-existing server.pid for Rails.
+# Clean old pid
 rm -f /usr/src/app/tmp/pids/server.pid
 
-echo "bundle install..."
+echo "bundle check/install…"
 bundle check || bundle install --jobs 4
 
-# Precompile assets (only in production)
-if [ "$RAILS_ENV" = "production" ]; then
-  echo "Precompiling assets..."
-  bundle exec rake assets:precompile
+
+# Precompile assets if manifest missing
+if [ "${RAILS_ENV}" = "production" ]; then
+  if ! ls public/assets/.sprockets-manifest* >/dev/null 2>&1; then
+    echo "Assets manifest not found, precompiling…"
+    bundle exec rails assets:precompile
+  else
+    echo "Assets manifest present, skipping precompile."
+  fi
 fi
 
-# Then exec the container's main process (what's set as CMD in the Dockerfile).
+# Hand off to CMD
 exec "$@"
