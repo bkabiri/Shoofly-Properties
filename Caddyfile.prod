@@ -1,25 +1,18 @@
 {
-  # Optional, but recommended:
-  email you@example.com
+	# optional global options
 }
 
-# Replace with your domain
-${APP_HOST} {
-  encode gzip zstd
-
-  @rails {
-    not path /assets/* /packs/* /uploads/*
-  }
-
-  reverse_proxy @rails web-snoofly:3000 {
-    # Caddy passes standard proxy headers automatically
-  }
-
-  # (Optional) Static paths served by Rails public/ (if you pre-build front-end assets)
-  handle_path /assets/* {
-    uri strip_prefix /assets
-    reverse_proxy web-snoofly:3000
-  }
-
-  # WebSocket/ActionCable just works through reverse_proxy
+# S3 API endpoint (root path)
+minio.snoofly.co.uk {
+	encode gzip zstd
+	handle_path /console* {
+		# Protect console with basic auth
+		basicauth {
+			{$CADDY_CONSOLE_USER} {$CADDY_CONSOLE_PASS}
+		}
+		uri strip_prefix /console
+		reverse_proxy minio-snoofly:9001
+	}
+	# everything else proxies to S3 API
+	reverse_proxy minio-snoofly:9000
 }

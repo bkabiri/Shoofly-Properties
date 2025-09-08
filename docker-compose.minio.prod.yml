@@ -4,26 +4,82 @@ networks:
   snoofly-net:
     external: true
 
+volumes:
+  minio_data:
+  caddy_data:
+  caddy_config:
+
 services:
   minio-snoofly:
-    image: minio/minio:latest   # <-- use a valid tag
+    image: minio/minio:RELEASE.2024-08-29T22-08-55Z
     container_name: minio-snoofly
-    restart: unless-stopped
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    command: server /data --console-address ":9001"
-    # Only expose the console; keep S3 API internal to the snoofly-net
-    ports:
-      - "9001:9001" # optional; remove if you’ll use it only via the network
     volumes:
       - minio_data:/data
-    networks: [snoofly-net]
+    expose:
+      - "9000"
+      - "9001"
+    networks:
+      - snoofly-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/ready"]
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
       interval: 10s
-      timeout: 5s
-      retries: 12
+      timeout: 3s
+      retries: 10
 
-volumes:
-  minio_data:
+  minio-mc-init:
+    image: minio/mc:RELEASE.2024-08-26T17-20-37Z
+    container_name: minio-mc-init
+    depends_on:
+      minio-snoofly:
+        condition: service_healthy
+    entrypoint: ["/bin/sh","-c"]
+    command: >
+      "
+      set -e
+      mc alias set myminio http://minio-snoofly:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      # Create bucket if missing
+      mc ls myminio/${MINIO_BUCKET} >/dev/null 2>&1 || mc mb myminio/${MINIO_BUCKET};
+      # Make objects publicly readable (download) – adjust if you want private
+      mc anonymous set download myminio/${MINIO_BUCKET};
+      # CORS for web delivery (tweak as you like)
+      cat >/tmp/cors.json <<'JSON'
+      [
+        {
+          "AllowedOrigin": ["https://snoofly.co.uk","https://${MINIO_PUBLIC_HOST}","http://localhost:3000","http://app.localhost"],
+          "AllowedMethod": ["GET","PUT","POST","DELETE"],
+          "AllowedHeader": ["*"],
+          "ExposeHeader": ["ETag","Location"],
+          "MaxAgeSeconds": 3000
+        }
+      ]
+      JSON
+      mc anonymous set-json /tmp/cors.json myminio/${MINIO_BUCKET};
+      echo 'MinIO init done.';
+      "
+    networks:
+      - snoofly-net
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      MINIO_PUBLIC_HOST: ${MINIO_PUBLIC_HOST}
+    restart: "no"
+
+  caddy-minio:
+    image: caddy:2-alpine
+    container_name: caddy-minio
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.minio:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - minio-snoofly
+    networks:
+      - snoofly-net
