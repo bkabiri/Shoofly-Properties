@@ -12,13 +12,10 @@ ENV RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=1 \
     RAILS_SERVE_STATIC_FILES=1
 
-# System deps needed to install gems and (if we ever precompile) assets
+# System deps for build (has Node/Yarn for ExecJS during asset compile)
 RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
   && rm -rf /var/lib/apt/lists/*
-# Debian provides /usr/bin/nodejs but ExecJS expects /usr/bin/node (for asset builds)
-# Ensure /usr/bin/node exists for ExecJS (only if missing)
-RUN (command -v node >/dev/null 2>&1 || ln -s /usr/bin/nodejs /usr/bin/node) && node -v
 
 WORKDIR /usr/src/app
 
@@ -29,28 +26,39 @@ RUN gem install bundler -v 2.3.7 \
  && bundle config set without 'development test' \
  && bundle install --jobs 4 --retry 3
 
-# App code (no precompile here)
+# App code
 COPY . .
+
+# ---- Build-time args just to satisfy boot during precompile ----
+# (Provide real values in your CI or `docker build --build-arg ...`)
+ARG SECRET_KEY_BASE=dummy
+ARG RAILS_MASTER_KEY
+ARG SENDGRID_API_KEY=dummy
+ARG APP_HOST=snoofly.co.uk
+
+ENV SECRET_KEY_BASE=${SECRET_KEY_BASE} \
+    RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
+    SENDGRID_API_KEY=${SENDGRID_API_KEY} \
+    APP_HOST=${APP_HOST}
+
+# Precompile assets (ExecJS runs here; fine)
+RUN bundle exec rake assets:precompile
 
 #############
 # Final image
 #############
 FROM ruby:${RUBY_VERSION}
 
-# Runtime deps only
+# Minimal runtime deps (no Node here)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips imagemagick postgresql-client \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# Bring the app and gems over
+# App and gems from builder
 COPY --from=builder /usr/src/app /usr/src/app
 COPY --from=builder /usr/local/bundle /usr/local/bundle
-
-# Entrypoint handles assets/db and then execs puma
-COPY entrypoint.sh /usr/src/app/entrypoint.sh
-RUN chmod +x /usr/src/app/entrypoint.sh
 
 ENV RAILS_ENV=production \
     BUNDLE_DEPLOYMENT=1 \
@@ -58,6 +66,8 @@ ENV RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=1 \
     RAILS_SERVE_STATIC_FILES=1
 
+# Ensure your entrypoint does NOT recompile
+ENTRYPOINT ["./entrypoint.sh"]
+
 EXPOSE 3000
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
-CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+CMD ["bash", "-lc", "bundle exec puma -C config/puma.rb"]
