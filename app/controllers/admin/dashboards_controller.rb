@@ -39,9 +39,26 @@ module Admin
           q = "%#{params[:q].downcase}%"
           scope = scope.where("LOWER(users.full_name) LIKE ? OR LOWER(users.email) LIKE ?", q, q)
         end
-        scope.order(created_at: :desc).limit(10)
+        scope.order(created_at: :desc).limit(100)
       end
+      # Tickets for dashboard tab
+        @tickets = begin
+          scope = Ticket.order(updated_at: :desc)
 
+          # status filter (open/pending/closed)
+          if params[:t_status].present?
+            scope = scope.where(status: params[:t_status])
+          end
+
+          # search subject or requester email
+          if params[:t_q].present?
+            q = "%#{params[:t_q].downcase}%"
+            scope = scope.left_joins(:user)
+                        .where("LOWER(tickets.subject) LIKE ? OR LOWER(users.email) LIKE ?", q, q)
+          end
+
+          scope.limit(60)
+        end
       # --- All listings (seller type + search) ---
       @all_listings = begin
         scope = Listing.includes(:user).order(created_at: :desc)
@@ -53,7 +70,7 @@ module Admin
           q = "%#{params[:q].downcase}%"
           scope = scope.where("LOWER(listings.title) LIKE ? OR LOWER(listings.address) LIKE ?", q, q)
         end
-        scope.limit(10)
+        scope.limit(100)
       end
 
       # --- Approvals / requests ---

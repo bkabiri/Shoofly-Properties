@@ -71,11 +71,16 @@
         <span class="ms-auto chip red"><i class="bi bi-dot"></i> <%= pending_count %></span>
       </button>
 
-      <%= link_to admin_tickets_path,
-            class: "side-link #{controller_path == 'admin/tickets' ? 'active' : ''}" do %>
+      <button type="button"
+        class="side-link"
+        data-bs-toggle="tab"
+        data-bs-target="#tab-support"
+        role="tab"
+        aria-controls="tab-support"
+              aria-selected="false">
         <i class="bi bi-life-preserver"></i> Support
         <span class="ms-auto chip gray"><%= (@kpis && @kpis[:open_tickets]).to_i %></span>
-      <% end %>
+      </button>
 
       <hr>
 
@@ -130,6 +135,9 @@
         </div>
         <div id="tab-promos" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-promos">
           <%= render "admin/dashboard_sections/promo_codes" %>
+        </div>
+        <div id="tab-support" class="tab-pane fade" role="tabpanel">
+          <%= render "admin/dashboard_sections/tickets" %>
         </div>
       </div>
     </div>

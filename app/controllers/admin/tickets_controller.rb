@@ -5,19 +5,16 @@ module Admin
 
     def index
       scope = Ticket.order(created_at: :desc)
-
-      # Optional filters
       scope = scope.where(status: params[:status]) if params[:status].present?
       scope = scope.where("subject ILIKE :q OR body ILIKE :q", q: "%#{params[:q]}%") if params[:q].present?
+      @tickets = scope.page(params[:page]).per(20)
 
-      @tickets = scope.page(params[:page]).per(20)  # <-- paginate here
-
-      # KPI counts
       @open_count     = Ticket.open.count
       @pending_count  = Ticket.pending.count
       @resolved_count = Ticket.resolved.count
       @closed_count   = Ticket.closed.count
     end
+
     def show; end
 
     def new
@@ -25,7 +22,8 @@ module Admin
     end
 
     def create
-      @ticket = Ticket.new(ticket_params.merge(user: current_user))
+      # ✅ set requester (the user who opened the ticket)
+      @ticket = Ticket.new(ticket_params.merge(requester: current_user))
       if @ticket.save
         redirect_to admin_ticket_path(@ticket), notice: "Ticket created."
       else
@@ -34,7 +32,8 @@ module Admin
     end
 
     def update
-      if @ticket.update(ticket_params.merge(assigned_to: current_user))
+      # Don’t overwrite assignee here; let the permitted param do it.
+      if @ticket.update(ticket_params)
         redirect_to admin_ticket_path(@ticket), notice: "Ticket updated."
       else
         render :show, status: :unprocessable_entity
@@ -58,7 +57,8 @@ module Admin
     end
 
     def ticket_params
-      params.require(:ticket).permit(:subject, :body, :status, :priority, :assigned_to_id)
+      # include :assigned_to_id (matches belongs_to :assigned_to)
+      params.require(:ticket).permit(:subject, :body, :status, :priority, :assigned_to_id, :attachment)
     end
   end
 end
