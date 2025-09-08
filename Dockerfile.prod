@@ -1,35 +1,99 @@
-FROM ruby:3.0.3
+# syntax=docker/dockerfile:1
 
+##########
+# Builder
+##########
+ARG RUBY_VERSION=3.0.3
+FROM ruby:${RUBY_VERSION}-slim AS builder
+
+# System deps to build gems and precompile assets
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    postgresql-client \
-    git \
-    nano \
-    nodejs \
-    yarn \
+  build-essential \
+  git \
+  libpq-dev \
+  libvips \
+  libvips-dev \
+  imagemagick \
+  curl \
+  ca-certificates \
+  bash \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Node (for ExecJS) and Yarn via Corepack (modern, reproducible)
+ARG NODE_MAJOR=20
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && corepack enable \
+  && corepack prepare yarn@stable --activate \
+  && rm -rf /var/lib/apt/lists/*
+
+# Bundler (pin to match your lockfile toolversion)
+RUN gem install bundler -v 2.3.7
+
+WORKDIR /app
+
+# Bundle config + cache layer
+ENV BUNDLE_DEPLOYMENT=1 \
+    BUNDLE_WITHOUT="development:test" \
+    BUNDLE_JOBS=4 \
+    BUNDLE_RETRY=3
+
+# Copy only Gemfiles first to leverage cache
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# App code
+COPY . .
+
+# Precompile assets for production (ExecJS needs Node at build time)
+ENV RAILS_ENV=production RACK_ENV=production
+RUN SECRET_KEY_BASE=dummy bundle exec rails assets:precompile
+
+#############
+# Final image
+#############
+FROM ruby:${RUBY_VERSION}-slim
+
+# Minimal runtime deps (no compilers, no node)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips \
-  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    imagemagick \
+    postgresql-client \
+    curl \
+    bash \
+  && rm -rf /var/lib/apt/lists/*
 
-# (This second apt-get for libvips is redundant; removing it is fine)
-# RUN apt-get update && apt-get install -y libvips
+# Create non-root user
+RUN useradd -u 1001 -m -d /home/app app
 
-RUN gem install bundler:2.3.7
+WORKDIR /app
 
-WORKDIR /usr/src/app
+# Copy gems and app from builder
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+COPY --from=builder /app /app
 
-# --- Add your app + entrypoint ---
-# Copy Gemfiles first if you want layer caching, but the key fix is copying entrypoint.sh
-COPY entrypoint.sh /usr/src/app/entrypoint.sh
-RUN chmod +x /usr/src/app/entrypoint.sh
+# Runtime env
+ENV RAILS_ENV=production \
+    RACK_ENV=production \
+    RAILS_LOG_TO_STDOUT=1 \
+    RAILS_SERVE_STATIC_FILES=1 \
+    BUNDLE_DEPLOYMENT=1 \
+    BUNDLE_WITHOUT="development:test"
 
-# (Then copy the rest of your app; optional here but typical)
-# COPY Gemfile Gemfile.lock ./
-# RUN bundle install --without development test
-# COPY . .
+# Ownership
+RUN chown -R app:app /app /usr/local/bundle
 
-# Use an absolute path to be unambiguous
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+# Create entrypoint inside the image (no external file needed)
+RUN printf '%s\n' '#!/usr/bin/env bash' \
+    'set -euo pipefail' \
+    'rm -f tmp/pids/server.pid' \
+    'exec "$@"' > /usr/local/bin/entrypoint.sh \
+ && chmod +x /usr/local/bin/entrypoint.sh
+
+USER app
 
 EXPOSE 3000
-CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0"]
+
+# Entrypoint + default command (Compose will pass your Puma command here)
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash", "-lc", "bundle exec puma -C config/puma.rb"]
