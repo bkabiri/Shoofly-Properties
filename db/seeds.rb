@@ -20,4 +20,4 @@ puts "Seeding users..."
   )
 end
 
-puts "✅ Seeded 30 buyer users."
+puts "✅ Seeded 30 buyer users."r

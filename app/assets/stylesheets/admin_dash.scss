@@ -153,3 +153,33 @@
   background: #fff;
   border-radius: 10px;
 }
+
+/* --- Tabs: never let hidden panes take space --- */
+.admin-main .tab-content {
+  position: relative;
+  min-width: 0;
+  align-self: start; /* keep content aligned with top of grid row */
+}
+
+/* If for any reason a pane is not active, collapse it completely */
+.admin-main .tab-pane:not(.active) {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Remove any extra top padding/margin so the first card hugs the top */
+.admin-main .tab-pane {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* First card in any pane shouldn’t add extra gap */
+.admin-main .tab-pane > .section-card:first-child {
+  margin-top: 0 !important;
+}
+
+/* Tables should always fill the card width */
+.section-card .table-responsive { width: 100%; }

@@ -117,6 +117,7 @@ end
     namespace :admin do
       resource :dashboard, only: :show, controller: "dashboards"
       resources :impersonations, only: [:create, :destroy]
+      resources :promotion_codes, only: [:index, :create, :update, :destroy]
       resources :users, only: [:index, :show, :edit, :update, :destroy] do
         member do
           patch :block   # -> Admin::UsersController#block

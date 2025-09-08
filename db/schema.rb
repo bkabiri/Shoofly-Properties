@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_05_091713) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_08_084724) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -179,6 +179,21 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_05_091713) do
     t.index ["code"], name: "index_plans_on_code", unique: true
   end
 
+  create_table "promotion_codes", force: :cascade do |t|
+    t.string "code", null: false
+    t.string "kind", default: "free_listing", null: false
+    t.integer "usage_limit", default: 1, null: false
+    t.integer "used_count", default: 0, null: false
+    t.datetime "starts_at"
+    t.datetime "expires_at"
+    t.boolean "active", default: true, null: false
+    t.bigint "created_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_promotion_codes_on_code", unique: true
+    t.index ["created_by_id"], name: "index_promotion_codes_on_created_by_id"
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.string "email"
     t.datetime "created_at", null: false
@@ -253,6 +268,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_05_091713) do
   add_foreign_key "payments", "listings"
   add_foreign_key "payments", "plans"
   add_foreign_key "payments", "users"
+  add_foreign_key "promotion_codes", "users", column: "created_by_id"
   add_foreign_key "ticket_messages", "tickets"
   add_foreign_key "ticket_messages", "users"
   add_foreign_key "tickets", "users", column: "assigned_to_id"

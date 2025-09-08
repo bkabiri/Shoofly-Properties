@@ -98,6 +98,16 @@
               aria-selected="false">
         <i class="bi bi-gear"></i> Settings
       </button>
+      <!-- Promo Codes -->
+      <button type="button"
+        class="side-link"
+        data-bs-toggle="tab"
+        data-bs-target="#tab-promos"
+        role="tab"
+        aria-controls="tab-promos"
+        aria-selected="false">
+        <i class="bi bi-ticket-perforated"></i> Promo Codes
+      </button>
     </aside>
 
     <!-- Main column (always the right column) -->
@@ -118,6 +128,9 @@
         <div id="tab-settings" class="tab-pane fade" role="tabpanel">
           <%= render "admin/dashboard_sections/settings" %>
         </div>
+        <div id="tab-promos" class="tab-pane fade" role="tabpanel" aria-labelledby="tab-promos">
+          <%= render "admin/dashboard_sections/promo_codes" %>
+        </div>
       </div>
     </div>
   </div>
@@ -128,6 +141,10 @@
 <script>
   document.addEventListener("turbo:load", () => {
     const $$ = (s, ctx=document) => Array.from(ctx.querySelectorAll(s));
+    const deactivateAll = () => {
+      $$('.admin-main .tab-pane').forEach(p => p.classList.remove('show','active'));
+      $$('.admin-sidebar .side-link[role="tab"]').forEach(b => b.classList.remove('active'));
+    };
 
     // Deep link: #tab-approvals etc.
     if (location.hash) {

@@ -1,0 +1,163 @@
+<!-- app/views/admin/dashboard_sections/_promo_codes.html.erb -->
+
+<div class="section-card">
+  <div class="section-head">
+    <h5 class="mb-0">Promotion Codes</h5>
+    <div class="toolbar">
+      <span class="chip gray"><%= PromotionCode.count %> total</span>
+      <button class="btn btn-ghost" data-bs-toggle="modal" data-bs-target="#newPromoModal">
+        <i class="bi bi-plus-lg"></i> New code
+      </button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Uses</th>
+          <th>Window</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (@promotion_codes || PromotionCode.recent.limit(200)).each do |pc| %>
+          <tr>
+            <td class="fw-bold">
+              <span class="promo-code"><%= pc.code %></span>
+              <button class="btn btn-sm btn-light ms-2 js-copy" type="button" data-code="<%= pc.code %>" title="Copy">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </td>
+            <td><span class="badge bg-light text-dark"><%= pc.kind.humanize %></span></td>
+            <td><%= pc.used_count %>/<%= pc.usage_limit %></td>
+            <td class="text-muted">
+              <% if pc.starts_at.present? || pc.expires_at.present? %>
+                <%= pc.starts_at ? l(pc.starts_at, format: :short) : "—" %> → <%= pc.expires_at ? l(pc.expires_at, format: :short) : "—" %>
+              <% else %>
+                Always
+              <% end %>
+            </td>
+            <td>
+              <span class="chip <%= pc.usable_now? ? 'red' : 'gray' %>">
+                <%= pc.usable_now? ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <!-- Toggle active (bind to model so params => promotion_code[active]) -->
+              <%= form_with model: pc, url: admin_promotion_code_path(pc), method: :patch, class: "d-inline" do |f| %>
+                <%= f.hidden_field :active, value: (!pc.active) %>
+                <button class="btn btn-sm btn-light" type="submit" title="<%= pc.active ? 'Deactivate' : 'Activate' %>">
+                  <i class="bi <%= pc.active ? 'bi-toggle-on' : 'bi-toggle-off' %>"></i>
+                </button>
+              <% end %>
+
+              <%= link_to admin_promotion_code_path(pc),
+                          data: { turbo_method: :delete, turbo_confirm: "Delete code #{pc.code}?" },
+                          class: "btn btn-sm btn-light text-danger",
+                          title: "Delete" do %>
+                <i class="bi bi-trash"></i>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+
+        <% if (@promotion_codes || []).empty? %>
+          <tr><td colspan="6" class="text-center text-muted py-4">No promotion codes yet.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create new promo modal (bind to model OR use scope: :promotion_code) -->
+<div class="modal fade" id="newPromoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <%= form_with model: PromotionCode.new, url: admin_promotion_codes_path, method: :post do |f| %>
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-ticket-perforated me-2"></i>Create Promotion Code</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Code</label>
+            <div class="input-group">
+              <%= f.text_field :code, class: "form-control", placeholder: "Leave blank to auto-generate (e.g., 8 chars)" %>
+              <button class="btn btn-outline-secondary" type="button" id="genPromoCode">Generate</button>
+            </div>
+            <div class="form-text">Saved as UPPERCASE and must be unique.</div>
+          </div>
+
+          <%= f.hidden_field :kind, value: "free_listing" %>
+          <div class="mb-3">
+            <label class="form-label">Benefit</label>
+            <input class="form-control" value="Free single listing for private sellers (£10 value)" disabled>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Usage limit</label>
+              <%= f.number_field :usage_limit, value: 1, min: 1, class: "form-control" %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Active?</label>
+              <div class="form-check form-switch mt-2">
+                <%= f.check_box :active, class: "form-check-input", checked: true %>
+                <label class="form-check-label">Enabled</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label class="form-label">Starts at (optional)</label>
+              <%= f.datetime_local_field :starts_at, class: "form-control" %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Expires at (optional)</label>
+              <%= f.datetime_local_field :expires_at, class: "form-control" %>
+            </div>
+          </div>
+
+          <div class="alert alert-light border mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            Applied by a <strong>Private Seller</strong>, the checkout for one listing will be free (normally £10).
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-ghost" type="button" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-snoofly-red" type="submit">Create code</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("turbo:load", () => {
+    const genBtn = document.getElementById("genPromoCode");
+    if (genBtn) {
+      genBtn.addEventListener("click", () => {
+        const field = document.querySelector('#newPromoModal input[name="promotion_code[code]"]');
+        if (field) {
+          const s = Math.random().toString(36).slice(2, 10).toUpperCase();
+          field.value = s; field.focus(); field.select();
+        }
+      });
+    }
+    document.querySelectorAll(".js-copy").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(btn.dataset.code || ""); 
+          btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+          setTimeout(() => btn.innerHTML = '<i class="bi bi-clipboard"></i>', 1500);
+        } catch(_) {}
+      });
+    });
+  });
+</script>
