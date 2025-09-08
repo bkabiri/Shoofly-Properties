@@ -11,14 +11,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# … no more `gem update --system`
-RUN apt-get update && apt-get install -y libvips
+# (This second apt-get for libvips is redundant; removing it is fine)
+# RUN apt-get update && apt-get install -y libvips
+
 RUN gem install bundler:2.3.7
 
 WORKDIR /usr/src/app
 
-ENTRYPOINT ["./entrypoint.sh"]
+# --- Add your app + entrypoint ---
+# Copy Gemfiles first if you want layer caching, but the key fix is copying entrypoint.sh
+COPY entrypoint.sh /usr/src/app/entrypoint.sh
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+# (Then copy the rest of your app; optional here but typical)
+# COPY Gemfile Gemfile.lock ./
+# RUN bundle install --without development test
+# COPY . .
+
+# Use an absolute path to be unambiguous
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
 
 EXPOSE 3000
-
 CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0"]
