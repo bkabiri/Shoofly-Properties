@@ -13,8 +13,8 @@ ENV RAILS_ENV=production \
     RAILS_SERVE_STATIC_FILES=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
- && rm -rf /var/lib/apt/lists/*
+  build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
