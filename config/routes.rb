@@ -116,9 +116,12 @@ end
 
     namespace :admin do
       resource :dashboard, only: :show, controller: "dashboards"
-
-      resources :users, only: [:index, :show] do
-        patch :suspend, on: :member
+      resources :impersonations, only: [:create, :destroy]
+      resources :users, only: [:index, :show, :edit, :update, :destroy] do
+        member do
+          patch :block   # -> Admin::UsersController#block
+          # (optionally) patch :unblock
+        end
       end
 
       resources :listings, only: [:index, :edit, :update] do

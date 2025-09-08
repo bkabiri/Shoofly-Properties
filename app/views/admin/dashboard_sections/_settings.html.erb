@@ -1,0 +1,21 @@
+ <div class="section-card">
+          <div class="section-head">
+            <h5 class="mb-0">Admin Settings</h5>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3">
+                <h6 class="fw-bold mb-2">Payments</h6>
+                <p class="text-muted mb-3">Connect your Stripe keys, toggle live/test mode.</p>
+                <%= link_to "Open Billing Settings", admin_billing_settings_path, class: "btn btn-outline-dark btn-sm" %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3">
+                <h6 class="fw-bold mb-2">Plans & Pricing</h6>
+                <p class="text-muted mb-3">Manage plan catalog (one-off & subscriptions).</p>
+                <%= link_to "Manage Plans", admin_plans_path, class: "btn btn-outline-dark btn-sm" %>
+              </div>
+            </div>
+          </div>
+        </div>

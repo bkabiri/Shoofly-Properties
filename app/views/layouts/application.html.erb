@@ -34,6 +34,19 @@
   <%= javascript_importmap_tags %> <!-- ✅ keeps Turbo & controllers -->
 </head>
 <body>
+  <% if session[:admin_id].present? && current_user.present? %>
+  <div class="impersonation-banner">
+    <div class="container d-flex justify-content-between align-items-center">
+      <span>
+        <strong>⚠️ Impersonating:</strong> <%= current_user.email %>
+      </span>
+      <%= link_to "Stop Impersonating",
+                  admin_impersonation_path(current_user),
+                  data: { turbo_method: :delete },
+                  class: "btn btn-sm btn-light fw-bold" %>
+    </div>
+  </div>
+  <% end %>
   <%= yield %>
     <div class="container mt-3">
     <%= render "shared/flash" %>

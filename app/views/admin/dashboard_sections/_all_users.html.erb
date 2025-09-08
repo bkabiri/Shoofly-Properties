@@ -1,0 +1,228 @@
+
+        <!-- ALL USERS -->
+        <div class="section-card mb-4">
+          <div class="section-head">
+            <h5 class="mb-0">All Users</h5>
+            <div class="toolbar">
+              <%= form_with url: admin_dashboard_path,
+                            method: :get,
+                            local: true,
+                            data: { turbo_frame: "all_users_frame" },
+                            class: "d-flex gap-2" do %>
+
+                <select name="role"
+                        class="form-select w-auto"
+                        data-controller="autosubmit"
+                        data-action="change->autosubmit#submit">
+                  <option value="">All roles</option>
+                  <option value="buyer"        <%= "selected" if params[:role] == "buyer" %>>Buyer</option>
+                  <option value="seller"       <%= "selected" if params[:role] == "seller" %>>Seller</option>
+                  <option value="estate_agent" <%= "selected" if params[:role] == "estate_agent" %>>Estate Agent</option>
+                  <option value="admin"        <%= "selected" if params[:role] == "admin" %>>Admin</option>
+                </select>
+
+                <input name="q"
+                       value="<%= params[:q] %>"
+                       class="form-control"
+                       placeholder="Search by name or email"
+                       data-controller="autosubmit"
+                       data-action="input->autosubmit#submit"
+                       data-autosubmit-delay-value="200">
+
+                <button class="btn btn-ghost" type="submit"><i class="bi bi-search"></i></button>
+              <% end %>
+              <span class="chip gray"><%= @all_users&.size || 0 %> shown</span>
+            </div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 420px; overflow:auto; border-radius:.5rem;">
+            <turbo-frame id="all_users_frame">
+              <table class="table align-middle mb-0">
+                <thead class="bg-light" style="position: sticky; top: 0; z-index: 1;">
+                  <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% (@all_users || []).each do |u| %>
+                    <tr>
+                      <td class="fw-semibold"><%= u.full_name.presence || u.email.split("@").first %></td>
+                      <td class="text-muted"><%= u.email %></td>
+                      <td><span class="badge bg-light text-dark"><%= u.role.to_s.humanize %></span></td>
+                      <td class="text-muted"><%= l(u.created_at, format: :short) %></td>
+                      <td class="text-end">
+                        <!-- Icon actions with tooltip on hover -->
+                        <div class="d-inline-flex gap-1">
+                          <%= link_to edit_admin_user_path(u),
+                                      class: "btn btn-sm btn-light",
+                                      data: { bs_toggle: "tooltip", bs_title: "Edit" } do %>
+                            <i class="bi bi-pencil"></i>
+                          <% end %>
+
+                          <%= link_to block_admin_user_path(u),
+                                      data: { turbo_method: :patch, turbo_confirm: "Block this user?" },
+                                      class: "btn btn-sm btn-light text-warning",
+                                      data: { bs_toggle: "tooltip", bs_title: "Block" } do %>
+                            <i class="bi bi-slash-circle"></i>
+                          <% end %>
+
+                          <%= link_to admin_user_path(u),
+                                      data: { turbo_method: :delete, turbo_confirm: "Delete this user? This cannot be undone." },
+                                      class: "btn btn-sm btn-light text-danger",
+                                      data: { bs_toggle: "tooltip", bs_title: "Delete" } do %>
+                            <i class="bi bi-trash"></i>
+                          <% end %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+
+                  <% if (@all_users || []).empty? %>
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">No users found.</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </turbo-frame>
+          </div>
+        </div>
+
+        <!-- ALL LISTINGS -->
+        <div class="section-card mb-4">
+          <div class="section-head">
+            <h5 class="mb-0">All Listings</h5>
+
+            <div class="toolbar">
+              <%= form_with url: admin_dashboard_path,
+                            method: :get,
+                            local: true,
+                            data: { turbo_frame: "all_listings_frame" },
+                            class: "d-flex gap-2 align-items-center" do %>
+
+                <select name="seller_type"
+                        class="form-select w-auto"
+                        data-controller="autosubmit"
+                        data-action="change->autosubmit#submit">
+                  <option value="">All seller types</option>
+                  <option value="private"      <%= "selected" if params[:seller_type] == "private" %>>Private Seller</option>
+                  <option value="estate_agent" <%= "selected" if params[:seller_type] == "estate_agent" %>>Estate Agent</option>
+                </select>
+
+                <input name="q"
+                       value="<%= params[:q] %>"
+                       class="form-control"
+                       placeholder="Search by title or address"
+                       autocomplete="off"
+                       data-controller="autosubmit"
+                       data-action="input->autosubmit#submit"
+                       data-autosubmit-delay-value="220">
+
+                <button class="btn btn-ghost" type="submit" title="Search">
+                  <i class="bi bi-search"></i>
+                </button>
+              <% end %>
+            </div>
+          </div>
+
+          <%= turbo_frame_tag "all_listings_frame" do %>
+            <div class="mb-2">
+              <span class="chip gray"><%= @all_listings&.size || 0 %> shown</span>
+            </div>
+
+            <div class="table-responsive" style="max-height: 420px; overflow:auto; border-radius:.5rem;">
+              <table class="table align-middle mb-0">
+                <thead class="bg-light" style="position: sticky; top: 0; z-index: 1;">
+                  <tr>
+                    <th>Seller</th>
+                    <th>Property Title</th>
+                    <th>Price</th>
+                    <th>Address</th>
+                    <th>Beds</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% (@all_listings || []).each do |l| %>
+                    <% seller = l.user %>
+                    <tr>
+                      <td class="fw-semibold">
+                        <% if seller&.role.to_s == "estate_agent" %>
+                          <%= seller.estate_agent_name.presence || "Estate Agent" %>
+                        <% else %>
+                          <%= seller&.full_name.presence || seller&.email.to_s.split("@").first %>
+                        <% end %>
+                        <div class="small text-muted"><%= seller&.role.to_s.humanize.presence %></div>
+                      </td>
+
+                      <td>
+                        <%= link_to l.title, listing_path(l), class: "text-decoration-none" %>
+                        <% if l.status.present? %>
+                          <span class="badge bg-light text-dark ms-2"><%= l.status.to_s.humanize %></span>
+                        <% end %>
+                      </td>
+
+                      <td class="fw-bold">
+                        <%= l.guide_price.present? ?
+                              number_to_currency(l.guide_price, unit: "£", precision: 0, delimiter: ",") :
+                              "Guide price on request" %>
+                      </td>
+
+                      <td class="text-muted"><%= l.address.presence || "—" %></td>
+                      <td><span class="badge bg-light text-dark"><%= l.bedrooms.presence || "—" %></span></td>
+
+                      <td class="text-end">
+                        <div class="d-inline-flex gap-1">
+                          <!-- Edit -->
+                          <%= link_to edit_admin_listing_path(l),
+                                      class: "btn btn-sm btn-light",
+                                      data: { bs_toggle: "tooltip", bs_title: "Edit" } do %>
+                            <i class="bi bi-pencil"></i>
+                          <% end %>
+
+                          <!-- Unpublish -->
+                          <%= link_to reject_admin_listing_path(l),
+                                      data: { turbo_method: :patch, turbo_confirm: "Unpublish this listing?" },
+                                      class: "btn btn-sm btn-light text-warning",
+                                      data: { bs_toggle: "tooltip", bs_title: "Unpublish" } do %>
+                            <i class="bi bi-eye-slash"></i>
+                          <% end %>
+
+                          <!-- Delete -->
+                          <%= link_to admin_listing_path(l),
+                                      data: { turbo_method: :delete, turbo_confirm: "Delete this listing permanently?" },
+                                      class: "btn btn-sm btn-light text-danger",
+                                      data: { bs_toggle: "tooltip", bs_title: "Delete" } do %>
+                            <i class="bi bi-trash"></i>
+                          <% end %>
+
+                          <!-- Contact seller (start conversation) -->
+                          <% if seller.present? %>
+                            <%= button_to conversations_path(listing_id: l.id,
+                                                            redirect_to: admin_dashboard_path(anchor: "tab-users")),
+                                          method: :post,
+                                          class: "btn btn-sm btn-light",
+                                          data: { bs_toggle: "tooltip", bs_title: "Contact Seller" } do %>
+                              <i class="bi bi-envelope"></i>
+                            <% end %>
+                          <% end %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+
+                  <% if (@all_listings || []).empty? %>
+                    <tr>
+                      <td colspan="6" class="text-center text-muted py-4">No listings found.</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
+      </div>

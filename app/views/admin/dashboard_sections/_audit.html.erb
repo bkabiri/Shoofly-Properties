@@ -1,0 +1,96 @@
+<div class="section-card">
+  <div class="section-head">
+    <h5 class="mb-0">Audit & Activity</h5>
+
+    <div class="toolbar">
+      <%= form_with url: admin_dashboard_path, method: :get, local: true,
+                    data: { turbo_frame: "audit_frame" },
+                    class: "d-flex gap-2 align-items-center" do %>
+
+        <!-- Date range (optional) -->
+        <input type="date" name="from" value="<%= params[:from] %>" class="form-control w-auto"
+               data-controller="autosubmit" data-action="change->autosubmit#submit">
+        <input type="date" name="to"   value="<%= params[:to] %>"   class="form-control w-auto"
+               data-controller="autosubmit" data-action="change->autosubmit#submit">
+
+        <!-- Actor / target search -->
+        <input type="search" name="q" value="<%= params[:q] %>" placeholder="Search actor, target, details"
+               class="form-control"
+               data-controller="autosubmit" data-action="input->autosubmit#submit"
+               data-autosubmit-delay-value="220">
+
+        <!-- Type filter -->
+        <select name="atype" class="form-select w-auto"
+                data-controller="autosubmit" data-action="change->autosubmit#submit">
+          <option value="">All types</option>
+          <option value="listing" <%= "selected" if params[:atype] == "listing" %>>Listings</option>
+          <option value="user"    <%= "selected" if params[:atype] == "user" %>>Users</option>
+          <option value="ticket"  <%= "selected" if params[:atype] == "ticket" %>>Tickets</option>
+          <option value="other"   <%= "selected" if params[:atype] == "other" %>>Other</option>
+        </select>
+
+        <button class="btn btn-ghost" type="submit" title="Search">
+          <i class="bi bi-search"></i>
+        </button>
+      <% end %>
+
+      <span class="chip gray"><%= @audit_rows&.size || 0 %> shown</span>
+    </div>
+  </div>
+
+  <%= turbo_frame_tag "audit_frame" do %>
+    <div class="table-responsive" style="max-height: 520px; overflow:auto; border-radius:.5rem;">
+      <table class="table align-middle mb-0">
+        <thead class="bg-light" style="position: sticky; top: 0; z-index: 1;">
+          <tr>
+            <th style="width: 160px;">Time</th>
+            <th style="width: 160px;">Actor</th>
+            <th>Event</th>
+            <th>Target</th>
+            <th>Details</th>
+            <th class="text-end" style="width: 120px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (@audit_rows || []).each do |row| %>
+            <tr>
+              <td class="text-muted"><%= l(row[:time], format: :short) rescue row[:time].to_s %></td>
+              <td>
+                <%= row[:actor_name].presence || "System" %>
+                <% if row[:actor_email].present? %>
+                  <div class="small text-muted"><%= row[:actor_email] %></div>
+                <% end %>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark"><%= row[:verb].to_s.humanize %></span>
+              </td>
+              <td>
+                <%= row[:target_label] %>
+                <% if row[:target_type].present? %>
+                  <div class="small text-muted"><%= row[:target_type].to_s.humanize %></div>
+                <% end %>
+              </td>
+              <td class="text-muted"><%= row[:details].presence || "—" %></td>
+              <td class="text-end">
+                <% if row[:target_path].present? %>
+                  <%= link_to row[:target_path], class: "btn btn-sm btn-light", target: "_blank",
+                                         data: { bs_toggle: "tooltip", bs_title: "Open" } do %>
+                    <i class="bi bi-box-arrow-up-right"></i>
+                  <% end %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+
+          <% if (@audit_rows || []).empty? %>
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">
+                No activity for the selected filters.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

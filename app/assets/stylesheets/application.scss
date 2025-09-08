@@ -28,3 +28,20 @@ body {
   filter: brightness(0.95);
   color: #fff;
 }
+
+.impersonation-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1100; // higher than navbar
+  background: #ffc107; // Bootstrap warning yellow
+  color: #000;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-bottom: 2px solid #dc3545; // red border for emphasis
+}
+
+.impersonation-banner .btn {
+  border: 1px solid #000;
+}

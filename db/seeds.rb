@@ -5,10 +5,19 @@
 #
 #   movies = Movie.create([{ name: "Star Wars" }, { name: "Lord of the Rings" }])
 #   Character.create(name: "Luke", movie: movies.first)
-if User.where(role: "admin").none?
-  u = User.find_or_create_by!(email: "admin@snoofly.com") do |x|
-    x.password = SecureRandom.base58(16)
-    x.role     = "admin"
-  end
-  puts "Seeded admin: #{u.email}"
+# db/seeds.rb
+
+require "faker"
+
+puts "Seeding users..."
+
+30.times do
+  User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",   # common test password
+    full_name: Faker::Name.name,
+    mobile_phone: Faker::PhoneNumber.cell_phone_in_e164
+  )
 end
+
+puts "✅ Seeded 30 buyer users."

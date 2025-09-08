@@ -37,3 +37,5 @@ application.register("confirm-delete", ConfirmDeleteController);
 
 import ChatSearchController from "./chat_search_controller.js"
 application.register("chat-search", ChatSearchController)
+import AutosubmitController from "./autosubmit_controller"
+application.register("autosubmit", AutosubmitController)
