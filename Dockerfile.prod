@@ -15,7 +15,7 @@ ENV RAILS_ENV=production \
 RUN apt-get update && apt-get install -y --no-install-recommends \
   build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
   && rm -rf /var/lib/apt/lists/*
-
+RUN ln -sf /usr/bin/nodejs /usr/bin/node && node -v
 WORKDIR /usr/src/app
 
 # Bundle cache
