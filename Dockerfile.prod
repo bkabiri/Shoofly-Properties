@@ -21,9 +21,6 @@ RUN gem install bundler -v 2.3.7 && bundle install --jobs 4 --retry 3
 COPY . .
 
 # Precompile assets (needs master key if you use credentials in assets)
-ARG RAILS_MASTER_KEY
-ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
-RUN bundle exec rake assets:precompile
 
 # --- Final image ---
 FROM ruby:3.0.3
