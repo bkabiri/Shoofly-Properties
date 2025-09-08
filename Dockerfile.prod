@@ -41,7 +41,6 @@ ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
     APP_HOST=${APP_HOST}
 
 # Precompile assets
-RUN bundle exec rake assets:precompile
 
 #############
 # Final image
