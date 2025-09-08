@@ -1,54 +1,70 @@
 version: "3.9"
 
 services:
-  web:
+  web-snoofly:
+    container_name: web-snoofly
     build: .
     command: bash -c "rm -f tmp/pids/server.pid && bin/rails s -p 3000 -b 0.0.0.0"
     volumes:
       - .:/usr/src/app
       - bundle:/usr/local/bundle
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
+    expose:
+      - "3000"
     environment:
       RAILS_ENV: development
       RACK_ENV: development
-      # Nice logs in containers
       RAILS_LOG_TO_STDOUT: "1"
-      # History file inside container
       HISTFILE: /usr/src/app/log/.bash_history
-      # Service endpoints (service names = hosts)
-      DB_HOST: db
-      REDIS_URL: redis://redis:6379/1
-      ACTION_CABLE_URL: ws://localhost:3000/cable
+      DB_HOST: db-snoofly
+      REDIS_URL: redis://redis-snoofly:6379/1
+      ACTION_CABLE_URL: ws://app.localhost/cable
+      APP_HOST: app.localhost
+      APP_URL: http://app.localhost
+    env_file:
+      - .env
     depends_on:
-      db:
+      db-snoofly:
         condition: service_healthy
-      redis:
+      redis-snoofly:
         condition: service_healthy
 
-  db:
+  sidekiq-snoofly:
+    container_name: sidekiq-snoofly
+    build: .
+    command: bash -c "bundle exec sidekiq -C config/sidekiq.yml"
+    volumes:
+      - .:/usr/src/app
+      - bundle:/usr/local/bundle
+    environment:
+      RAILS_ENV: development
+      DB_HOST: db-snoofly
+      REDIS_URL: redis://redis-snoofly:6379/1
+    depends_on:
+      db-snoofly:
+        condition: service_healthy
+      redis-snoofly:
+        condition: service_healthy
+
+  db-snoofly:
+    container_name: db-snoofly
     image: postgres:13
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: snoofly_development
-    # Uncomment if you need to connect from host tools (psql, TablePlus)
-    # ports:
-    #   - "5432:5432"
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_DEV}
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
+      # Use postgres superuser for readiness check (robust, even if app user changes)
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  redis:
+  redis-snoofly:
+    container_name: redis-snoofly
     image: redis:7-alpine
     command: ["redis-server", "--appendonly", "yes", "--save", "60", "1", "--loglevel", "warning"]
-    # Uncomment if you need to inspect from host (redis-cli on host)
     # ports:
     #   - "6379:6379"
     volumes:
@@ -58,6 +74,18 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  caddy-snoofly:
+    container_name: caddy-snoofly
+    image: caddy:2-alpine
+    ports:
+      - "8080:80"
+      # If you want HTTPS locally, uncomment 443 and we’ll trust a local cert later
+      # - "443:443"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - web-snoofly
 
 volumes:
   pg_data:

@@ -1,0 +1,25 @@
+version: "3.9"
+
+name: snoofly-redis
+
+networks:
+  snoofly-net:
+    external: true
+
+services:
+  redis-snoofly:
+    image: redis:7-alpine
+    container_name: redis-snoofly
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis_data:/data
+    networks: [snoofly-net]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  redis_data:

@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1
+
+FROM ruby:3.0.3 as base
+
+ENV RAILS_ENV=production \
+    BUNDLE_DEPLOYMENT=1 \
+    BUNDLE_WITHOUT="development:test"
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/src/app
+
+# Cache bundler
+COPY Gemfile Gemfile.lock ./
+RUN gem install bundler -v 2.3.7 && bundle install --jobs 4 --retry 3
+
+# App code
+COPY . .
+
+# Precompile assets (needs master key if you use credentials in assets)
+ARG RAILS_MASTER_KEY
+ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+RUN bundle exec rake assets:precompile
+
+# --- Final image ---
+FROM ruby:3.0.3
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libvips imagemagick postgresql-client \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/src/app
+COPY --from=base /usr/src/app /usr/src/app
+COPY --from=base /usr/local/bundle /usr/local/bundle
+
+ENV RAILS_ENV=production \
+    BUNDLE_DEPLOYMENT=1 \
+    BUNDLE_WITHOUT="development:test"
+
+EXPOSE 3000
+
+CMD ["bash", "-lc", "bundle exec puma -C config/puma.rb"]

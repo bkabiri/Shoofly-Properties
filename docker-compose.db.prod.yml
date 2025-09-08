@@ -1,0 +1,28 @@
+version: "3.9"
+
+name: snoofly-db
+
+networks:
+  snoofly-net:
+    external: true
+
+services:
+  db-snoofly:
+    image: postgres:14
+    container_name: db-snoofly
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_PROD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks: [snoofly-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME_PROD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_data:

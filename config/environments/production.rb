@@ -21,7 +21,7 @@ Rails.application.configure do
 
   # Lock down allowed origins (adjust the regex/domains as needed).
   config.action_cable.allowed_request_origins = [
-    %r{\Ahttps?://(www\.)?snoofly\.com\z},
+    %r{\Ahttps?://(www\.)?snoofly\.co.uk\z},
     ENV["APP_HOST"].present? ? %r{\Ahttps?://(www\.)?#{Regexp.escape(ENV["APP_HOST"])}\z} : nil
   ].compact
   # =====================================

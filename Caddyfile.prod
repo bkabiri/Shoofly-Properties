@@ -1,0 +1,25 @@
+{
+  # Optional, but recommended:
+  email you@example.com
+}
+
+# Replace with your domain
+${APP_HOST} {
+  encode gzip zstd
+
+  @rails {
+    not path /assets/* /packs/* /uploads/*
+  }
+
+  reverse_proxy @rails web-snoofly:3000 {
+    # Caddy passes standard proxy headers automatically
+  }
+
+  # (Optional) Static paths served by Rails public/ (if you pre-build front-end assets)
+  handle_path /assets/* {
+    uri strip_prefix /assets
+    reverse_proxy web-snoofly:3000
+  }
+
+  # WebSocket/ActionCable just works through reverse_proxy
+}

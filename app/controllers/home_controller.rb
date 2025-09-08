@@ -4,4 +4,7 @@ class HomeController < ApplicationController
   def pricing
     
   end
+  def coming_soon
+    
+  end
 end

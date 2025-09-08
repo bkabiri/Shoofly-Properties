@@ -1,0 +1,10 @@
+# Force HTTP (no TLS) for dev
+http://app.localhost {
+  encode gzip zstd
+  reverse_proxy web-snoofly:3000
+}
+
+http://localhost {
+  encode gzip zstd
+  reverse_proxy web-snoofly:3000
+}

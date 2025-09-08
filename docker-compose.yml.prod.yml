@@ -1,0 +1,65 @@
+version: "3.9"
+
+name: snoofly-app
+
+networks:
+  snoofly-net:
+    external: true
+
+services:
+  web-snoofly:
+    image: your-registry/snoofly-web:latest   # or build: .
+    container_name: web-snoofly
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "1"
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      DB_HOST: db-snoofly
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME_PROD: ${DB_NAME_PROD}
+      REDIS_URL: redis://redis-snoofly:6379/1
+      ACTION_CABLE_URL: wss://${APP_HOST}/cable
+      APP_HOST: ${APP_HOST}
+      APP_URL: https://${APP_HOST}
+      ACTIVE_STORAGE_SERVICE: s3
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: "us-east-1"
+      AWS_S3_ENDPOINT: http://minio-snoofly:9000
+      AWS_S3_FORCE_PATH_STYLE: "true"
+      AWS_S3_BUCKET: ${S3_BUCKET}
+    expose:
+      - "3000"
+    networks: [snoofly-net]
+    depends_on:
+      - caddy-snoofly
+    # If you prefer building here (no registry), uncomment:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.prod
+    command: >
+      bash -lc "bin/rails db:migrate && bundle exec puma -C config/puma.rb"
+
+  caddy-snoofly:
+    image: caddy:2-alpine
+    container_name: caddy-snoofly
+    restart: unless-stopped
+    networks: [snoofly-net]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web-snoofly
+
+volumes:
+  caddy_data:
+  caddy_config:

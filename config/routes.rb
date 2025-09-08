@@ -1,8 +1,12 @@
 # config/routes.rb
+require "sidekiq/web"
 Rails.application.routes.draw do
   # -------------------------
   # Public Listings
   # -------------------------
+  authenticate :user, ->(u) { u.admin? } do
+    mount Sidekiq::Web => "/sidekiq"
+  end
   resources :listings, only: [:index, :show] do
     post   :favorite,   to: "favorites#create"
     delete :unfavorite, to: "favorites#destroy"

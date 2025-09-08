@@ -33,7 +33,9 @@ gem "kaminari"
 # Auth
 gem "kaminari-bootstrap"
 gem "devise"
-
+gem "sidekiq"
+# optional, for scheduled jobs via cron-like syntax
+gem "sidekiq-cron", require: false
 group :development, :test do
   gem "debug", platforms: %i[mri mingw x64_mingw]
   gem "faker"
