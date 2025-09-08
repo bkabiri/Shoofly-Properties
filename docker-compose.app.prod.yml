@@ -8,10 +8,10 @@ networks:
 services:
   web-snoofly:
     # If you publish images, keep this. Otherwise swap to a local build (see commented block).
-    image: your-registry/snoofly-web:latest
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.prod
+
+    build:
+     context: .
+     dockerfile: Dockerfile.prod
 
     container_name: web-snoofly
     restart: unless-stopped
