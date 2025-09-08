@@ -3,13 +3,12 @@ name: snoofly-app
 
 networks:
   snoofly-net:
-    external: true   # run once: docker network create snoofly-net
+    external: true   # create once:  docker network create snoofly-net
 
 services:
   web-snoofly:
-    # If you push an image, keep this:
+    # If you publish images, keep this. Otherwise swap to a local build (see commented block).
     image: your-registry/snoofly-web:latest
-    # If you want to build on the server instead, comment the line above and use:
     # build:
     #   context: .
     #   dockerfile: Dockerfile.prod
@@ -17,43 +16,49 @@ services:
     container_name: web-snoofly
     restart: unless-stopped
     env_file:
-      - .env.production
+      - .env
     environment:
       RAILS_ENV: production
+      RACK_ENV: production
       RAILS_LOG_TO_STDOUT: "1"
       RAILS_SERVE_STATIC_FILES: "1"
+      # If you do NOT use credentials, remove this next line entirely
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
 
-      # DB
-      DB_HOST: ${DB_HOST:-db-snoofly}
+      # ---- Database ----
+      DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-5432}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME_PROD: ${DB_NAME_PROD}
 
-      # Redis
-      REDIS_URL: ${REDIS_URL:-redis://redis-snoofly:6379/1}
+      # ---- Redis ----
+      REDIS_URL: ${REDIS_URL}
 
-      # Host/app URLs
-      APP_HOST: ${APP_HOST:-snoofly.co.uk}
+      # ---- App URLs ----
+      APP_HOST: ${APP_HOST}
       APP_URL: https://${APP_HOST}
       ACTION_CABLE_URL: wss://${APP_HOST}/cable
 
-      # Active Storage via S3-compatible (MinIO)
-      ACTIVE_STORAGE_SERVICE: s3
+      # ---- Active Storage (MinIO via S3 driver) ----
+      ACTIVE_STORAGE_SERVICE: minio_s3
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
       AWS_REGION: "us-east-1"
-      AWS_S3_ENDPOINT: http://minio-snoofly:9000
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
       AWS_S3_FORCE_PATH_STYLE: "true"
       AWS_S3_BUCKET: ${S3_BUCKET}
 
     expose:
       - "3000"
     networks: [snoofly-net]
-    # IMPORTANT: no depends_on to caddy to avoid cycles
     command: >
       bash -lc "bundle exec puma -C config/puma.rb"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
 
   caddy-snoofly:
     image: caddy:2-alpine
@@ -68,7 +73,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - web-snoofly   # one-way dependency (OK)
+      web-snoofly:
+        condition: service_healthy
 
 volumes:
   caddy_data:
