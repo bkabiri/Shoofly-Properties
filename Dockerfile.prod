@@ -6,21 +6,19 @@
 ARG RUBY_VERSION=3.0.3
 FROM ruby:${RUBY_VERSION} AS builder
 
-# Rails/bundle env for build
 ENV RAILS_ENV=production \
     BUNDLE_DEPLOYMENT=1 \
     BUNDLE_WITHOUT="development:test" \
     RAILS_LOG_TO_STDOUT=1 \
     RAILS_SERVE_STATIC_FILES=1
 
-# System deps needed to build gems & assets
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential libpq-dev git nodejs yarn libvips libvips-dev imagemagick \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# Bundle install (cached)
+# Bundle cache
 COPY Gemfile Gemfile.lock ./
 RUN gem install bundler -v 2.3.7 \
  && bundle config set deployment 'true' \
@@ -30,13 +28,16 @@ RUN gem install bundler -v 2.3.7 \
 # App code
 COPY . .
 
-# ---- Build-time secrets for precompile ONLY ----
-# Pass the real master key; use a *dummy* SendGrid key for build.
-# At runtime you'll supply real SENDGRID_API_KEY via environment.
+# ---- Build-time args just to satisfy boot during precompile ----
 ARG RAILS_MASTER_KEY
 ARG SENDGRID_API_KEY=dummy
+ARG SECRET_KEY_BASE=dummy
 ARG APP_HOST=snoofly.co.uk
 
+ENV RAILS_MASTER_KEY=${RAILS_MASTER_KEY} \
+    SENDGRID_API_KEY=${SENDGRID_API_KEY} \
+    SECRET_KEY_BASE=${SECRET_KEY_BASE} \
+    APP_HOST=${APP_HOST}
 
 # Precompile assets
 RUN bundle exec rake assets:precompile
@@ -46,18 +47,15 @@ RUN bundle exec rake assets:precompile
 #############
 FROM ruby:${RUBY_VERSION}
 
-# Only runtime deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips imagemagick postgresql-client \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# App & gems from builder
 COPY --from=builder /usr/src/app /usr/src/app
 COPY --from=builder /usr/local/bundle /usr/local/bundle
 
-# Runtime env (secrets come from container env / .env.production)
 ENV RAILS_ENV=production \
     BUNDLE_DEPLOYMENT=1 \
     BUNDLE_WITHOUT="development:test" \
@@ -65,6 +63,4 @@ ENV RAILS_ENV=production \
     RAILS_SERVE_STATIC_FILES=1
 
 EXPOSE 3000
-
-# Puma config should exist at config/puma.rb
 CMD ["bash", "-lc", "bundle exec puma -C config/puma.rb"]
