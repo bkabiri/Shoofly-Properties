@@ -36,6 +36,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME_DEV=${DB_NAME_DEV}
       - DB_NAME_PROD=${DB_NAME_PROD}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
 
     networks:
       - snoofly-net
