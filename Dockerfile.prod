@@ -1,99 +1,24 @@
-# syntax=docker/dockerfile:1
+FROM ruby:3.0.3
 
-##########
-# Builder
-##########
-ARG RUBY_VERSION=3.0.3
-FROM ruby:${RUBY_VERSION}-slim AS builder
-
-# System deps to build gems and precompile assets
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  build-essential \
-  git \
-  libpq-dev \
-  libvips \
-  libvips-dev \
-  imagemagick \
-  curl \
-  ca-certificates \
-  bash \
-  && rm -rf /var/lib/apt/lists/*
-
-# Install Node (for ExecJS) and Yarn via Corepack (modern, reproducible)
-ARG NODE_MAJOR=20
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
-  && apt-get install -y --no-install-recommends nodejs \
-  && corepack enable \
-  && corepack prepare yarn@stable --activate \
-  && rm -rf /var/lib/apt/lists/*
-
-# Bundler (pin to match your lockfile toolversion)
-RUN gem install bundler -v 2.3.7
-
-WORKDIR /app
-
-# Bundle config + cache layer
-ENV BUNDLE_DEPLOYMENT=1 \
-    BUNDLE_WITHOUT="development:test" \
-    BUNDLE_JOBS=4 \
-    BUNDLE_RETRY=3
-
-# Copy only Gemfiles first to leverage cache
-COPY Gemfile Gemfile.lock ./
-RUN bundle install
-
-# App code
-COPY . .
-
-# Precompile assets for production (ExecJS needs Node at build time)
-ENV RAILS_ENV=production RACK_ENV=production
-RUN SECRET_KEY_BASE=dummy bundle exec rails assets:precompile
-
-#############
-# Final image
-#############
-FROM ruby:${RUBY_VERSION}-slim
-
-# Minimal runtime deps (no compilers, no node)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libvips \
-    imagemagick \
+    build-essential \
+    libpq-dev \
     postgresql-client \
-    curl \
-    bash \
-  && rm -rf /var/lib/apt/lists/*
+    git \
+    nano \
+    nodejs \
+    yarn \
+    libvips \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create non-root user
-RUN useradd -u 1001 -m -d /home/app app
+# … no more `gem update --system`
+RUN apt-get update && apt-get install -y libvips
+RUN gem install bundler:2.3.7
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy gems and app from builder
-COPY --from=builder /usr/local/bundle /usr/local/bundle
-COPY --from=builder /app /app
-
-# Runtime env
-ENV RAILS_ENV=production \
-    RACK_ENV=production \
-    RAILS_LOG_TO_STDOUT=1 \
-    RAILS_SERVE_STATIC_FILES=1 \
-    BUNDLE_DEPLOYMENT=1 \
-    BUNDLE_WITHOUT="development:test"
-
-# Ownership
-RUN chown -R app:app /app /usr/local/bundle
-
-# Create entrypoint inside the image (no external file needed)
-RUN printf '%s\n' '#!/usr/bin/env bash' \
-    'set -euo pipefail' \
-    'rm -f tmp/pids/server.pid' \
-    'exec "$@"' > /usr/local/bin/entrypoint.sh \
- && chmod +x /usr/local/bin/entrypoint.sh
-
-USER app
+ENTRYPOINT ["./entrypoint.sh"]
 
 EXPOSE 3000
 
-# Entrypoint + default command (Compose will pass your Puma command here)
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["bash", "-lc", "bundle exec puma -C config/puma.rb"]
+CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0"]

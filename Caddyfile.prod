@@ -1,18 +1,4 @@
-{
-	# optional global options
+snoofly.co.uk, www.snoofly.co.uk {
+  reverse_proxy web:3000
 }
 
-# S3 API endpoint (root path)
-minio.snoofly.co.uk {
-	encode gzip zstd
-	handle_path /console* {
-		# Protect console with basic auth
-		basicauth {
-			{$CADDY_CONSOLE_USER} {$CADDY_CONSOLE_PASS}
-		}
-		uri strip_prefix /console
-		reverse_proxy minio-snoofly:9001
-	}
-	# everything else proxies to S3 API
-	reverse_proxy minio-snoofly:9000
-}

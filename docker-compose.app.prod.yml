@@ -1,81 +1,50 @@
-# docker-compose.app.prod.yml
-name: snoofly-app
-
-networks:
-  snoofly-net:
-    external: true   # create once:  docker network create snoofly-net
+version: '3.8'
 
 services:
-  web-snoofly:
-    # If you publish images, keep this. Otherwise swap to a local build (see commented block).
-
-    build:
-     context: .
-     dockerfile: Dockerfile.prod
-
-    container_name: web-snoofly
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      RAILS_ENV: production
-      RACK_ENV: production
-      RAILS_LOG_TO_STDOUT: "1"
-      RAILS_SERVE_STATIC_FILES: "1"
-      # If you do NOT use credentials, remove this next line entirely
-      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-
-      # ---- Database ----
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME_PROD: ${DB_NAME_PROD}
-
-      # ---- Redis ----
-      REDIS_URL: ${REDIS_URL}
-
-      # ---- App URLs ----
-      APP_HOST: ${APP_HOST}
-      APP_URL: https://${APP_HOST}
-      ACTION_CABLE_URL: wss://${APP_HOST}/cable
-
-      # ---- Active Storage (MinIO via S3 driver) ----
-      ACTIVE_STORAGE_SERVICE: minio_s3
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
-      AWS_REGION: "us-east-1"
-      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT}
-      AWS_S3_FORCE_PATH_STYLE: "true"
-      AWS_S3_BUCKET: ${S3_BUCKET}
-
-    expose:
-      - "3000"
-    networks: [snoofly-net]
-    command: >
-      bash -lc "bundle exec puma -C config/puma.rb"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-
-  caddy-snoofly:
-    image: caddy:2-alpine
-    container_name: caddy-snoofly
-    restart: unless-stopped
-    networks: [snoofly-net]
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    depends_on:
-      web-snoofly:
-        condition: service_healthy
+    networks:
+      - snoofly-net
+
+  web:
+    build: .
+    command: >
+      bash -c "rm -f tmp/pids/server.pid &&
+               bin/rails assets:precompile &&
+               bin/rails s -p 3000 -b '0.0.0.0'"
+    restart: always
+    volumes:
+      - .:/usr/src/app
+      - bundle:/usr/local/bundle
+    env_file:
+      - .env
+    environment:
+      - RAILS_ENV=${RAILS_ENV}
+      - RAILS_LOG_TO_STDOUT=true
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME_DEV=${DB_NAME_DEV}
+      - DB_NAME_PROD=${DB_NAME_PROD}
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+    networks:
+      - snoofly-net
+
+networks:
+  snoofly-net:
+    external: true
 
 volumes:
+  bundle:
   caddy_data:
   caddy_config:
