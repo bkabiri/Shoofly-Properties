@@ -1,7 +1,7 @@
 // Entry point for the build
 import "@hotwired/turbo-rails"
 import "controllers"
-import "./confirm_adapter"
+import "confirm_adapter"
 
 window.Turbo = Turbo
 Turbo.session.drive = true
