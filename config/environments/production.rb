@@ -3,8 +3,9 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
-  config.hosts << "snoofly.co.uk"
-  config.hosts << "www.snoofly.co.uk"
+  if ENV["ALLOWED_HOSTS"].present?
+  config.hosts += ENV["ALLOWED_HOSTS"].split(",").map(&:strip)
+  end
   # Code is not reloaded between requests.
   config.cache_classes = true
 
