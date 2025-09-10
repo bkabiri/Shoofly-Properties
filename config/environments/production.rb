@@ -5,8 +5,6 @@ Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
   config.hosts << "snoofly.co.uk"
   config.hosts << "www.snoofly.co.uk"
-   Rails.application.routes.default_url_options[:host] = "https://snoofly.co.uk"
-  Rails.application.config.action_mailer.default_url_options = { host: "https://rsnoofly.co.uk" }
   # Code is not reloaded between requests.
   config.cache_classes = true
 
