@@ -1,24 +1,35 @@
 FROM ruby:3.0.3
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    postgresql-client \
-    git \
-    nano \
-    nodejs \
-    yarn \
-    libvips \
+  build-essential libpq-dev postgresql-client git nano nodejs yarn \
+  libvips imagemagick \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# … no more `gem update --system`
-RUN apt-get update && apt-get install -y libvips
 RUN gem install bundler:2.3.7
 
 WORKDIR /usr/src/app
 
-ENTRYPOINT ["./entrypoint.sh"]
+# Install gems with cache layers
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --jobs 4 --retry 3
+
+# Copy app code
+COPY . .
+
+# Copy entrypoint and make executable (absolute path!)
+COPY entrypoint.sh /usr/local/bin/app-entrypoint
+RUN chmod +x /usr/local/bin/app-entrypoint
+
+# (Recommended) precompile at build time so runtime is fast and no 404s
+# Pass SECRET_KEY_BASE at build or set a dummy if your app needs it only for assets.
+ARG SECRET_KEY_BASE
+ENV RAILS_ENV=production \
+    RAILS_LOG_TO_STDOUT=1 \
+    RAILS_SERVE_STATIC_FILES=1 \
+    SECRET_KEY_BASE=${SECRET_KEY_BASE}
+
+RUN bundle exec rake assets:precompile
 
 EXPOSE 3000
-
-CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0"]
+ENTRYPOINT ["/usr/local/bin/app-entrypoint"]
+CMD ["bundle", "exec", "rails", "s", "-b", "0.0.0.0", "-p", "3000"]
