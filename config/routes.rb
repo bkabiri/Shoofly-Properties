@@ -30,7 +30,8 @@ Rails.application.routes.draw do
     sessions:      "users/sessions",
     passwords:     "users/passwords"
   }
-  root to: "home#index"
+  #root to: "home#index"
+  root "home#coming_soon"
 
   # -------------------------
   # Checkout

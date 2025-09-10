@@ -1,531 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snoofly - Coming Soon</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<!-- app/views/home/coming_soon.html.erb -->
+<div class="coming-hero">
+  <!-- Background image -->
+  <%= image_tag "hero.png", class: "coming-hero__bg", alt: "Snoofly hero" %>
+  <div class="coming-hero__overlay"></div>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
-
-        .coming-soon-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            position: relative;
-        }
-
-        .background-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .floating-house {
-            position: absolute;
-            font-size: 2rem;
-            opacity: 0.1;
-            color: #ff4a5f;
-            animation: float 15s infinite ease-in-out;
-        }
-
-        .floating-house:nth-child(1) {
-            top: 10%;
-            left: 5%;
-            animation-delay: 0s;
-        }
-
-        .floating-house:nth-child(2) {
-            top: 20%;
-            right: 10%;
-            animation-delay: -5s;
-        }
-
-        .floating-house:nth-child(3) {
-            bottom: 15%;
-            left: 15%;
-            animation-delay: -10s;
-        }
-
-        .floating-house:nth-child(4) {
-            bottom: 25%;
-            right: 5%;
-            animation-delay: -15s;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-20px) rotate(5deg);
-            }
-        }
-
-        .logo-container {
-            margin-bottom: 2rem;
-            text-align: center;
-            animation: fadeIn 1s ease-out;
-        }
-
-        .logo {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .logo-svg {
-            width: 60px;
-            height: 60px;
-        }
-
-        .logo-text {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ff4a5f 0%, #ff7b4a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .tagline {
-            font-size: 1.2rem;
-            color: #cccccc;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .main-content {
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto;
-            animation: slideUp 1s ease-out 0.5s both;
-        }
-
-        .coming-soon-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #ffffff 0%, #ff4a5f 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        @media (max-width: 768px) {
-            .coming-soon-title {
-                font-size: 2.5rem;
-            }
-        }
-
-        .description {
-            font-size: 1.2rem;
-            color: #cccccc;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-
-        .countdown {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin: 2rem 0;
-            flex-wrap: wrap;
-        }
-
-        .countdown-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 1.5rem;
-            min-width: 100px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .countdown-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #ff4a5f;
-            line-height: 1;
-        }
-
-        .countdown-label {
-            font-size: 0.9rem;
-            color: #cccccc;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .notify-form {
-            max-width: 500px;
-            margin: 2rem auto;
-            position: relative;
-        }
-
-        .form-group {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        @media (max-width: 576px) {
-            .form-group {
-                flex-direction: column;
-            }
-        }
-
-        .email-input {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            border: none;
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            font-size: 1rem;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .email-input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #ff4a5f;
-        }
-
-        .email-input::placeholder {
-            color: #999999;
-        }
-
-        .notify-btn {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 50px;
-            background: #ff4a5f;
-            color: #ffffff;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .notify-btn:hover {
-            background: #e53b4e;
-            transform: translateY(-2px);
-        }
-
-        .company-info {
-            margin-top: 3rem;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            max-width: 600px;
-            text-align: center;
-            animation: fadeIn 1s ease-out 1s both;
-        }
-
-        .company-info-title {
-            font-size: 1.2rem;
-            color: #ff4a5f;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .company-details {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
-        }
-
-        .company-detail {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #cccccc;
-        }
-
-        .company-detail i {
-            color: #ff4a5f;
-        }
-
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .social-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .social-link:hover {
-            background: #ff4a5f;
-            transform: translateY(-3px);
-        }
-
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: #999999;
-            font-size: 0.9rem;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Confetti effect */
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #ff4a5f;
-            opacity: 0.7;
-        }
-
-        @keyframes confettiFall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="coming-soon-container">
-        <!-- Animated Background -->
-        <div class="background-animation">
-            <i class="floating-house bi bi-house-door"></i>
-            <i class="floating-house bi bi-house-heart"></i>
-            <i class="floating-house bi bi-house"></i>
-            <i class="floating-house bi bi-house-check"></i>
-        </div>
-
-        <!-- Logo and Tagline -->
-        <div class="logo-container">
-            <div class="logo">
-                <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="#ff4a5f">
-                    <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
-                    <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
-                </svg>
-                <span class="logo-text">SNOOFLY</span>
-            </div>
-            <p class="tagline">Revolutionizing the UK property market with transparent, direct-to-buyer solutions</p>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <h1 class="coming-soon-title">Something Amazing Is Coming Soon</h1>
-            <p class="description">
-                We're working hard to bring you a revolutionary property platform that empowers sellers and connects buyers directly. 
-                Join our waitlist to be the first to know when we launch!
-            </p>
-
-            <!-- Countdown Timer -->
-            <div class="countdown">
-                <div class="countdown-item">
-                    <div class="countdown-number" id="days">00</div>
-                    <div class="countdown-label">Days</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="countdown-number" id="hours">00</div>
-                    <div class="countdown-label">Hours</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="countdown-number" id="minutes">00</div>
-                    <div class="countdown-label">Minutes</div>
-                </div>
-                <div class="countdown-item">
-                    <div class="countdown-number" id="seconds">00</div>
-                    <div class="countdown-label">Seconds</div>
-                </div>
-            </div>
-
-            <!-- Notification Form -->
-            <div class="notify-form">
-                <div class="form-group">
-                    <input type="email" class="email-input" placeholder="Enter your email address" required>
-                    <button type="submit" class="notify-btn">Notify Me</button>
-                </div>
-            </div>
-
-            <!-- Company Information -->
-            <div class="company-info">
-                <h3 class="company-info-title">Company Information</h3>
-                <div class="company-details">
-                    <div class="company-detail">
-                        <i class="bi bi-building"></i>
-                        <span>SNOOFLY LTD</span>
-                    </div>
-                    <div class="company-detail">
-                        <i class="bi bi-file-text"></i>
-                        <span>Company No: 16678454</span>
-                    </div>
-                    <div class="company-detail">
-                        <i class="bi bi-geo-alt"></i>
-                        <span>61 Bridge Street, Kington, England, HR5 3DJ</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Social Links -->
-            <div class="social-links">
-                <a href="#" class="social-link" aria-label="Facebook">
-                    <i class="bi bi-facebook"></i>
-                </a>
-                <a href="#" class="social-link" aria-label="Twitter">
-                    <i class="bi bi-twitter"></i>
-                </a>
-                <a href="#" class="social-link" aria-label="Instagram">
-                    <i class="bi bi-instagram"></i>
-                </a>
-                <a href="#" class="social-link" aria-label="LinkedIn">
-                    <i class="bi bi-linkedin"></i>
-                </a>
-            </div>
-        </div>
+  <!-- Top-centered Snoofly logo -->
+  <div class="coming-hero__logo">
+    <div class="brand-row">
+      <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
+          <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+          <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+        </svg>
+        <span class="fw-bold fs-4" style="color:#ff4a5f;">Snoofly</span>
+      <% end %>
     </div>
+  </div>
 
-    <div class="footer">
-        <p>© 2023 SNOOFLY LTD. All rights reserved.</p>
+  <!-- Main content -->
+  <div class="coming-hero__content">
+    <span class="coming-pill">We’re almost ready</span>
+    <h1 class="coming-title">Snoofly is launching soon</h1>
+    <p class="coming-subtitle">
+      A better way to find, manage, and love your next place. Be first in line when we open the doors.
+    </p>
+
+    <!-- Countdown -->
+    <div id="countdown" class="cd">
+      <div class="cd__tile">
+        <div class="cd__num" data-key="days">00</div>
+        <div class="cd__label">Days</div>
+      </div>
+      <div class="cd__tile">
+        <div class="cd__num" data-key="hours">00</div>
+        <div class="cd__label">Hours</div>
+      </div>
+      <div class="cd__tile">
+        <div class="cd__num" data-key="minutes">00</div>
+        <div class="cd__label">Minutes</div>
+      </div>
+      <div class="cd__tile">
+        <div class="cd__num" data-key="seconds">00</div>
+        <div class="cd__label">Seconds</div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <script>
-        // Countdown Timer
-        function updateCountdown() {
-            const launchDate = new Date('2024-03-01T00:00:00').getTime();
-            const now = new Date().getTime();
-            const distance = launchDate - now;
+<!-- Minimal footer -->
+<div class="coming-footer">
+  © <%= Time.current.year %> Snoofly — All rights reserved.
+</div>
 
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+<style>
+  :root{
+    --glass-bg: rgba(255,255,255,0.12);
+    --glass-brd: rgba(255,255,255,0.18);
+    --fg: #fff;
+    --fg-dim: rgba(255,255,255,0.7);
+    --shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
 
-            document.getElementById('days').textContent = days.toString().padStart(2, '0');
-            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-        }
+  .coming-hero{
+    position:relative; min-height:100vh; color:var(--fg); overflow:hidden;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+  }
+  .coming-hero__bg{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.55);
+  }
+  .coming-hero__overlay{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(60% 80% at 20% 20%, rgba(255,255,255,0.12), transparent 60%),
+      radial-gradient(80% 80% at 80% 20%, rgba(0,123,255,0.22), transparent 60%),
+      linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
+    pointer-events:none;
+  }
 
-        // Initial call and set interval
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
+  /* Top-centered logo */
+  .coming-hero__logo{
+    position:absolute; top:28px; left:50%; transform:translateX(-50%);
+    z-index:2;
+  }
+  .coming-hero__logo .navbar-brand{
+    background:var(--glass-bg); border:1px solid var(--glass-brd);
+    border-radius:999px; padding:.5rem 1rem;
+    backdrop-filter: blur(6px); box-shadow: var(--shadow);
+    text-decoration:none;
+  }
+  .coming-hero__logo svg{ flex-shrink:0; }
 
-        // Form submission
-        document.querySelector('.notify-btn').addEventListener('click', function() {
-            const emailInput = document.querySelector('.email-input');
-            const email = emailInput.value.trim();
-            
-            if (email && isValidEmail(email)) {
-                // Here you would typically send the email to your server
-                alert('Thank you! We\'ll notify you when we launch.');
-                emailInput.value = '';
-                
-                // Create confetti effect
-                createConfetti();
-            } else {
-                alert('Please enter a valid email address.');
-            }
-        });
+  .coming-hero__content{
+    position:relative; z-index:1; max-width:980px; padding:72px 20px 40px;
+  }
 
-        function isValidEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
+  .coming-pill{
+    display:inline-block; background:#fff; color:#111; font-weight:700;
+    padding:.4rem .9rem; border-radius:999px; letter-spacing:.02em; margin-bottom:16px;
+    box-shadow: var(--shadow);
+  }
 
-        function createConfetti() {
-            const confettiCount = 100;
-            const container = document.querySelector('.coming-soon-container');
-            
-            for (let i = 0; i < confettiCount; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.background = getRandomColor();
-                confetti.style.animation = `confettiFall ${Math.random() * 3 + 2}s linear forwards`;
-                
-                container.appendChild(confetti);
-                
-                // Remove confetti after animation completes
-                setTimeout(() => {
-                    confetti.remove();
-                }, 5000);
-            }
-        }
+  .coming-title{
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 800; margin: 0 0 .4rem;
+    text-shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  .coming-subtitle{
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    color: var(--fg-dim); margin: 0 auto 28px; max-width: 760px;
+  }
 
-        function getRandomColor() {
-            const colors = ['#ff4a5f', '#ff7b4a', '#4a90e2', '#50e3c2', '#f5a623'];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
+  .cd{
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin: 0 auto 10px;
+  }
+  .cd__tile{
+    min-width:120px; padding:16px 18px; border-radius:18px;
+    background:var(--glass-bg); border:1px solid var(--glass-brd);
+    backdrop-filter: blur(8px); box-shadow: var(--shadow);
+  }
+  .cd__num{
+    font-weight:900; line-height:1; letter-spacing:.02em;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  }
+  .cd__label{
+    text-transform:uppercase; letter-spacing:.12em; font-size:.72rem; opacity:.9; margin-top:6px;
+  }
 
-        // Add some interactive floating houses on mouse move
-        document.addEventListener('mousemove', (e) => {
-            const houses = document.querySelectorAll('.floating-house');
-            const x = e.clientX / window.innerWidth;
-            const y = e.clientY / window.innerHeight;
-            
-            houses.forEach((house, index) => {
-                const speed = 0.01 + (index * 0.01);
-                const xOffset = (x - 0.5) * speed * 100;
-                const yOffset = (y - 0.5) * speed * 100;
-                
-                house.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
-            });
-        });
-    </script>
-</body>
-</html>
+  .coming-footer{
+    text-align:center; color:#8e9aa7; font-size:.9rem; padding:18px 16px;
+    background:#0c0f12; border-top:1px solid rgba(255,255,255,0.06);
+  }
+</style>
+
+<script>
+  // Simple inline countdown (UTC) to Oct 10, 2025
+  (function(){
+    const el = document.getElementById("countdown");
+    if(!el) return;
+    const target = new Date("2025-10-10T00:00:00Z");
+
+    function pad(n){ return String(n).padStart(2,"0"); }
+    function render(diffMs){
+      if(diffMs <= 0){ diffMs = 0; clearInterval(t); }
+      const s = Math.floor(diffMs / 1000);
+      const days = Math.floor(s / 86400);
+      const hours = Math.floor((s % 86400) / 3600);
+      const minutes = Math.floor((s % 3600) / 60);
+      const seconds = s % 60;
+
+      el.querySelector('[data-key="days"]').textContent = pad(days);
+      el.querySelector('[data-key="hours"]').textContent = pad(hours);
+      el.querySelector('[data-key="minutes"]').textContent = pad(minutes);
+      el.querySelector('[data-key="seconds"]').textContent = pad(seconds);
+    }
+
+    function tick(){ render(target - new Date()); }
+    const t = setInterval(tick, 1000);
+    tick();
+  })();
+</script>
