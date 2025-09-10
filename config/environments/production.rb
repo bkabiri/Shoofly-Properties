@@ -10,6 +10,7 @@ Rails.application.configure do
   # Eager load code on boot.
   config.eager_load = true
   config.require_master_key = false
+  config.secret_key_base = ENV.fetch("SECRET_KEY_BASE")
   # Full error reports are disabled and caching is turned on.
   config.consider_all_requests_local       = false
   config.action_controller.perform_caching = true
