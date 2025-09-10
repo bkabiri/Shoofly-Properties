@@ -40,7 +40,6 @@ Rails.application.configure do
   # Assets
   # config.assets.css_compressor = :sass
   config.assets.compile = false
-  config.assets.digest  = true
   # config.asset_host = ENV["ASSET_HOST"] if ENV["ASSET_HOST"].present?
 
   # Files
