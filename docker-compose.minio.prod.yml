@@ -6,8 +6,11 @@ networks:
 
 volumes:
   minio_data:
+  caddy_data:
+  caddy_config:
 
 services:
+  # MinIO server (S3 API :9000, Console :9001)
   minio-snoofly:
     image: minio/minio
     container_name: minio-snoofly
@@ -17,10 +20,11 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-    # PUBLISH the ports to the host (not just expose)
+    # You can comment these out once Caddy is confirmed working
+    # so MinIO is only reachable via HTTPS:
     ports:
       - "9000:9000"   # S3 API
-      - "9001:9001"   # MinIO Console
+      - "9001:9001"   # Console
     networks: [snoofly-net]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
@@ -28,6 +32,7 @@ services:
       timeout: 3s
       retries: 10
 
+  # One-shot init job: create bucket + CORS
   minio-mc-init:
     image: minio/mc:latest
     container_name: minio-mc-init
@@ -43,7 +48,7 @@ services:
       cat >/tmp/cors.json <<'JSON'
       [
         {
-          "AllowedOrigin": ["https://snoofly.co.uk","https://www.snoofly.co.uk","http://localhost:3000","http://app.localhost"],
+          "AllowedOrigin": ["https://snoofly.co.uk","https://www.snoofly.co.uk","https://s3.snoofly.co.uk","http://localhost:3000","http://app.localhost"],
           "AllowedMethod": ["GET","PUT","POST","DELETE"],
           "AllowedHeader": ["*"],
           "ExposeHeader": ["ETag","Location"],
@@ -51,7 +56,7 @@ services:
         }
       ]
       JSON
-      mc anonymous set-json myminio/${MINIO_BUCKET} /tmp/cors.json;
+      mc cors set myminio/${MINIO_BUCKET} /tmp/cors.json;
       echo 'MinIO init done.';
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -60,3 +65,19 @@ services:
       MINIO_PUBLIC_HOST: ${MINIO_PUBLIC_HOST}
     networks: [snoofly-net]
     restart: "no"
+
+  # Caddy TLS reverse proxy for MinIO
+  caddy-minio:
+    image: caddy:2-alpine
+    container_name: caddy-minio
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.minio:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - minio-snoofly
+    networks: [snoofly-net]

@@ -1,0 +1,17 @@
+# Common bits
+(minio-common) {
+	encode zstd gzip
+	header { -Server }
+}
+
+# MinIO Console (web UI)
+minio.snoofly.co.uk {
+	import minio-common
+	reverse_proxy minio-snoofly:9001
+}
+
+# S3 API endpoint (use this in app/public URLs)
+s3.snoofly.co.uk {
+	import minio-common
+	reverse_proxy minio-snoofly:9000
+}
