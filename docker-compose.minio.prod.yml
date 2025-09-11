@@ -6,11 +6,8 @@ networks:
 
 volumes:
   minio_data:
-  caddy_data:
-  caddy_config:
 
 services:
-  # MinIO server (S3 API :9000, Console :9001)
   minio-snoofly:
     image: minio/minio
     container_name: minio-snoofly
@@ -20,11 +17,9 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-    # You can comment these out once Caddy is confirmed working
-    # so MinIO is only reachable via HTTPS:
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Console
+    expose:
+      - "9000"
+      - "9001"
     networks: [snoofly-net]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
@@ -32,7 +27,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # One-shot init job: create bucket + CORS
   minio-mc-init:
     image: minio/mc:latest
     container_name: minio-mc-init
@@ -62,22 +56,5 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${MINIO_BUCKET}
-      MINIO_PUBLIC_HOST: ${MINIO_PUBLIC_HOST}
     networks: [snoofly-net]
     restart: "no"
-
-  # Caddy TLS reverse proxy for MinIO
-  caddy-minio:
-    image: caddy:2-alpine
-    container_name: caddy-minio
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile.minio:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - minio-snoofly
-    networks: [snoofly-net]

@@ -1,4 +1,14 @@
+# Rails app
 snoofly.co.uk, www.snoofly.co.uk {
   reverse_proxy web:3000
 }
 
+# MinIO Console (admin UI)
+minio.snoofly.co.uk {
+  reverse_proxy minio-snoofly:9001
+}
+
+# MinIO S3 API (for Rails / apps to use)
+s3.snoofly.co.uk {
+  reverse_proxy minio-snoofly:9000
+}
