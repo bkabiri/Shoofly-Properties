@@ -9,7 +9,7 @@ volumes:
 
 services:
   minio-snoofly:
-    image: minio/minio:latest   # or minio/minio:latest
+    image: minio/minio
     container_name: minio-snoofly
     command: server /data --console-address ":9001"
     environment:
@@ -17,11 +17,11 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-    expose:
-      - "9000"   # S3 API
-      - "9001"   # Console
-    networks:
-      - snoofly-net
+    # PUBLISH the ports to the host (not just expose)
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # MinIO Console
+    networks: [snoofly-net]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -29,29 +29,21 @@ services:
       retries: 10
 
   minio-mc-init:
-    image: bitnami/minio-client:latest
+    image: minio/mc:latest
     container_name: minio-mc-init
     depends_on:
       minio-snoofly:
         condition: service_healthy
-    entrypoint: ["/bin/bash","-lc"]
-    command: |
+    entrypoint: ["/bin/sh","-c"]
+    command: >
       set -e
-      mc alias set myminio http://minio-snoofly:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
-      # Create bucket if it doesn’t exist
-      mc ls myminio/${MINIO_BUCKET} >/dev/null 2>&1 || mc mb myminio/${MINIO_BUCKET}
-      # Make bucket public (optional)
-      mc anonymous set download myminio/${MINIO_BUCKET}
-      # CORS
+      mc alias set myminio http://minio-snoofly:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc ls myminio/${MINIO_BUCKET} >/dev/null 2>&1 || mc mb myminio/${MINIO_BUCKET};
+      mc anonymous set download myminio/${MINIO_BUCKET};
       cat >/tmp/cors.json <<'JSON'
       [
         {
-          "AllowedOrigin": [
-            "https://snoofly.co.uk",
-            "https://www.snoofly.co.uk",
-            "http://localhost:3000",
-            "http://app.localhost"
-          ],
+          "AllowedOrigin": ["https://snoofly.co.uk","https://www.snoofly.co.uk","http://localhost:3000","http://app.localhost"],
           "AllowedMethod": ["GET","PUT","POST","DELETE"],
           "AllowedHeader": ["*"],
           "ExposeHeader": ["ETag","Location"],
@@ -59,13 +51,12 @@ services:
         }
       ]
       JSON
-      mc anonymous set-json myminio/${MINIO_BUCKET} /tmp/cors.json
-      echo '✅ MinIO init done.'
+      mc anonymous set-json myminio/${MINIO_BUCKET} /tmp/cors.json;
+      echo 'MinIO init done.';
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${MINIO_BUCKET}
       MINIO_PUBLIC_HOST: ${MINIO_PUBLIC_HOST}
-    networks:
-      - snoofly-net
+    networks: [snoofly-net]
     restart: "no"
