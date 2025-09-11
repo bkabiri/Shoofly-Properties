@@ -1,13 +1,12 @@
 // app/javascript/controllers/stripe_checkout_controller.js
 import { Controller } from "@hotwired/stimulus"
-import { loadStripe } from "@stripe/stripe-js"
 
 export default class extends Controller {
   static values = {
-    mode: String,              // "payment" | "subscription" (read from clicked button)
-    priceId: String,           // optional (for subscriptions / static prices)
-    amountPence: Number,       // optional (for one-time dynamic)
-    name: String               // optional (for one-time dynamic)
+    mode: String,
+    priceId: String,
+    amountPence: Number,
+    name: String
   }
 
   async start(event) {
@@ -21,9 +20,9 @@ export default class extends Controller {
 
     try {
       const pk = document.querySelector('meta[name="stripe-publishable-key"]').content
-      const stripe = await loadStripe(pk)
+      if (!window.Stripe) throw new Error("Stripe.js not loaded")
+      const stripe = window.Stripe(pk)
 
-      // Build payload for /checkout/sessions
       const payload = { mode }
       if (priceId)     payload.price_id = priceId
       if (amountPence) payload.amount_pence = parseInt(amountPence, 10)
