@@ -8,7 +8,7 @@ Rails.application.configure do
   end
   # Code is not reloaded between requests.
   config.cache_classes = true
-config.active_storage.service = :minio
+  config.active_storage.service = :minio
   # Eager load code on boot.
   config.eager_load = true
   config.require_master_key = false
