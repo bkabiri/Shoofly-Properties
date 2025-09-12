@@ -9,29 +9,26 @@ volumes:
 
 services:
   minio-snoofly:
-    image: minio/minio:latest
+    image: minio/minio
     container_name: minio-snoofly
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      # Let MinIO embed correct host in presigned URLs
-      MINIO_SERVER_URL: https://s3.snoofly.co.uk
-      # Optional, but nice to be explicit
-      MINIO_REGION: us-east-1
-      # If you want console through HTTPS proxy too:
-      MINIO_BROWSER_REDIRECT_URL: https://minio-console.snoofly.co.uk
+      MINIO_SERVER_URL: "https://s3.snoofly.co.uk"            # public S3 endpoint via Caddy
+      MINIO_REGION: "${MINIO_REGION:-us-east-1}"
+      MINIO_BROWSER_REDIRECT_URL: "https://minio.snoofly.co.uk"  # console public URL via Caddy
     volumes:
       - minio_data:/data
     expose:
-      - "9000"   # S3 API (proxied by Caddy)
-      - "9001"   # Console (proxied by Caddy if you set it up)
+      - "9000"   # S3 API (internal to docker net; Caddy will proxy)
+      - "9001"   # Console (internal; Caddy will proxy)
     networks: [snoofly-net]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
       interval: 10s
-      timeout: 3s
-      retries: 10
+      timeout: 5s
+      retries: 20
 
   minio-mc-init:
     image: minio/mc:latest
@@ -43,14 +40,11 @@ services:
     command: >
       set -e
       mc alias set myminio http://minio-snoofly:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-
-      # Create bucket if missing
+      # create bucket if missing
       mc ls myminio/${MINIO_BUCKET} >/dev/null 2>&1 || mc mb --region=${MINIO_REGION:-us-east-1} myminio/${MINIO_BUCKET};
-
-      # Keep bucket PRIVATE (Active Storage uses presigned URLs)
+      # keep bucket PRIVATE (Active Storage uses presigned URLs)
       mc anonymous set none myminio/${MINIO_BUCKET};
-
-      # CORS so browsers can GET the presigned URLs and PUT (if you ever use direct uploads)
+      # CORS for browser access (GET presigned, PUT if you later use direct uploads)
       cat >/tmp/cors.json <<'JSON'
       [
         {
@@ -69,7 +63,6 @@ services:
       ]
       JSON
       mc cors set myminio/${MINIO_BUCKET} /tmp/cors.json;
-
       echo 'MinIO init done.';
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -77,4 +70,4 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET}
       MINIO_REGION: ${MINIO_REGION:-us-east-1}
     networks: [snoofly-net]
-    restart: "no"
+    restart: "always"
