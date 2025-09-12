@@ -15,20 +15,17 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_SERVER_URL: "https://s3.snoofly.co.uk"            # public S3 endpoint via Caddy
-      MINIO_REGION: "${MINIO_REGION:-us-east-1}"
-      MINIO_BROWSER_REDIRECT_URL: "https://minio.snoofly.co.uk"  # console public URL via Caddy
     volumes:
       - minio_data:/data
     expose:
-      - "9000"   # S3 API (internal to docker net; Caddy will proxy)
-      - "9001"   # Console (internal; Caddy will proxy)
+      - "9000"
+      - "9001"
     networks: [snoofly-net]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
       interval: 10s
-      timeout: 5s
-      retries: 20
+      timeout: 3s
+      retries: 10
 
   minio-mc-init:
     image: minio/mc:latest
@@ -40,21 +37,12 @@ services:
     command: >
       set -e
       mc alias set myminio http://minio-snoofly:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
-      # create bucket if missing
-      mc ls myminio/${MINIO_BUCKET} >/dev/null 2>&1 || mc mb --region=${MINIO_REGION:-us-east-1} myminio/${MINIO_BUCKET};
-      # keep bucket PRIVATE (Active Storage uses presigned URLs)
-      mc anonymous set none myminio/${MINIO_BUCKET};
-      # CORS for browser access (GET presigned, PUT if you later use direct uploads)
+      mc ls myminio/${MINIO_BUCKET} >/dev/null 2>&1 || mc mb myminio/${MINIO_BUCKET};
+      mc anonymous set download myminio/${MINIO_BUCKET};
       cat >/tmp/cors.json <<'JSON'
       [
         {
-          "AllowedOrigin": [
-            "https://snoofly.co.uk",
-            "https://www.snoofly.co.uk",
-            "https://s3.snoofly.co.uk",
-            "http://localhost:3000",
-            "http://app.localhost"
-          ],
+          "AllowedOrigin": ["https://snoofly.co.uk","https://www.snoofly.co.uk","https://s3.snoofly.co.uk","http://localhost:3000","http://app.localhost"],
           "AllowedMethod": ["GET","PUT","POST","DELETE"],
           "AllowedHeader": ["*"],
           "ExposeHeader": ["ETag","Location"],
@@ -68,6 +56,5 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${MINIO_BUCKET}
-      MINIO_REGION: ${MINIO_REGION:-us-east-1}
     networks: [snoofly-net]
-    restart: "always"
+    restart: "no"
