@@ -14,10 +14,9 @@ Rails.application.configure do
 
   # ======== Active Storage (local or MinIO S3) ========
   # Default local disk
-  config.active_storage.service = :local
-  # To test S3/MinIO locally, set in .env:
+
   # ACTIVE_STORAGE_SERVICE=s3
-  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "local").to_sym
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "minio").to_sym
 
   # ======== Action Cable ========
   config.action_cable.url = ENV.fetch("ACTION_CABLE_URL", "ws://app.localhost/cable")
