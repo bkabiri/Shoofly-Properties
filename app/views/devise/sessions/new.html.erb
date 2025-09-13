@@ -1,11 +1,14 @@
-<!-- app/views/home/coming_soon.html.erb -->
-<div class="coming-hero">
-  <!-- Background image -->
-  <%= image_tag "hero.png", class: "coming-hero__bg", alt: "Snoofly hero" %>
-  <div class="coming-hero__overlay"></div>
+<%= render "shared/navbar" %>
 
-  <!-- Top-centered Snoofly logo (replace filename to match your asset, e.g. logo.svg / logo.png) -->
-  <div class="brand-row">
+<div class="auth-wrap">
+  <div class="container py-5">
+    <div class="row justify-content-center g-4">
+      <!-- Brand / Benefits panel -->
+      <div class="col-12 col-lg-6 d-none d-lg-block">
+        <div class="auth-brand card shadow-sm border-0">
+          <div class="auth-brand-inner">
+            <!-- Brand row -->
+            <div class="brand-row">
              <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
       <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
         <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
@@ -15,149 +18,138 @@
     <% end %>
             </div>
 
-  <!-- Main content -->
-  <div class="coming-hero__content">
-    <span class="coming-pill">We’re almost ready</span>
-    <h1 class="coming-title">Snoofly is launching soon</h1>
-    <p class="coming-subtitle">
-      A better way to find, manage, and love your next place. Be first in line when we open the doors.
-    </p>
+            <h2 class="display-6 fw-800 mt-3 mb-2">Welcome back</h2>
+            <p class="text-muted mb-4">
+              Log in to manage your saved properties, schedule viewings, and list your next sale with ease.
+            </p>
 
-    <!-- Countdown -->
-    <div id="countdown" class="cd">
-      <div class="cd__tile">
-        <div class="cd__num" data-key="days">00</div>
-        <div class="cd__label">Days</div>
+            <ul class="list-unstyled auth-benefits">
+              <li><i class="bi bi-check-circle-fill"></i> Track favourite properties</li>
+              <li><i class="bi bi-check-circle-fill"></i> Message sellers & agents</li>
+              <li><i class="bi bi-check-circle-fill"></i> Create & manage listings</li>
+              <li><i class="bi bi-check-circle-fill"></i> Real-time viewing scheduler</li>
+            </ul>
+
+            <div class="auth-illustration mt-auto">
+              <div class="glow"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="cd__tile">
-        <div class="cd__num" data-key="hours">00</div>
-        <div class="cd__label">Hours</div>
-      </div>
-      <div class="cd__tile">
-        <div class="cd__num" data-key="minutes">00</div>
-        <div class="cd__label">Minutes</div>
-      </div>
-      <div class="cd__tile">
-        <div class="cd__num" data-key="seconds">00</div>
-        <div class="cd__label">Seconds</div>
+
+      <!-- Auth card -->
+      <div class="col-12 col-lg-6">
+        <div class="auth-card card shadow-sm border-0">
+          <div class="card-body p-4 p-md-5">
+
+            <!-- Social login -->
+            <div class="d-flex justify-content-center gap-3 mb-4">
+              <%= link_to "#", class: "social-btn", title: "Continue with Google", aria: { label: "Continue with Google" } do %>
+                <i class="bi bi-google"></i>
+              <% end %>
+              <%= link_to "#", class: "social-btn", title: "Continue with Facebook", aria: { label: "Continue with Facebook" } do %>
+                <i class="bi bi-facebook"></i>
+              <% end %>
+              <%= link_to "#", class: "social-btn", title: "Continue with Apple", aria: { label: "Continue with Apple" } do %>
+                <i class="bi bi-apple"></i>
+              <% end %>
+            </div>
+
+            <div class="text-center mb-4">
+              <h1 class="fw-800 mb-1">Log in</h1>
+              <div class="text-muted">Use your Snoofly account to continue</div>
+            </div>
+
+            <%= render "devise/shared/error_messages", resource: resource %>
+
+            <%= form_for(resource, as: resource_name, url: session_path(resource_name),
+                         html: { id: "snooflyLoginForm", class: "w-100", data: { controller: "login" } }) do |f| %>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label class="form-label fw-600">Email <span class="text-danger">*</span></label>
+                <%= f.email_field :email,
+                      autofocus: true,
+                      autocomplete: "email",
+                      class: "form-control form-control-lg input-elevated",
+                      placeholder: "you@example.com",
+                      data: { login_target: "email", action: "input->login#updateBtn" } %>
+              </div>
+
+              <!-- Password + toggle + forgot -->
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label class="form-label fw-600 mb-0">Password <span class="text-danger">*</span></label>
+                  <% if devise_mapping.recoverable? %>
+                    <%= link_to "Forgot password?", new_password_path(resource_name), class: "small text-decoration-none auth-link-muted" %>
+                  <% end %>
+                </div>
+                <div class="input-group">
+                  <%= f.password_field :password,
+                        autocomplete: "current-password",
+                        class: "form-control form-control-lg input-elevated",
+                        id: "passwordField",
+                        placeholder: "••••••••",
+                        data: { login_target: "password", action: "input->login#updateBtn" } %>
+                  <button class="btn btn-outline-secondary btn-eye" type="button"
+                          id="togglePassword"
+                          aria-label="Show password"
+                          data-login-target="togglePassword"
+                          data-action="login#togglePassword">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Remember me -->
+              <% if devise_mapping.rememberable? %>
+                <div class="form-check mb-3">
+                  <%= f.check_box :remember_me, class: "form-check-input", id: "stayLoggedIn" %>
+                  <label class="form-check-label" for="stayLoggedIn">Stay logged in</label>
+                </div>
+              <% end %>
+
+              <!-- Submit -->
+              <div class="d-grid gap-2 mb-3">
+                <%= f.submit "Log in", class: "btn btn-snoofly-red btn-lg" %>
+              </div>
+              <div class="container mt-3">
+                <%= render "shared/flash" %>
+                </div>
+              <!-- Divider -->
+              <div class="auth-divider my-3"><span>or</span></div>
+
+              <!-- Secondary CTA -->
+              <p class="text-center text-muted mb-0">
+                New to Snoofly?
+                <%= link_to "Create an account", new_registration_path(resource_name), class: "auth-link" %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+          By continuing, you agree to Snoofly’s
+          <%= link_to "Terms", "#", class: "auth-link" %> and
+          <%= link_to "Privacy Policy", "#", class: "auth-link" %>.
+        </p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Minimal footer -->
-<div class="coming-footer">
-  © <%= Time.current.year %> Snoofly — All rights reserved.
-</div>
-
-<style>
-  :root{
-    --glass-bg: rgba(255,255,255,0.12);
-    --glass-brd: rgba(255,255,255,0.18);
-    --fg: #fff;
-    --fg-dim: rgba(255,255,255,0.7);
-    --shadow: 0 10px 30px rgba(0,0,0,0.25);
-  }
-
-  .coming-hero{
-    position:relative; min-height:100vh; color:var(--fg); overflow:hidden;
-    display:flex; align-items:center; justify-content:center; text-align:center;
-  }
-  .coming-hero__bg{
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.55);
-  }
-  .coming-hero__overlay{
-    position:absolute; inset:0;
-    background:
-      radial-gradient(60% 80% at 20% 20%, rgba(255,255,255,0.12), transparent 60%),
-      radial-gradient(80% 80% at 80% 20%, rgba(0,123,255,0.22), transparent 60%),
-      linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
-    pointer-events:none;
-  }
-
-  /* Top-centered logo */
-  .coming-hero__logo{
-    position:absolute; top:28px; left:50%; transform:translateX(-50%);
-    display:flex; align-items:center; justify-content:center;
-    padding:.5rem 1rem; border-radius:999px; background:var(--glass-bg);
-    border:1px solid var(--glass-brd); box-shadow: var(--shadow);
-    backdrop-filter: blur(6px);
-  }
-  .coming-hero__logo-img{ height:36px; width:auto; display:block; }
-
-  .coming-hero__content{
-    position:relative; z-index:1; max-width:980px; padding:72px 20px 40px;
-  }
-
-  .coming-pill{
-    display:inline-block; background:#fff; color:#111; font-weight:700;
-    padding:.4rem .9rem; border-radius:999px; letter-spacing:.02em; margin-bottom:16px;
-    box-shadow: var(--shadow);
-  }
-
-  .coming-title{
-    font-size: clamp(2rem, 4.5vw, 3.5rem);
-    font-weight: 800; margin: 0 0 .4rem;
-    text-shadow: 0 6px 24px rgba(0,0,0,.35);
-  }
-  .coming-subtitle{
-    font-size: clamp(1rem, 1.6vw, 1.25rem);
-    color: var(--fg-dim); margin: 0 auto 28px; max-width: 760px;
-  }
-
-  .cd{
-    display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin: 0 auto 10px;
-  }
-  .cd__tile{
-    min-width:120px; padding:16px 18px; border-radius:18px;
-    background:var(--glass-bg); border:1px solid var(--glass-brd);
-    backdrop-filter: blur(8px); box-shadow: var(--shadow);
-  }
-  .cd__num{
-    font-weight:900; line-height:1; letter-spacing:.02em;
-    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-  }
-  .cd__label{
-    text-transform:uppercase; letter-spacing:.12em; font-size:.72rem; opacity:.9; margin-top:6px;
-  }
-
-  .coming-footer{
-    text-align:center; color:#8e9aa7; font-size:.9rem; padding:18px 16px;
-    background:#0c0f12; border-top:1px solid rgba(255,255,255,0.06);
-  }
-
-  /* Small screens fine-tune */
-  @media (max-width: 480px){
-    .coming-hero__logo{ top:18px; }
-    .coming-hero__logo-img{ height:30px; }
-    .cd__tile{ min-width:104px; padding:14px 16px; border-radius:16px; }
-  }
-</style>
-
+<!-- Tiny JS for the eye toggle if Stimulus isn't loaded -->
 <script>
-  // Simple inline countdown (UTC) to Oct 10, 2025
-  (function(){
-    const el = document.getElementById("countdown");
-    if(!el) return;
-    const target = new Date("2025-10-10T00:00:00Z");
-
-    function pad(n){ return String(n).padStart(2,"0"); }
-    function render(diffMs){
-      if(diffMs <= 0){ diffMs = 0; clearInterval(t); }
-      const s = Math.floor(diffMs / 1000);
-      const days = Math.floor(s / 86400);
-      const hours = Math.floor((s % 86400) / 3600);
-      const minutes = Math.floor((s % 3600) / 60);
-      const seconds = s % 60;
-
-      el.querySelector('[data-key="days"]').textContent = pad(days);
-      el.querySelector('[data-key="hours"]').textContent = pad(hours);
-      el.querySelector('[data-key="minutes"]').textContent = pad(minutes);
-      el.querySelector('[data-key="seconds"]').textContent = pad(seconds);
+  document.addEventListener("turbo:load", () => {
+    const btn = document.getElementById("togglePassword");
+    const field = document.getElementById("passwordField");
+    if (btn && field) {
+      btn.addEventListener("click", () => {
+        const isPwd = field.type === "password";
+        field.type = isPwd ? "text" : "password";
+        btn.querySelector("i")?.classList.toggle("bi-eye");
+        btn.querySelector("i")?.classList.toggle("bi-eye-slash");
+      });
     }
-
-    function tick(){ render(target - new Date()); }
-    const t = setInterval(tick, 1000);
-    tick();
-  })();
+  });
 </script>

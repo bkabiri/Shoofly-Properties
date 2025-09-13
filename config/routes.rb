@@ -31,7 +31,13 @@ Rails.application.routes.draw do
     passwords:     "users/passwords"
   }
   #root to: "home#index"
-  root "home#coming_soon"
+  if Rails.env.production?
+    # Production root → Coming Soon page
+    root "home#coming_soon"
+  else
+    # Dev / Test root → Normal home#index
+    root "home#index"
+  end
 
   # -------------------------
   # Checkout
