@@ -8,10 +8,10 @@ Rails.application.configure do
   end
   # Code is not reloaded between requests.
   config.cache_classes = true
-  config.active_storage.service = :minio
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "minio").to_sym
   # Eager load code on boot.
   config.eager_load = true
-  config.require_master_key = false
+  config.require_master_key = true
   config.secret_key_base = ENV.fetch("SECRET_KEY_BASE")
   # Full error reports are disabled and caching is turned on.
   config.consider_all_requests_local       = false
@@ -42,6 +42,7 @@ Rails.application.configure do
   # config.asset_host = ENV["ASSET_HOST"] if ENV["ASSET_HOST"].present?
 
   # Files
+ 
   # (Switch to :amazon / :google / :azure in production when ready)
 
   # SSL (enable when you terminate TLS in front or on the app)
