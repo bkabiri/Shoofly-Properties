@@ -7,4 +7,6 @@ class HomeController < ApplicationController
   def coming_soon
     
   end
+  def confirm
+  end
 end

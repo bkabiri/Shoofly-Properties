@@ -99,7 +99,7 @@ Rails.application.routes.draw do
   # Marketing / static
   get "/pricing",     to: "home#pricing",     as: :pricing
   get "/coming_soon", to: "home#coming_soon", as: :coming_soon
-
+  get "/confirm", to: "home#confirm", as: :confirm_email
   # -------------------------
   # Messaging (authenticated)
   # -------------------------

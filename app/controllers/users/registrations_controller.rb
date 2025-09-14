@@ -18,13 +18,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
     resource.update_without_password(params)
   end
 
-  def after_update_path_for(resource)
-    dashboard_path
+  def after_sign_up_path_for(resource)
+  confirm_email_path
   end
 
-  def after_sign_up_path_for(resource)
-    dashboard_path
-  end
 
   def configure_permitted_parameters
     extra = [

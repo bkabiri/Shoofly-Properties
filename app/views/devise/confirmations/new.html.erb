@@ -1,21 +1,89 @@
-<h2 class="page-title">Resend confirmation instructions</h2>
+<%= render "shared/navbar" %>
 
-<%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+<div class="auth-wrap">
+  <div class="container py-5">
+    <div class="row justify-content-center g-4">
+      <!-- Brand / Benefits panel -->
+      <div class="col-12 col-lg-6 d-none d-lg-block">
+        <div class="auth-brand card shadow-sm border-0">
+          <div class="auth-brand-inner">
+            <!-- Brand row -->
+            <div class="brand-row">
+              <%= link_to root_path, class: "navbar-brand d-flex align-items-center gap-2" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true">
+                  <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+                  <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+                </svg>
+                <span class="fw-bold fs-4" style="color:#ff4a5f;">Snoofly</span>
+              <% end %>
+            </div>
 
-  <div class="d-flex flex-column justify-content-center align-items-center">
+            <h2 class="display-6 fw-800 mt-3 mb-2">Verify your account</h2>
+            <p class="text-muted mb-4">
+              Resend your confirmation email to unlock access to all features on Snoofly.
+            </p>
 
-    <div class="form-group mb-3 w-50">
-      <%= f.label :email, class:"form-label" %>
-      <%= f.email_field :email, autofocus: true, autocomplete: "email", value: (resource.pending_reconfirmation? ? resource.unconfirmed_email : resource.email), class:"form-control" %>
+            <ul class="list-unstyled auth-benefits">
+              <li><i class="bi bi-envelope-check-fill"></i> Confirm your identity</li>
+              <li><i class="bi bi-check-circle-fill"></i> Access your dashboard</li>
+              <li><i class="bi bi-chat-dots-fill"></i> Start messaging buyers & agents</li>
+              <li><i class="bi bi-house-heart-fill"></i> Manage your listings seamlessly</li>
+            </ul>
+
+            <div class="auth-illustration mt-auto">
+              <div class="glow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auth card -->
+      <div class="col-12 col-lg-6">
+        <div class="auth-card card shadow-sm border-0">
+          <div class="card-body p-4 p-md-5">
+
+            <div class="text-center mb-4">
+              <h1 class="fw-800 mb-1">Resend confirmation</h1>
+              <div class="text-muted">Enter your email and we’ll send you the link</div>
+            </div>
+
+            <%= render "devise/shared/error_messages", resource: resource %>
+
+            <%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post, class: "w-100" }) do |f| %>
+              <!-- Email -->
+              <div class="mb-3">
+                <label class="form-label fw-600">Email <span class="text-danger">*</span></label>
+                <%= f.email_field :email,
+                      autofocus: true,
+                      autocomplete: "email",
+                      value: (resource.pending_reconfirmation? ? resource.unconfirmed_email : resource.email),
+                      class: "form-control form-control-lg input-elevated",
+                      placeholder: "you@example.com" %>
+              </div>
+
+              <!-- Submit -->
+              <div class="d-grid gap-2 mb-3">
+                <%= f.submit "Resend confirmation instructions", class: "btn btn-snoofly-red btn-lg" %>
+              </div>
+            <% end %>
+
+            <!-- Divider -->
+            <div class="auth-divider my-3"><span>or</span></div>
+
+            <!-- Secondary CTA -->
+            <p class="text-center text-muted mb-0">
+              Already confirmed?
+              <%= link_to "Log in", new_session_path(resource_name), class: "auth-link" %>
+            </p>
+          </div>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+          By continuing, you agree to Snoofly’s
+          <%= link_to "Terms", "#", class: "auth-link" %> and
+          <%= link_to "Privacy Policy", "#", class: "auth-link" %>.
+        </p>
+      </div>
     </div>
-
-    <div class="mb-3 d-flex align-items-center justify-content-center">
-      <%= f.submit "Resend confirmation instructions", class:"btn btn-lg btn-primary rounded-pill" %>
-    </div>
-
-    <%= render "devise/shared/links" %>
-
   </div>
-
-<% end %>
+</div>

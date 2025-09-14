@@ -1,0 +1,72 @@
+<div class="container d-flex flex-column justify-content-center align-items-center py-5" style="min-height:80vh; text-align:center;">
+  <div class="mb-4">
+    <a href="<%= root_url %>" style="text-decoration:none;display:inline-flex;align-items:center;">
+      <span style="display:inline-block;vertical-align:middle;margin-right:10px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 16 16" fill="#ff4a5f" aria-hidden="true" style="display:block;">
+          <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.707L8 2.207 1.354 8.853a.5.5 0 1 1-.708-.707z"/>
+          <path d="m14 9.293-6-6-6 6V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5zm-6-.811c1.664-1.673 5.825 1.254 0 5.018-5.825-3.764-1.664-6.691 0-5.018"/>
+        </svg>
+      </span>
+      <span style="font-weight:800;font-size:28px;letter-spacing:.2px;color:#ff4a5f;">Snoofly</span>
+    </a>
+  </div>
+
+  <h1 class="fw-bold mb-3" style="color:#333;">Confirm your email</h1>
+  <p class="lead text-muted mb-4" style="max-width:600px;">
+    We’ve sent a confirmation link to your email address.  
+    Please check your inbox (and spam folder) to verify your account.
+  </p>
+
+  <!-- Progress bar -->
+  <div class="w-100 mb-3" style="max-width:500px;">
+    <div class="progress" style="height: 12px; border-radius: 6px; background:#f0f0f0;">
+      <div id="progress-bar" class="progress-bar" role="progressbar" 
+           style="width: 0%; background:#ff4a5f; transition: width 1s linear;"></div>
+    </div>
+    <p id="timer-text" class="mt-2 small text-muted"></p>
+  </div>
+
+  <div class="d-flex gap-3">
+    <a href="<%= root_path %>" class="btn btn-outline-secondary rounded-pill px-4">
+      Back to Home
+    </a>
+    <%= link_to "Resend Confirmation Email", new_user_confirmation_path, class: "btn btn-primary rounded-pill px-4", style: "background:#ff4a5f;border:none;" %>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("turbo:load", () => {
+    const totalSeconds = 10 * 60; // 10 minutes
+    let remaining = totalSeconds;
+    let timerId;
+
+    const progressBar = document.getElementById("progress-bar");
+    const timerText = document.getElementById("timer-text");
+
+    if (!progressBar || !timerText) return; // prevent errors if elements missing
+
+    function updateTimer() {
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+      timerText.textContent = `Time remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+      const percent = ((totalSeconds - remaining) / totalSeconds) * 100;
+      progressBar.style.width = percent + "%";
+
+      if (remaining > 0) {
+        remaining -= 1;
+        timerId = setTimeout(updateTimer, 1000);
+      } else {
+        timerText.textContent = "Time’s up! If you didn’t receive it, try resending.";
+      }
+    }
+
+    // Reset any previous timer if user navigates back
+    if (window.confirmationTimerId) {
+      clearTimeout(window.confirmationTimerId);
+    }
+    window.confirmationTimerId = timerId;
+
+    updateTimer();
+  });
+</script>
