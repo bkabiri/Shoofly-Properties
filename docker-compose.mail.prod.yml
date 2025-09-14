@@ -33,6 +33,7 @@ services:
 
       # Certs issued by Caddy for mail.snoofly.co.uk
       # NOTE: Caddy stores under /data/caddy/certificates/...; we mount that at /mnt/caddy
+      environment:
       SSL_TYPE: "manual"
       SSL_CERT_PATH: "/mnt/caddy/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.crt"
       SSL_KEY_PATH:  "/mnt/caddy/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.key"
