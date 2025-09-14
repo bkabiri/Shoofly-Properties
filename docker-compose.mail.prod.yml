@@ -1,0 +1,92 @@
+version: "3.8"
+
+name: snoofly-mail
+
+networks:
+  snoofly-net:
+    external: true
+
+volumes:
+  maildata:
+  mailstate:
+  maillogs:
+  roundcube_data:
+  caddy_data:   # reuse the same named volume your existing Caddy uses
+    external: true
+
+services:
+  mail:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mail
+    hostname: mail
+    domainname: snoofly.co.uk
+    restart: unless-stopped
+    env_file:
+      - .env               # optional: place DMS_* vars here if you like
+    environment:
+      # Core
+      ENABLE_SPAMASSASSIN: "0"
+      ENABLE_CLAMAV: "0"
+      ENABLE_FAIL2BAN: "1"
+      ENABLE_POSTGREY: "0"
+      ONE_DIR: "1"
+      PERMIT_DOCKER: "network"
+      TLS_LEVEL: "modern"
+
+      # SSL: use the cert Caddy issues for mail.snoofly.co.uk
+      # Caddy must have a site block for mail.snoofly.co.uk (see below)
+      SSL_TYPE: "manual"
+      SSL_CERT_PATH: "/mnt/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.crt"
+      SSL_KEY_PATH:  "/mnt/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.key"
+
+      # We only need inbound; don’t relay outbound via this box
+      RELAY_HOST: ""
+      SMTP_ONLY: "0" # keep IMAP enabled
+
+      # Disable auto DKIM here; SendGrid handles DKIM for outbound
+      ENABLE_OPENDKIM: "0"
+
+    ports:
+      - "25:25"     # SMTP (inbound from the world)
+      - "993:993"   # IMAPS for your mail client / Roundcube
+    cap_add:
+      - NET_ADMIN
+      - SYS_PTRACE
+    stop_grace_period: 1m
+    volumes:
+      - maildata:/var/mail
+      - mailstate:/var/mail-state
+      - maillogs:/var/log/mail
+      - ./docker-mailserver/config/:/tmp/docker-mailserver/
+      - caddy_data:/mnt/caddy:ro
+    networks: [snoofly-net]
+
+  roundcube:
+    image: roundcube/roundcube:latest
+    container_name: roundcube
+    restart: unless-stopped
+    depends_on: [mail]
+    environment:
+      # IMAP (read mail from docker-mailserver)
+      ROUNDCUBE_DEFAULT_HOST: "ssl://mail.snoofly.co.uk"
+      ROUNDCUBE_DEFAULT_PORT: "993"
+
+      # SMTP (send mail **via SendGrid**)
+      ROUNDCUBE_SMTP_SERVER: "smtp.sendgrid.net"
+      ROUNDCUBE_SMTP_PORT: "587"
+      ROUNDCUBE_SMTP_USER: "apikey"                 # literal username for SendGrid
+      ROUNDCUBE_SMTP_PASS: "${SENDGRID_API_KEY}"    # set in .env
+      ROUNDCUBE_SMTP_AUTH_TYPE: "LOGIN"
+      ROUNDCUBE_SMTP_AUTH: "true"
+      ROUNDCUBE_DES_KEY: "${ROUNDCUBE_DES_KEY:-change-me-24-chars}" # 24+ chars recommended
+
+      # UI niceties
+      ROUNDCUBE_PLUGINS: "archive,zipdownload,managesieve,markasjunk"
+      UPLOAD_MAX_FILESIZE: "25M"
+      MEMORY_LIMIT: "256M"
+
+    volumes:
+      - roundcube_data:/var/roundcube
+    expose:
+      - "80"
+    networks: [snoofly-net]
