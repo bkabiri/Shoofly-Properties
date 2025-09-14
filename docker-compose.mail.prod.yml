@@ -11,6 +11,7 @@ volumes:
   roundcube_data:
   caddy_data:
     external: true
+    name: shoofly-properties_caddy_data   # <- matches your running Caddy volume
 
 services:
   mail:
@@ -30,11 +31,13 @@ services:
       PERMIT_DOCKER: "network"
       TLS_LEVEL: "modern"
 
-      # Certs issued by Caddy for mail.snoofly.co.uk (verify this path matches your Caddy data dir)
+      # Certs issued by Caddy for mail.snoofly.co.uk
+      # NOTE: Caddy stores under /data/caddy/certificates/...; we mount that at /mnt/caddy
       SSL_TYPE: "manual"
-      SSL_CERT_PATH: "/mnt/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.crt"
-      SSL_KEY_PATH:  "/mnt/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.key"
+      SSL_CERT_PATH: "/mnt/caddy/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.crt"
+      SSL_KEY_PATH:  "/mnt/caddy/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.snoofly.co.uk/mail.snoofly.co.uk.key"
 
+      # We read mail locally; outbound sending stays with SendGrid
       RELAY_HOST: ""
       SMTP_ONLY: "0"
       ENABLE_OPENDKIM: "0"
@@ -53,7 +56,7 @@ services:
       - caddy_data:/mnt/caddy:ro
     networks: [snoofly-net]
     healthcheck:
-      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/127.0.0.1/25' || exit 1"]
+      test: ["CMD-SHELL", "timeout 3 bash -lc '</dev/tcp/127.0.0.1/25' || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 10
@@ -65,14 +68,15 @@ services:
     depends_on:
       - mail
     environment:
+      # IMAP (read mail from docker-mailserver)
       ROUNDCUBE_DEFAULT_HOST: "ssl://mail.snoofly.co.uk"
       ROUNDCUBE_DEFAULT_PORT: "993"
 
-      # Send via SendGrid
+      # SMTP (send via SendGrid)
       ROUNDCUBE_SMTP_SERVER: "smtp.sendgrid.net"
       ROUNDCUBE_SMTP_PORT: "587"
-      ROUNDCUBE_SMTP_USER: "apikey"
-      ROUNDCUBE_SMTP_PASS: "${SENDGRID_API_KEY}"
+      ROUNDCUBE_SMTP_USER: "apikey"                # literal username for SendGrid
+      ROUNDCUBE_SMTP_PASS: "${SENDGRID_API_KEY}"   # set in .env
       ROUNDCUBE_SMTP_AUTH_TYPE: "LOGIN"
       ROUNDCUBE_SMTP_AUTH: "true"
 
@@ -86,7 +90,7 @@ services:
       - "80"
     networks: [snoofly-net]
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 10
