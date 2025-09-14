@@ -41,11 +41,12 @@ services:
       # We read mail locally; outbound sending stays with SendGrid
       RELAY_HOST: ""
       SMTP_ONLY: "0"
-      ENABLE_OPENDKIM: "0"
+      ENABLE_OPENDKIM: "1"
     ports:
       - "25:25"    # SMTP in
       - "993:993"  # IMAPS
       - "587:587" 
+      - "465:465"
     cap_add:
       - NET_ADMIN
       - SYS_PTRACE
