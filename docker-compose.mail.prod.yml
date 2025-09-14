@@ -45,6 +45,7 @@ services:
     ports:
       - "25:25"    # SMTP in
       - "993:993"  # IMAPS
+      - "587:587" 
     cap_add:
       - NET_ADMIN
       - SYS_PTRACE
