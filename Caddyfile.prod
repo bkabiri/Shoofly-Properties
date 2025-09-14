@@ -1,14 +1,103 @@
-# Rails app
+# Optional: a global email for ACME and some sane defaults
+{
+  email admin@snoofly.co.uk
+  # Reduce noisy logs a bit; set to DEBUG while troubleshooting
+  # debug
+}
+
+# --- Rails app (includes Action Cable) ---
 snoofly.co.uk, www.snoofly.co.uk {
-  reverse_proxy web:3000
+  encode zstd gzip
+
+  @cable path /cable
+  reverse_proxy @cable web:3000 {
+    # WebSockets auto-upgrade
+    transport http {
+      read_timeout  600s
+      write_timeout 600s
+      dial_timeout  10s
+    }
+    header_up X-Forwarded-Proto {scheme}
+    header_up X-Forwarded-For   {remote}
+    header_up X-Forwarded-Host  {host}
+  }
+
+  # Everything else → Rails
+  reverse_proxy web:3000 {
+    transport http {
+      read_timeout  180s
+      write_timeout 180s
+      dial_timeout  10s
+    }
+    header_up X-Forwarded-Proto {scheme}
+    header_up X-Forwarded-For   {remote}
+    header_up X-Forwarded-Host  {host}
+  }
+
+  # Basic security headers (tune CSP when you lock down assets)
+  header {
+    # Remove Caddy’s server header
+    -Server
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options    "nosniff"
+    X-Frame-Options           "DENY"
+    Referrer-Policy           "strict-origin-when-cross-origin"
+    # Example CSP (loose). Tighten for your asset hosts as you go.
+    # Content-Security-Policy "default-src 'self' https: 'unsafe-inline' 'unsafe-eval' data: blob:"
+  }
+
+  log {
+    output file /data/logs/rails-access.log {
+      roll_size 10MiB
+      roll_keep 10
+    }
+    format json
+  }
 }
 
-# MinIO Console (admin UI)
+# --- MinIO Console (admin UI) ---
 minio.snoofly.co.uk {
-  reverse_proxy minio-snoofly:9001
+  encode zstd gzip
+
+  reverse_proxy minio-snoofly:9001 {
+    transport http {
+      read_timeout  300s
+      write_timeout 300s
+      dial_timeout  10s
+    }
+    header_up Host {host}
+    header_up X-Forwarded-Proto {scheme}
+  }
+
+  log {
+    output file /data/logs/minio-console.log {
+      roll_size 10MiB
+      roll_keep 10
+    }
+    format json
+  }
 }
 
-# MinIO S3 API (for Rails / apps to use)
+# --- MinIO S3 API (for Rails / external clients) ---
 s3.snoofly.co.uk {
-  reverse_proxy minio-snoofly:9000
+  # Don’t add CSP/HSTS here if you’re doing presigned PUT/GET from browsers;
+  # Let MinIO’s CORS handle it.
+  reverse_proxy minio-snoofly:9000 {
+    transport http {
+      read_timeout  900s      # allow large uploads/downloads
+      write_timeout 900s
+      dial_timeout  10s
+    }
+    # Preserve Host; MinIO likes this even if you're using path-style
+    header_up Host {host}
+    header_up X-Forwarded-Proto {scheme}
+  }
+
+  log {
+    output file /data/logs/minio-s3.log {
+      roll_size 10MiB
+      roll_keep 10
+    }
+    format json
+  }
 }
