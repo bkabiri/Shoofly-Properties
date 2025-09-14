@@ -1,7 +1,5 @@
-# Optional: a global email for ACME and some sane defaults
 {
   email admin@snoofly.co.uk
-  # Reduce noisy logs a bit; set to DEBUG while troubleshooting
   # debug
 }
 
@@ -11,7 +9,6 @@ snoofly.co.uk, www.snoofly.co.uk {
 
   @cable path /cable
   reverse_proxy @cable web:3000 {
-    # WebSockets auto-upgrade
     transport http {
       read_timeout  600s
       write_timeout 600s
@@ -22,7 +19,6 @@ snoofly.co.uk, www.snoofly.co.uk {
     header_up X-Forwarded-Host  {host}
   }
 
-  # Everything else → Rails
   reverse_proxy web:3000 {
     transport http {
       read_timeout  180s
@@ -34,15 +30,12 @@ snoofly.co.uk, www.snoofly.co.uk {
     header_up X-Forwarded-Host  {host}
   }
 
-  # Basic security headers (tune CSP when you lock down assets)
   header {
-    # Remove Caddy’s server header
     -Server
     Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
     X-Content-Type-Options    "nosniff"
     X-Frame-Options           "DENY"
     Referrer-Policy           "strict-origin-when-cross-origin"
-    # Example CSP (loose). Tighten for your asset hosts as you go.
     # Content-Security-Policy "default-src 'self' https: 'unsafe-inline' 'unsafe-eval' data: blob:"
   }
 
@@ -80,21 +73,48 @@ minio.snoofly.co.uk {
 
 # --- MinIO S3 API (for Rails / external clients) ---
 s3.snoofly.co.uk {
-  # Don’t add CSP/HSTS here if you’re doing presigned PUT/GET from browsers;
-  # Let MinIO’s CORS handle it.
   reverse_proxy minio-snoofly:9000 {
     transport http {
-      read_timeout  900s      # allow large uploads/downloads
+      read_timeout  900s
       write_timeout 900s
       dial_timeout  10s
     }
-    # Preserve Host; MinIO likes this even if you're using path-style
     header_up Host {host}
     header_up X-Forwarded-Proto {scheme}
   }
 
   log {
     output file /data/logs/minio-s3.log {
+      roll_size 10MiB
+      roll_keep 10
+    }
+    format json
+  }
+}
+
+# --- Webmail (Roundcube UI) ---
+webmail.snoofly.co.uk {
+  encode zstd gzip
+  reverse_proxy roundcube:80
+
+  log {
+    output file /data/logs/webmail-access.log {
+      roll_size 10MiB
+      roll_keep 10
+    }
+    format json
+  }
+}
+
+# --- Mail hostname (for TLS certs only) ---
+mail.snoofly.co.uk {
+  respond "OK (mail hostname for TLS cert only)" 200
+
+  @root path /
+  redir @root https://webmail.snoofly.co.uk 308
+
+  log {
+    output file /data/logs/mail-host.log {
       roll_size 10MiB
       roll_keep 10
     }
